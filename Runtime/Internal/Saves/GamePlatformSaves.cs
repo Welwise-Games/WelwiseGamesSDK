@@ -102,7 +102,6 @@ namespace WelwiseGamesSDK.Internal.Saves
                     _strings[identifier] = value.Substring(1);
                     break;
                 case 'i':
-                    Debug.Log(value.Substring(1));
                     _ints[identifier] = int.Parse(value.Substring(1));
                     break;
                 case 'f':

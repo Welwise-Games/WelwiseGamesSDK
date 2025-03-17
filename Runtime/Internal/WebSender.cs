@@ -20,7 +20,6 @@ namespace WelwiseGamesSDK.Internal
             string url, 
             Action<UnityWebRequest> callback)
         {
-            Debug.Log(url);
             using var request = UnityWebRequest.Get(url);
             request.SetRequestHeader(ApiKeyHeader, _apiKey);
             yield return request.SendWebRequest();

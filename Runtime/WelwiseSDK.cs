@@ -93,6 +93,7 @@ namespace WelwiseGamesSDK
             if (_webSender != null) return;
             var go = new GameObject($"[ {nameof(WelwiseSDK)} ] -- {nameof(WebSender)}");
             _webSender = go.AddComponent<WebSender>();
+            Object.DontDestroyOnLoad(go);
             _webSender.Initialize(_settings.ApiKey);
         }
 
