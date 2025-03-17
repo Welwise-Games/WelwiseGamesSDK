@@ -4,6 +4,7 @@ using UnityEngine;
 using WelwiseGamesSDK.Internal;
 using WelwiseGamesSDK.Internal.Environment;
 using WelwiseGamesSDK.Internal.Saves;
+using Object = UnityEngine.Object;
 
 namespace WelwiseGamesSDK
 {
