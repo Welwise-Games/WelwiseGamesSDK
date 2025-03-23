@@ -1,8 +1,9 @@
-﻿using WelwiseGamesSDK.Internal;
+﻿using System;
+using WelwiseGamesSDK.Internal;
 
-namespace WelwiseGamesSDK
+namespace WelwiseGamesSDK.Shared
 {
-    public interface ISaves : IWaitService
+    public interface ISaves : INeedInitializeService
     {
         public string GetPlayerName();
         public void SetPlayerName(string name);

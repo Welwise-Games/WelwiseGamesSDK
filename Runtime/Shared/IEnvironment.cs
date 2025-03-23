@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace WelwiseGamesSDK
+namespace WelwiseGamesSDK.Shared
 {
     public interface IEnvironment
     {

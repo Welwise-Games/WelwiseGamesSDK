@@ -2,19 +2,30 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Unity.Plastic.Newtonsoft.Json;
-using UnityEngine;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Data;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Requests;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Responses;
+using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
 {
     internal class MetaversePlatformSaves : PlatformSaves
     {
-        private string _playerName;
-
-        public MetaversePlatformSaves(WebSender webSender) : base(webSender) {}
+        private readonly string _metaverseId;
         
+        public MetaversePlatformSaves(
+            WebSender webSender, 
+            float syncDelay, 
+            IEnvironment environment, 
+            string metaverseId) 
+            : base(
+                webSender, 
+                syncDelay, 
+                environment)
+        {
+            _metaverseId = metaverseId;
+        }
+
         protected override void ParseSaveJson(string json)
         {
             var data = JsonConvert.DeserializeObject<GetMetaverseDataResponse>(json);
@@ -32,7 +43,7 @@ namespace WelwiseGamesSDK.Internal.Saves
             }
         }
 
-        protected override string GetUrl() => $"{WelwiseSDK.BaseUrl}/metaverses/{WelwiseSDK.Settings.MetaverseId}/players/{WelwiseSDK.GetEnvironment().PlayerId.ToString()}";
+        protected override string GetUrl() => $"{BaseApiUrl}/metaverses/{_metaverseId}/players/{_environment.PlayerId}";
 
         protected override string CreateSaveJson()
         {
@@ -81,14 +92,6 @@ namespace WelwiseGamesSDK.Internal.Saves
                 PlayerMetaverseData = gameData.ToArray()
             };
             return JsonConvert.SerializeObject(request);
-        }
-
-        public override string GetPlayerName() => _playerName;
-
-        public override void SetPlayerName(string name)
-        {
-            _playerName = name;
-            SyncCheck();
         }
 
         private void ParseSimpleValue(string identifier, string value)

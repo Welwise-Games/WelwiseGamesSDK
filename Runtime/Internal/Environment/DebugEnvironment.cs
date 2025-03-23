@@ -1,4 +1,5 @@
 ﻿using System;
+using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Environment
 {

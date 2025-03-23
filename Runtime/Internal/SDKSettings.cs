@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using WelwiseGamesSDK.Shared;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -6,22 +7,31 @@ using UnityEditor;
 
 namespace WelwiseGamesSDK.Internal
 {
-    public sealed class SDKSettings : ScriptableObject
+    public sealed class SDKSettings : ScriptableObject, ISDKConfig
     {
+        public SDKMode Mode =>
+#if UNITY_EDITOR
+            SDKMode.Debug;
+#elif DEVELOPMENT_BUILD
+            SDKMode.Development;
+#else
+            SDKMode.Production;
+#endif
+        
+        public string DebugPlayerId => _playerId;
         public string GameId => _gameId;
-        public string PlayerId => _playerId;
         public float SyncDelay => _syncDelay;
-        public string ApiKey => _apiKey;
-        public bool UseDebugID => _useDebugId;
-        public bool UseMetaverse => _useMetaverse;
+        public string ApiAuthKey => _apiAuthKey;
         public string MetaverseId => _metaverseId;
-
+        public bool IsMetaverseConnected => _isMetaverseConnected;
+        internal SupportedSDKType SupportedSDKType => _supportedSDKType;
+        
+        [SerializeField] private SupportedSDKType _supportedSDKType;
         [SerializeField] private string _gameId;
-        [SerializeField] private bool _useDebugId;
         [SerializeField] private string _playerId;
         [SerializeField] private float _syncDelay = 35;
-        [SerializeField] private string _apiKey;
-        [SerializeField] private bool _useMetaverse;
+        [SerializeField] private string _apiAuthKey;
+        [SerializeField] private bool _isMetaverseConnected;
         [SerializeField] private string _metaverseId;
         
         

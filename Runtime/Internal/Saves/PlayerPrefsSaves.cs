@@ -1,26 +1,33 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
 {
-    internal class PlayerPrefsSaves : ISaves
+    internal sealed class PlayerPrefsSaves : ISaves
     {
+        public event Action Initialized;
         private const string PlayerNameKey = "PlayerName";
-        public event Action Ready;
 
         private readonly bool _isMetaverse;
+        private readonly MonoBehaviour _coroutineRunner;
 
-        public PlayerPrefsSaves(WebSender webSender, bool isMetaverse)
+        public PlayerPrefsSaves(MonoBehaviour coroutineRunner, bool isMetaverse)
         {
-            webSender.StartCoroutine(ReadyRoutine());
             _isMetaverse = isMetaverse;
+            _coroutineRunner = coroutineRunner;
+        }
+        
+        public void Initialize()
+        {
+            _coroutineRunner.StartCoroutine(ReadyRoutine());
         }
 
         private IEnumerator ReadyRoutine()
         {
             yield return new WaitForSeconds(1);
-            Ready?.Invoke();
+            Initialized?.Invoke();
         }
 
         public string GetPlayerName() => PlayerPrefs.GetString(PlayerNameKey, string.Empty);

@@ -2,18 +2,29 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Unity.Plastic.Newtonsoft.Json;
-using UnityEngine;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Data;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Requests;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Responses;
+using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
 {
     internal sealed class GamePlatformSaves : PlatformSaves
     {
-        private string _playerName;
-        
-        public GamePlatformSaves(WebSender webSender) : base(webSender) {}
+        private readonly string _gameId;
+
+        public GamePlatformSaves(
+            WebSender webSender, 
+            float syncDelay, 
+            string gameId, 
+            IEnvironment environment)
+            : base(
+                webSender, 
+                syncDelay, 
+                environment)
+        {
+            _gameId = gameId;
+        }
 
         protected override void ParseSaveJson(string json)
         {
@@ -31,17 +42,9 @@ namespace WelwiseGamesSDK.Internal.Saves
                 }
             }
         }
-        
-        public override string GetPlayerName() => _playerName;
-
-        public override void SetPlayerName(string name)
-        {
-            _playerName = name;
-            SyncCheck();
-        }
 
 
-        protected override string GetUrl() => $"{WelwiseSDK.BaseUrl}/games/{WelwiseSDK.Settings.GameId}/players/{WelwiseSDK.GetEnvironment().PlayerId.ToString()}";
+        protected override string GetUrl() => $"{BaseApiUrl}/games/{_gameId}/players/{_environment.PlayerId}";
 
 
         protected override string CreateSaveJson()
