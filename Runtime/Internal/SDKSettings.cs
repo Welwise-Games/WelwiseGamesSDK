@@ -56,6 +56,21 @@ namespace WelwiseGamesSDK.Internal
             Debug.LogError("SDKSettings asset is missing! Please create it in Resources folder.");
 #endif
         }
+#if UNITY_EDITOR
+        [MenuItem("Tools/WelwiseGamesSDK/Create Settings", priority = 0)]
+        private static void CreateSettingsMenuItem()
+        {
+            var settings = LoadOrCreateSettings();
+            Selection.activeObject = settings;
+            EditorGUIUtility.PingObject(settings);
+        }
+
+        [MenuItem("Tools/WelwiseGamesSDK/Create Settings", validate = true)]
+        private static bool ValidateCreateSettingsMenuItem()
+        {
+            return Resources.Load<SDKSettings>(nameof(SDKSettings)) == null;
+        }
+#endif
 
 #if UNITY_EDITOR
         private static SDKSettings CreateSettingsAsset()
