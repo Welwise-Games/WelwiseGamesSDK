@@ -14,6 +14,13 @@ namespace WelwiseGamesSDK.Internal
         {
             _apiKey = apiKey;
         }
+
+        public static WebSender Create()
+        {
+            var go = new GameObject("WelwiseGamesSDK.WebSender");
+            DontDestroyOnLoad(go);
+            return go.AddComponent<WebSender>();
+        }
         
         #region Routines
         private IEnumerator GetRequestRoutine(

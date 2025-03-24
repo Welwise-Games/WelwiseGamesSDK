@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using WelwiseGamesSDK.Shared;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -6,21 +7,24 @@ using UnityEditor;
 
 namespace WelwiseGamesSDK.Internal
 {
-    public sealed class SDKSettings : ScriptableObject
+    public sealed class SDKSettings : ScriptableObject, ISDKConfig
     {
+        public SDKMode Mode => _mode;
+        
+        public string DebugPlayerId => _playerId;
         public string GameId => _gameId;
-        public string PlayerId => _playerId;
         public float SyncDelay => _syncDelay;
-        public string ApiKey => _apiKey;
-        public bool UseDebugID => _useDebugId;
-        public bool UseMetaverse => _useMetaverse;
+        public string ApiAuthKey => _apiAuthKey;
         public string MetaverseId => _metaverseId;
-
+        public bool UseMetaverse => _useMetaverse;
+        internal SupportedSDKType SupportedSDKType => _supportedSDKType;
+        
+        [SerializeField] private SDKMode _mode;
+        [SerializeField] private SupportedSDKType _supportedSDKType;
         [SerializeField] private string _gameId;
-        [SerializeField] private bool _useDebugId;
         [SerializeField] private string _playerId;
         [SerializeField] private float _syncDelay = 35;
-        [SerializeField] private string _apiKey;
+        [SerializeField] private string _apiAuthKey;
         [SerializeField] private bool _useMetaverse;
         [SerializeField] private string _metaverseId;
         
@@ -52,6 +56,21 @@ namespace WelwiseGamesSDK.Internal
             Debug.LogError("SDKSettings asset is missing! Please create it in Resources folder.");
 #endif
         }
+#if UNITY_EDITOR
+        [MenuItem("Tools/WelwiseGamesSDK/Create Settings", priority = 0)]
+        private static void CreateSettingsMenuItem()
+        {
+            var settings = LoadOrCreateSettings();
+            Selection.activeObject = settings;
+            EditorGUIUtility.PingObject(settings);
+        }
+
+        [MenuItem("Tools/WelwiseGamesSDK/Create Settings", validate = true)]
+        private static bool ValidateCreateSettingsMenuItem()
+        {
+            return Resources.Load<SDKSettings>(nameof(SDKSettings)) == null;
+        }
+#endif
 
 #if UNITY_EDITOR
         private static SDKSettings CreateSettingsAsset()

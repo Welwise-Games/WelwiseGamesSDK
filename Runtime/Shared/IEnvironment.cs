@@ -1,10 +1,9 @@
 ﻿using System;
 
-namespace WelwiseGamesSDK
+namespace WelwiseGamesSDK.Shared
 {
     public interface IEnvironment
     {
         public Guid PlayerId { get; }
-        public bool UseMetaverse { get; }
     }
 }

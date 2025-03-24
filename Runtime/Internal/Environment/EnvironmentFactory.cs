@@ -1,4 +1,6 @@
-﻿namespace WelwiseGamesSDK.Internal.Environment
+﻿using WelwiseGamesSDK.Shared;
+
+namespace WelwiseGamesSDK.Internal.Environment
 {
     internal static class EnvironmentFactory
     {
