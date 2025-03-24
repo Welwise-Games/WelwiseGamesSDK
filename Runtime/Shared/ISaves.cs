@@ -1,7 +1,4 @@
-﻿using System;
-using WelwiseGamesSDK.Internal;
-
-namespace WelwiseGamesSDK.Shared
+﻿namespace WelwiseGamesSDK.Shared
 {
     public interface ISaves : INeedInitializeService
     {

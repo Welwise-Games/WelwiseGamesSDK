@@ -5,28 +5,63 @@ using Unity.Plastic.Newtonsoft.Json;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Data;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Requests;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Responses;
+using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Requests;
+using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Responses;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
 {
     internal sealed class GamePlatformSaves : PlatformSaves
     {
-        private readonly string _gameId;
-
         public GamePlatformSaves(
             WebSender webSender, 
             float syncDelay, 
-            string gameId, 
-            IEnvironment environment)
+            IEnvironment environment,
+            bool useMetaverse,
+            string metaverseId,
+            string gameId,
+            CombinedSync sync)
             : base(
                 webSender, 
                 syncDelay, 
-                environment)
+                environment,
+                useMetaverse,
+                metaverseId,
+                gameId,
+                sync)
         {
-            _gameId = gameId;
         }
 
         protected override void ParseSaveJson(string json)
+        {
+            if (_useMetaverse)
+            {
+                ParseCombinedJson(json);
+            }
+            else
+            {
+                ParseDefaultJson(json);
+            }
+        }
+
+        private void ParseCombinedJson(string json)
+        {
+            var data = JsonConvert.DeserializeObject<GetMetaverseWithGameDataResponse>(json);
+            _playerName = data.PlayerName;
+            foreach (var gameData in data.PlayerGameData)
+            {
+                if (!string.IsNullOrEmpty(gameData.Value))
+                {
+                    ParseSimpleValue(gameData.Identifier, gameData.Value);
+                }
+                else
+                {
+                    throw new NotImplementedException();
+                }
+            }
+        }
+
+        private void ParseDefaultJson(string json)
         {
             var data = JsonConvert.DeserializeObject<GetGameDataResponse>(json);
             _playerName = data.PlayerName;
@@ -48,6 +83,12 @@ namespace WelwiseGamesSDK.Internal.Saves
 
 
         protected override string CreateSaveJson()
+        {
+            var request = CreateSaveGameDataRequest();
+            return JsonConvert.SerializeObject(request);
+        }
+
+        protected override SaveGameDataRequest CreateSaveGameDataRequest()
         {
             var gameData = new List<GameData>();
 
@@ -92,10 +133,11 @@ namespace WelwiseGamesSDK.Internal.Saves
                 PlayerName = _playerName,
                 PlayerGameData = gameData.ToArray()
             };
-
-            return JsonConvert.SerializeObject(request);
+            return request;
         }
-        
+
+        protected override SaveMetaverseDataRequest CreateSaveMetaverseDataRequest() => null;
+
         private void ParseSimpleValue(string identifier, string value)
         {
             var type = value[0];

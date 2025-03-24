@@ -9,29 +9,23 @@ namespace WelwiseGamesSDK.Internal
 {
     public sealed class SDKSettings : ScriptableObject, ISDKConfig
     {
-        public SDKMode Mode =>
-#if UNITY_EDITOR
-            SDKMode.Debug;
-#elif DEVELOPMENT_BUILD
-            SDKMode.Development;
-#else
-            SDKMode.Production;
-#endif
+        public SDKMode Mode => _mode;
         
         public string DebugPlayerId => _playerId;
         public string GameId => _gameId;
         public float SyncDelay => _syncDelay;
         public string ApiAuthKey => _apiAuthKey;
         public string MetaverseId => _metaverseId;
-        public bool IsMetaverseConnected => _isMetaverseConnected;
+        public bool UseMetaverse => _useMetaverse;
         internal SupportedSDKType SupportedSDKType => _supportedSDKType;
         
+        [SerializeField] private SDKMode _mode;
         [SerializeField] private SupportedSDKType _supportedSDKType;
         [SerializeField] private string _gameId;
         [SerializeField] private string _playerId;
         [SerializeField] private float _syncDelay = 35;
         [SerializeField] private string _apiAuthKey;
-        [SerializeField] private bool _isMetaverseConnected;
+        [SerializeField] private bool _useMetaverse;
         [SerializeField] private string _metaverseId;
         
         

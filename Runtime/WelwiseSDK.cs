@@ -18,11 +18,7 @@ namespace WelwiseGamesSDK
         public static void Construct()
         {
             var build = new SDKBuilder().Create();
-            foreach (var service in build.NeedInitializeServices)
-            {
-                AddToWaitQueue(service);
-            }
-            _sdk = build;
+            ConstructWithThirdPartySDK(build);
         }
 
         public static void ConstructWithThirdPartySDK(ISDK sdk)
@@ -31,6 +27,10 @@ namespace WelwiseGamesSDK
             {
                 Debug.LogWarning("SDK is already initialized.");
                 return;
+            }
+            foreach (var service in sdk.NeedInitializeServices)
+            {
+                AddToWaitQueue(service);
             }
             
             _sdk = sdk;
@@ -46,7 +46,7 @@ namespace WelwiseGamesSDK
 
             foreach (var service in Waiters)
             {
-                Initialize();
+                service.Initialize();
             }
             
             _isInitialized = true;

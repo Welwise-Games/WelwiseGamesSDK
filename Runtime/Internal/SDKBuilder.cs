@@ -14,7 +14,7 @@ namespace WelwiseGamesSDK.Internal
             public ISaves MetaverseSaves { get; internal set; }
             public ISDKConfig Config { get; internal set; }
             public IEnvironment Environment { get; internal set; }
-            public readonly List<INeedInitializeService> NeedInitializeServices = new();
+            public List<INeedInitializeService> NeedInitializeServices { get; } = new();
         }
 
         private SDKSettings _sdkSettings;
@@ -38,7 +38,7 @@ namespace WelwiseGamesSDK.Internal
             var build = new Build();
             
             var env = EnvironmentFactory.Create(_sdkSettings.Mode == SDKMode.Debug,
-                _sdkSettings.DebugPlayerId, _sdkSettings.IsMetaverseConnected);
+                _sdkSettings.DebugPlayerId, _sdkSettings.UseMetaverse);
             var gameSaves = SavesFactory.CreateMetaverseGameSaves(_webSender, _sdkSettings, env);
             var metaverseSaves = SavesFactory.CreateGameSaves(_webSender, _sdkSettings, env);
             build.NeedInitializeServices.Add(gameSaves);

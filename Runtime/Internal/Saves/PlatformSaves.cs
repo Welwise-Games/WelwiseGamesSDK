@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Requests;
+using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Requests;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
@@ -16,25 +18,49 @@ namespace WelwiseGamesSDK.Internal.Saves
         protected readonly Dictionary<string, float> _floats = new ();
         protected readonly Dictionary<string, int> _ints = new ();
         protected readonly Dictionary<string, bool> _booleans = new ();
+        protected readonly bool _useMetaverse;
+        protected readonly string _metaverseId;
+        protected readonly string _gameId;
         protected readonly IEnvironment _environment;
         private readonly WebSender _webSender;
         private readonly float _syncDelay;
+        private readonly CombinedSync _combinedSync;
+
 
         protected string _playerName;
         private float _lastWriteTime = float.NegativeInfinity;
 
-        protected PlatformSaves(WebSender webSender, float syncDelay, IEnvironment environment)
+        protected PlatformSaves(
+            WebSender webSender, 
+            float syncDelay, 
+            IEnvironment environment,
+            bool useMetaverse,
+            string metaverseId,
+            string gameId,
+            CombinedSync sync)
         {
             _webSender = webSender;
             _syncDelay = syncDelay;
             _environment = environment;
+            _useMetaverse = useMetaverse;
+            _metaverseId = metaverseId;
+            _gameId = gameId;
+            _combinedSync = sync;
         }
         
         public void Initialize()
         {
-            _webSender.GetRequest(
-                GetUrl(), 
-                InitialSync);
+            if (_useMetaverse)
+            {
+                _combinedSync.SetURL(GetCombinedUrl());
+                _combinedSync.InitialSync(InitialSync);
+            }
+            else
+            {
+                _webSender.GetRequest(
+                    GetUrl(),
+                    InitialSync);
+            }
         }
 
         private void InitialSync(UnityWebRequest request)
@@ -52,18 +78,32 @@ namespace WelwiseGamesSDK.Internal.Saves
         }
         
         protected abstract void ParseSaveJson(string json);
+        private string GetCombinedUrl() => $"{BaseApiUrl}/metaverses/{_metaverseId}/games/{_gameId}/players/{_environment.PlayerId}";
         protected abstract string GetUrl();
         protected abstract string CreateSaveJson();
+        protected abstract SaveGameDataRequest CreateSaveGameDataRequest();
+        protected abstract SaveMetaverseDataRequest CreateSaveMetaverseDataRequest();
 
-        protected void SyncCheck()
+        private void SyncCheck()
         {
             if (_lastWriteTime - Time.time > _syncDelay) return;
             _lastWriteTime = Time.time;
-            
-            _webSender.PutRequest(
-                GetUrl(),
-                CreateSaveJson(),
-                (r) => { });
+
+            if (_useMetaverse)
+            {
+                var saveGameDataRequest = CreateSaveGameDataRequest();
+                var saveMetaverseDataRequest = CreateSaveMetaverseDataRequest();
+                
+                if (saveMetaverseDataRequest != null) _combinedSync.SetMetaverseDataRequest(saveMetaverseDataRequest);
+                if (saveGameDataRequest != null) _combinedSync.SetSaveGameDataRequest(saveGameDataRequest);
+            }
+            else
+            {
+                _webSender.PutRequest(
+                    GetUrl(),
+                    CreateSaveJson(),
+                    (r) => { });
+            }
         }
 
         public string GetPlayerName() => _playerName;

@@ -8,6 +8,6 @@
         public float SyncDelay { get; }
         public string ApiAuthKey { get; }
         public string MetaverseId { get; }
-        public bool IsMetaverseConnected { get; }
+        public bool UseMetaverse { get; }
     }
 }
