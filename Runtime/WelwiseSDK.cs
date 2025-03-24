@@ -78,6 +78,15 @@ namespace WelwiseGamesSDK
             }
         }
 
+        public static ISDKConfig Config
+        {
+            get
+            {
+                if (!_isInitialized) throw new SDKNotInitialized();
+                return _sdk.Config;
+            }
+        }
+
         private static void AddToWaitQueue(INeedInitializeService needInitializeService)
         {
             Waiters.Add(needInitializeService);
