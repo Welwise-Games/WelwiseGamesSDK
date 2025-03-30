@@ -61,31 +61,6 @@
             Данные игрока в игре.
             </summary>
         </member>
-        <member name="T:WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.Games.Web.Responses.GetGameAdsIdResponse">
-            <summary>
-            Ответ на запрос получения идентификаторов рекламных блоков для игры.
-            </summary>
-        </member>
-        <member name="P:WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.Games.Web.Responses.GetGameAdsIdResponse.GameId">
-            <summary>
-            Идентификатор игры.
-            </summary>
-        </member>
-        <member name="P:WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.Games.Web.Responses.GetGameAdsIdResponse.RewardedAdsId">
-            <summary>
-            Идентификатор рекламы за вознаграждение.
-            </summary>
-        </member>
-        <member name="P:WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.Games.Web.Responses.GetGameAdsIdResponse.BannerAdsId">
-            <summary>
-            Идентификатор баннерной рекламы.
-            </summary>
-        </member>
-        <member name="P:WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.Games.Web.Responses.GetGameAdsIdResponse.InterstitialAdsId">
-            <summary>
-            Идентификатор межстраничной рекламы.
-            </summary>
-        </member>
         <member name="T:WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Data.MetaverseData">
             <summary>
             Данные игрока в метавселенной.
