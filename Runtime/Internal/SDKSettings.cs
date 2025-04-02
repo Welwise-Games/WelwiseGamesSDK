@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using WelwiseGamesSDK.Shared;
+using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -18,6 +19,8 @@ namespace WelwiseGamesSDK.Internal
         public string MetaverseId => _metaverseId;
         public bool UseMetaverse => _useMetaverse;
         internal SupportedSDKType SupportedSDKType => _supportedSDKType;
+        internal DeviceType DebugDeviceType => _debugDeviceType;
+        internal string DebugLanguageCode => _debugLanguageCode;
         
         [SerializeField] private SDKMode _mode;
         [SerializeField] private SupportedSDKType _supportedSDKType;
@@ -27,6 +30,8 @@ namespace WelwiseGamesSDK.Internal
         [SerializeField] private string _apiAuthKey;
         [SerializeField] private bool _useMetaverse;
         [SerializeField] private string _metaverseId;
+        [SerializeField] private DeviceType _debugDeviceType;
+        [SerializeField] private string _debugLanguageCode;
         
         
         public static SDKSettings LoadOrCreateSettings()

@@ -9,7 +9,7 @@ using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.R
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.MetaversesData.Web.Responses;
 using WelwiseGamesSDK.Shared;
 
-namespace WelwiseGamesSDK.Internal.Saves
+namespace WelwiseGamesSDK.Internal.Saves.WelwiseGames
 {
     internal sealed class GamePlatformSaves : PlatformSaves
     {

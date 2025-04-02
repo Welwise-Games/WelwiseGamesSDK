@@ -9,6 +9,8 @@ namespace WelwiseGamesSDK.Shared
         public ISaves MetaverseSaves { get; }
         public ISDKConfig Config { get; }
         public IEnvironment Environment { get; }
+        public IGameSessionTracker GameSessionTracker { get; }
+        public IAdvertisement Advertisement { get; }
         public List<INeedInitializeService> NeedInitializeServices { get; }
     }
 }

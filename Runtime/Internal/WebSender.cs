@@ -31,7 +31,7 @@ namespace WelwiseGamesSDK.Internal
             request.SetRequestHeader(ApiKeyHeader, _apiKey);
             yield return request.SendWebRequest();
             
-            callback.Invoke(request);
+            callback?.Invoke(request);
         }
 
         IEnumerator PostRequestRoutine(
@@ -50,7 +50,7 @@ namespace WelwiseGamesSDK.Internal
 
             yield return request.SendWebRequest();
             
-            callback.Invoke(request);
+            callback?.Invoke(request);
         }
 
 
@@ -62,7 +62,7 @@ namespace WelwiseGamesSDK.Internal
             using UnityWebRequest request = UnityWebRequest.Post(url, form);
             request.SetRequestHeader(ApiKeyHeader, _apiKey);
             yield return request.SendWebRequest();
-            callback.Invoke(request);
+            callback?.Invoke(request);
         }
 
         IEnumerator DeleteRequestRoutine(
@@ -72,7 +72,7 @@ namespace WelwiseGamesSDK.Internal
             using var request = UnityWebRequest.Delete(url);
             request.SetRequestHeader(ApiKeyHeader, _apiKey);
             yield return request.SendWebRequest();
-            callback.Invoke(request);
+            callback?.Invoke(request);
         }
 
         IEnumerator PutRequestRoutine(
@@ -90,7 +90,7 @@ namespace WelwiseGamesSDK.Internal
             request.SetRequestHeader(headerName, headerValue);
 
             yield return request.SendWebRequest();
-            callback.Invoke(request);
+            callback?.Invoke(request);
         }
         #endregion
 

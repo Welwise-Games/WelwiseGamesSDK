@@ -1,4 +1,5 @@
 ﻿using System;
+using WelwiseGamesSDK.Internal.Saves.WelwiseGames;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
@@ -19,7 +20,7 @@ namespace WelwiseGamesSDK.Internal.Saves
                     environment, 
                     config.UseMetaverse,
                     config.MetaverseId,
-                    config.MetaverseId,
+                    config.GameId,
                     _combinedSync),
                 _ => throw new NotImplementedException()
             };
@@ -39,7 +40,7 @@ namespace WelwiseGamesSDK.Internal.Saves
                     environment, 
                     config.UseMetaverse,
                     config.MetaverseId,
-                    config.MetaverseId,
+                    config.GameId,
                     _combinedSync),
                 _ => throw new NotImplementedException()
             };

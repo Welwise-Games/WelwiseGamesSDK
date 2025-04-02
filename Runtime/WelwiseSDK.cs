@@ -21,6 +21,7 @@ namespace WelwiseGamesSDK
             ConstructWithThirdPartySDK(build);
         }
 
+        // ReSharper disable once MemberCanBePrivate.Global
         public static void ConstructWithThirdPartySDK(ISDK sdk)
         {
             if (_isInitialized)
@@ -33,6 +34,12 @@ namespace WelwiseGamesSDK
                 AddToWaitQueue(service);
             }
             
+            Application.quitting += () =>
+            {
+                sdk.GameSessionTracker.SessionEnded();
+                sdk.GameSessionTracker.Send();
+            };
+            
             _sdk = sdk;
         }
 
@@ -43,13 +50,23 @@ namespace WelwiseGamesSDK
                 Debug.LogWarning("SDK is already initialized.");
                 return;
             }
-
+            Debug.Log($"[SDK] Initializing... (need wait {Waiters.Count} services)]");
             foreach (var service in Waiters)
             {
                 service.Initialize();
             }
             
             _isInitialized = true;
+            _sdk.GameSessionTracker.SessionStarted();
+        }
+
+        public static IAdvertisement Advertisement
+        {
+            get
+            {
+                if (!_isInitialized) throw new SDKNotInitialized();
+                return _sdk.Advertisement;
+            }
         }
         
         public static IEnvironment Environment
@@ -94,10 +111,9 @@ namespace WelwiseGamesSDK
             {
                 Waiters.Remove(needInitializeService);
 
-                if (Waiters.Count == 0)
-                {
-                    Ready?.Invoke();
-                }
+                if (Waiters.Count != 0) return;
+                Debug.Log("[SDK] Ready");
+                Ready?.Invoke();
             };
         }
     }
