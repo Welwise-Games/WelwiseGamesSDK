@@ -15,7 +15,7 @@ namespace WelwiseGamesSDK.Internal
         public static string DetectDeviceType()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        return GetDeviceTypeWebGL();
+        return GetDeviceType();
 #else
                 return _fallbackDevice;
 #endif
@@ -24,7 +24,7 @@ namespace WelwiseGamesSDK.Internal
         public static string DetectLanguage()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        return GetLanguageWebGL();
+        return GetLanguage();
 #else
             return _fallbackLanguage;
 #endif
@@ -32,9 +32,9 @@ namespace WelwiseGamesSDK.Internal
         
 
         [DllImport("__Internal")]
-        private static extern string GetDeviceTypeWebGL();
+        private static extern string GetDeviceType();
 
         [DllImport("__Internal")]
-        private static extern string GetLanguageWebGL();
+        private static extern string GetLanguage();
     }
 }
