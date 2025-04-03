@@ -24,15 +24,32 @@ namespace WelwiseGamesSDK.Internal.Environment
             }
             else
             {
-                PlayerId = Guid.Parse(id);
+                if (!Guid.TryParse(id, out var parsedId))
+                {
+                    parsedId = Guid.NewGuid();
+                    Debug.LogWarning("[Environment] Invalid GUID in cookie, generated new one.");
+                }
+                PlayerId = parsedId;
             }
-            DeviceType = DeviceInfo.DetectDeviceType() switch
+
+            var deviceTypeInt = DeviceInfo.DetectDeviceType();
+            switch (deviceTypeInt)
             {
-                "Desktop" => DeviceType.Desktop,
-                "Mobile" => DeviceType.Desktop,
-                "Tablet" => DeviceType.Tablet,
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                case 0:
+                    DeviceType = DeviceType.Desktop;
+                    break;
+                case 1:
+                    DeviceType = DeviceType.Mobile;
+                    break;
+                case 2:
+                    DeviceType = DeviceType.Tablet;
+                    break;
+                default:
+                    Debug.LogError($"[WebEnvironment] Unknown device type: {deviceTypeInt}, setting to default values ( DeviceType.Desktop).");
+                    DeviceType = DeviceType.Desktop;
+                    return;
+            }
+
             LanguageCode = DeviceInfo.DetectLanguage();
         }
     }

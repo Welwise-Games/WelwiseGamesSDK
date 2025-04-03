@@ -21,7 +21,7 @@
                 var value = decodeURIComponent(
                     cookie.substring(encodedKey.length + 1)
                 );
-                return Pointer_stringify(value);
+                return UTF8ToString(value); // Замена здесь
             }
         }
         return "";

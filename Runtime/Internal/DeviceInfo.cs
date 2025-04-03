@@ -1,21 +1,24 @@
 ﻿using System.Runtime.InteropServices;
+using UnityEngine;
 
 namespace WelwiseGamesSDK.Internal
 {
     internal static class DeviceInfo
     {
-            private static string _fallbackDevice;
+            private static int _fallbackDevice;
             private static string _fallbackLanguage;
             
-            public static void InitializeFallback(string fallbackDevice, string fallbackLanguage)
+            public static void InitializeFallback(int fallbackDevice, string fallbackLanguage)
             { 
                     _fallbackDevice = fallbackDevice;
                     _fallbackLanguage = fallbackLanguage;
             }
-        public static string DetectDeviceType()
+        public static int DetectDeviceType()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        return GetDeviceType();
+                var deviceType = GetDeviceType();
+                Debug.Log($"[C#] Detected device type: '{deviceType}'");
+                return deviceType;
 #else
                 return _fallbackDevice;
 #endif
@@ -32,7 +35,7 @@ namespace WelwiseGamesSDK.Internal
         
 
         [DllImport("__Internal")]
-        private static extern string GetDeviceType();
+        private static extern int GetDeviceType();
 
         [DllImport("__Internal")]
         private static extern string GetLanguage();

@@ -10,9 +10,9 @@ namespace WelwiseGamesSDK.Internal.Environment
 #if UNITY_EDITOR
             DeviceInfo.InitializeFallback(sdkSettings.DebugDeviceType switch
                 {
-                    DeviceType.Desktop => "Desktop",
-                    DeviceType.Mobile => "Mobile",
-                    DeviceType.Tablet => "Tablet",
+                    DeviceType.Desktop => 0,
+                    DeviceType.Mobile => 1,
+                    DeviceType.Tablet => 2,
                     _ => throw new ArgumentOutOfRangeException()
                 }, 
                 sdkSettings.DebugLanguageCode
