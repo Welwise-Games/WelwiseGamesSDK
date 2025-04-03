@@ -42,10 +42,8 @@ namespace WelwiseGamesSDK.Internal
             var build = new Build();
             
             var env = EnvironmentFactory.Create(_sdkSettings);
-            var gameSaves = SavesFactory.CreateMetaverseGameSaves(_webSender, _sdkSettings, env);
-            var metaverseSaves = SavesFactory.CreateGameSaves(_webSender, _sdkSettings, env);
-            build.NeedInitializeServices.Add(gameSaves);
-            build.NeedInitializeServices.Add(metaverseSaves);
+            var gameSaves = SavesFactory.CreateMetaverseGameSaves(_webSender, _sdkSettings, env, build.NeedInitializeServices);
+            var metaverseSaves = SavesFactory.CreateGameSaves(_webSender, _sdkSettings, env, build.NeedInitializeServices);
             
             build.GameSaves = gameSaves;
             build.MetaverseSaves = metaverseSaves;

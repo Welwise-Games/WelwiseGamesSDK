@@ -1,6 +1,6 @@
 ﻿namespace WelwiseGamesSDK.Shared
 {
-    public interface ISaves : INeedInitializeService
+    public interface ISaves
     {
         public string GetPlayerName();
         public void SetPlayerName(string name);

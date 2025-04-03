@@ -5,7 +5,7 @@ using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
 {
-    internal sealed class PlayerPrefsSaves : ISaves
+    internal sealed class PlayerPrefsSaves : ISaves, INeedInitializeService
     {
         public event Action Initialized;
         private const string PlayerNameKey = "PlayerName";

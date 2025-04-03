@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Unity.Plastic.Newtonsoft.Json;
+using Newtonsoft.Json;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Data;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Requests;
 using WelwiseGames.PlayerGameManagement.Unity.Api.Contracts.GamesData.Web.Responses;

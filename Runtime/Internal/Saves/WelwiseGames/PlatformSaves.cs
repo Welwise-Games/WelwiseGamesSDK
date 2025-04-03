@@ -8,7 +8,7 @@ using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.Saves
 {
-    internal abstract class PlatformSaves : ISaves
+    internal abstract class PlatformSaves : ISaves, INeedInitializeService
     {
         protected const string BaseApiUrl = "https://dev.welwise-games.ru/player-game-management";
         
