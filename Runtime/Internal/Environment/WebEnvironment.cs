@@ -51,6 +51,7 @@ namespace WelwiseGamesSDK.Internal.Environment
             }
 
             LanguageCode = DeviceInfo.DetectLanguage();
+            Debug.Log($"[WebEnvironment] Language code: {LanguageCode}, device type: {DeviceType}");
         }
     }
 }

@@ -7,6 +7,12 @@
         return 0;
     },
     GetLanguage: function () {
-        return (navigator.language || navigator.userLanguage).split('-')[0];
+         var lang = (navigator.language || navigator.userLanguage).split('-')[0];
+         var buffer = _malloc(lengthBytesUTF8(lang) + 1);
+         stringToUTF8(lang, buffer, lengthBytesUTF8(lang) + 1);
+         return buffer;
+    },
+    FreeLanguagePtr: function(ptr) {
+        _free(ptr);
     }
 });

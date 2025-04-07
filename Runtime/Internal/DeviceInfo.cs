@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 namespace WelwiseGamesSDK.Internal
@@ -27,7 +28,10 @@ namespace WelwiseGamesSDK.Internal
         public static string DetectLanguage()
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-        return GetLanguage();
+            var ptr = GetLanguage();
+            var lang = Marshal.PtrToStringUTF8(ptr);
+            FreeLanguagePtr(ptr);
+            return lang?.ToLower();
 #else
             return _fallbackLanguage;
 #endif
@@ -38,6 +42,9 @@ namespace WelwiseGamesSDK.Internal
         private static extern int GetDeviceType();
 
         [DllImport("__Internal")]
-        private static extern string GetLanguage();
+        private static extern IntPtr GetLanguage();
+        
+        [DllImport("__Internal")]
+        private static extern void FreeLanguagePtr(IntPtr ptr);
     }
 }
