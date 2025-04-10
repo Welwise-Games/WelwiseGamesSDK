@@ -11,6 +11,7 @@ namespace WelwiseGamesSDK.Shared
         public IEnvironment Environment { get; }
         public IGameSessionTracker GameSessionTracker { get; }
         public IAdvertisement Advertisement { get; }
+        public IAnalytics Analytics { get; }
         public List<INeedInitializeService> NeedInitializeServices { get; }
     }
 }

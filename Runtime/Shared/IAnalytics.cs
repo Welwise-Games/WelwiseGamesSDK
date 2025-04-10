@@ -4,5 +4,6 @@
     {
         public void SendEvent(string eventName);
         public void SendEvent(string eventName, string data);
+        public void SendGameIsReady();
     }
 }

@@ -68,6 +68,15 @@ namespace WelwiseGamesSDK
                 return _sdk.Advertisement;
             }
         }
+
+        public static IAnalytics Analytics
+        {
+            get
+            {
+                if (!_isInitialized) throw new SDKNotInitialized();
+                return _sdk.Analytics;
+            }
+        }
         
         public static IEnvironment Environment
         {

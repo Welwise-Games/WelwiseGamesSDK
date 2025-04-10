@@ -9,7 +9,7 @@ namespace WelwiseGamesSDK.Internal.Advertisement
         {
             return settings.Mode switch
             {
-                SDKMode.Development or SDKMode.Production => new WebAdvertisement(),
+                SDKMode.Development or SDKMode.Production => WebAdvertisement.Create(),
                 SDKMode.Debug => DebugAdvertisement.Create(),
                 _ => throw new ArgumentOutOfRangeException()
             };
