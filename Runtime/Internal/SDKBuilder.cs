@@ -4,6 +4,7 @@ using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Analytics.SessionTracker;
 using WelwiseGamesSDK.Internal.Environment;
+using WelwiseGamesSDK.Internal.PlatformNavigation;
 using WelwiseGamesSDK.Internal.Saves;
 using WelwiseGamesSDK.Shared;
 
@@ -20,6 +21,7 @@ namespace WelwiseGamesSDK.Internal
             public IGameSessionTracker GameSessionTracker { get; internal set; }
             public IAdvertisement Advertisement { get; internal set; }
             public IAnalytics Analytics { get; internal set; }
+            public IPlatformNavigation PlatformNavigation { get; internal set; }
             public List<INeedInitializeService> NeedInitializeServices { get; } = new();
         }
 
@@ -55,6 +57,7 @@ namespace WelwiseGamesSDK.Internal
                 .CreateGameSessionTracker(_sdkSettings, _webSender, env);
             build.Advertisement = AdvertisementFactory.Create(_sdkSettings);
             build.Analytics = AnalyticsFactory.Create(_sdkSettings);
+            build.PlatformNavigation = PlatformNavigationFactory.Create(_sdkSettings);
             return build;
         }
     }

@@ -60,6 +60,15 @@ namespace WelwiseGamesSDK
             _sdk.GameSessionTracker.SessionStarted();
         }
 
+        public static IPlatformNavigation PlatformNavigation
+        {
+            get
+            {
+                if (!_isInitialized) throw new SDKNotInitialized();
+                return _sdk.PlatformNavigation;
+            }
+        }
+
         public static IAdvertisement Advertisement
         {
             get

@@ -12,6 +12,7 @@ namespace WelwiseGamesSDK.Shared
         public IGameSessionTracker GameSessionTracker { get; }
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
+        public IPlatformNavigation PlatformNavigation { get; }
         public List<INeedInitializeService> NeedInitializeServices { get; }
     }
 }
