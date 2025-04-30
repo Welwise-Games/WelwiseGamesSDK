@@ -2,10 +2,11 @@
     "name": "WelwiseGamesSDK",
     "rootNamespace": "WelwiseGamesSDK",
     "references": [],
-    "includePlatforms": [],
-    "excludePlatforms": [
+    "includePlatforms": [
+        "Editor",
         "WebGL"
     ],
+    "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
