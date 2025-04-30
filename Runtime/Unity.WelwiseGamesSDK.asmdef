@@ -3,7 +3,9 @@
     "rootNamespace": "WelwiseGamesSDK",
     "references": [],
     "includePlatforms": [],
-    "excludePlatforms": [],
+    "excludePlatforms": [
+        "WebGL"
+    ],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
