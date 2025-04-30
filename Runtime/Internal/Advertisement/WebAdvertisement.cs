@@ -10,9 +10,13 @@ namespace WelwiseGamesSDK.Internal.Advertisement
         private Action<InterstitialState> _interstitialCallback;
         private Action<RewardedState> _rewardedCallback;
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+
         [DllImport("__Internal")]
         private static extern void JsShowInterstitial(string onClose, string onError);
+#endif
 
+#if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")]
         private static extern void JsShowRewarded(
             string onOpen, 
@@ -20,6 +24,7 @@ namespace WelwiseGamesSDK.Internal.Advertisement
             string onClose, 
             string onError
         );
+#endif
 
         public static WebAdvertisement Create()
         {
@@ -30,6 +35,7 @@ namespace WelwiseGamesSDK.Internal.Advertisement
 
         public void ShowInterstitial(Action<InterstitialState> callbackState)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
             _interstitialCallback = callbackState;
             try
             {
@@ -43,10 +49,15 @@ namespace WelwiseGamesSDK.Internal.Advertisement
                 Debug.LogError($"Error showing interstitial: {e.Message}");
                 _interstitialCallback?.Invoke(InterstitialState.Error);
             }
+#else
+            Debug.LogError("showing interstitial");
+            _interstitialCallback?.Invoke(InterstitialState.Opened);
+#endif
         }
 
         public void ShowRewarded(Action<RewardedState> callbackState)
         {
+#if UNITY_WEBGL && !UNITY_EDITOR
             _rewardedCallback = callbackState;
             try
             {
@@ -62,6 +73,10 @@ namespace WelwiseGamesSDK.Internal.Advertisement
                 Debug.LogError($"Error showing rewarded: {e.Message}");
                 _rewardedCallback?.Invoke(RewardedState.Error);
             }
+#else
+            Debug.LogError("showing rewarded");
+            _rewardedCallback?.Invoke(RewardedState.Rewarded);
+#endif
         }
 
         public void HandleInterstitialClose(string wasShown)

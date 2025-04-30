@@ -37,6 +37,7 @@ namespace WelwiseGamesSDK.Internal
 #endif
         }
         
+#if UNITY_WEBGL && !UNITY_EDITOR
 
         [DllImport("__Internal")]
         private static extern int GetDeviceType();
@@ -46,5 +47,6 @@ namespace WelwiseGamesSDK.Internal
         
         [DllImport("__Internal")]
         private static extern void FreeLanguagePtr(IntPtr ptr);
+#endif
     }
 }
