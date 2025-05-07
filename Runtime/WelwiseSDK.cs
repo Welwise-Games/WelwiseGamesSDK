@@ -9,6 +9,7 @@ namespace WelwiseGamesSDK
 {
     public static class WelwiseSDK
     {
+        public static bool IsInitialized => _isInitialized;
         private static bool _isInitialized = false;
         private static ISDK _sdk;
         private static readonly List<INeedInitializeService> Waiters = new ();
