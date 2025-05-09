@@ -1,0 +1,111 @@
+﻿mergeInto(LibraryManager.library, {
+    JsInit: function(onSuccess, onError) {
+        WelwiseGames.init()
+            .then(function(sdk) {
+                window.__wg_sdk = sdk; // Сохраняем инстанс SDK
+                Runtime.dynCall('v', onSuccess);
+            })
+            .catch(function(error) {
+                var errorMsg = error.message || String(error);
+                var buffer = allocateUTF8(errorMsg);
+                Runtime.dynCall('vi', onError, buffer);
+                _free(buffer);
+            });
+    },
+
+    JSGetPlayerData: function(onSuccess, onError) {
+        if (!window.__wg_sdk) {
+            var buffer = allocateUTF8("SDK not initialized");
+            Runtime.dynCall('vi', onError, buffer);
+            _free(buffer);
+            return;
+        }
+        
+        window.__wg_sdk.player.getData()
+            .then(function(data) {
+                var json = JSON.stringify(data);
+                var buffer = allocateUTF8(json);
+                Runtime.dynCall('vi', onSuccess, buffer);
+                _free(buffer);
+            })
+            .catch(function(error) {
+                var errorMsg = error.message || String(error);
+                var buffer = allocateUTF8(errorMsg);
+                Runtime.dynCall('vi', onError, buffer);
+                _free(buffer);
+            });
+    },
+
+    JSSetPlayerData: function(jsonDataPtr, onSuccess, onError) {
+        if (!window.__wg_sdk) {
+            var buffer = allocateUTF8("SDK not initialized");
+            Runtime.dynCall('vi', onError, buffer);
+            _free(buffer);
+            return;
+        }
+        
+        try {
+            var json = UTF8ToString(jsonDataPtr);
+            var data = JSON.parse(json);
+            
+            window.__wg_sdk.player.setData(data)
+                .then(function() {
+                    Runtime.dynCall('v', onSuccess);
+                })
+                .catch(function(error) {
+                    var errorMsg = error.message || String(error);
+                    var buffer = allocateUTF8(errorMsg);
+                    Runtime.dynCall('vi', onError, buffer);
+                    _free(buffer);
+                });
+        } catch (e) {
+            var buffer = allocateUTF8("Invalid JSON format");
+            Runtime.dynCall('vi', onError, buffer);
+            _free(buffer);
+        }
+    },
+
+    JsGetServerTime: function(onSuccess, onError) {
+        if (!window.__wg_sdk) {
+            var buffer = allocateUTF8("SDK not initialized");
+            Runtime.dynCall('vi', onError, buffer);
+            _free(buffer);
+            return;
+        }
+        
+        window.__wg_sdk.serverTime()
+            .then(function(timestamp) {
+                // Конвертируем число в строку и передаем напрямую
+                var timeString = String(timestamp);
+                var buffer = allocateUTF8(timeString);
+                Runtime.dynCall('vi', onSuccess, buffer);
+                _free(buffer);
+            })
+            .catch(function(error) {
+                var errorMsg = error.message || String(error);
+                var buffer = allocateUTF8(errorMsg);
+                Runtime.dynCall('vi', onError, buffer);
+                _free(buffer);
+            });
+    },
+
+    JsGoToGame: function(gameId, onSuccess, onError) {
+        if (!window.__wg_sdk) {
+            var buffer = allocateUTF8("SDK not initialized");
+            Runtime.dynCall('vi', onError, buffer);
+            _free(buffer);
+            return;
+        }
+        
+        window.__wg_sdk.PlatformNavigation.goToGame(gameId)
+            .then(function() {
+                Runtime.dynCall('v', onSuccess);
+            })
+            .catch(function(error) {
+                var errorMsg = error.message || String(error);
+                var buffer = allocateUTF8(errorMsg);
+                Runtime.dynCall('vi', onError, buffer);
+                _free(buffer);
+            });
+    }
+});

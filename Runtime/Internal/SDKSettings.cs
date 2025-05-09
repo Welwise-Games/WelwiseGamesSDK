@@ -10,8 +10,6 @@ namespace WelwiseGamesSDK.Internal
 {
     public sealed class SDKSettings : ScriptableObject, ISDKConfig
     {
-        public SDKMode Mode => _mode;
-        
         public string DebugPlayerId => _playerId;
         public string GameId => _gameId;
         public float SyncDelay => _syncDelay;
@@ -22,7 +20,6 @@ namespace WelwiseGamesSDK.Internal
         internal DeviceType DebugDeviceType => _debugDeviceType;
         internal string DebugLanguageCode => _debugLanguageCode;
         
-        [SerializeField] private SDKMode _mode;
         [SerializeField] private SupportedSDKType _supportedSDKType;
         [SerializeField] private string _gameId;
         [SerializeField] private string _playerId;

@@ -2,6 +2,7 @@
 {
     internal enum SupportedSDKType
     {
-        WelwiseGames
+        WelwiseGames,
+        YandexGames
     }
 }

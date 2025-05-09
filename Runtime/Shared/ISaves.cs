@@ -2,7 +2,7 @@
 {
     public interface ISaves
     {
-        public string GetPlayerName();
+        public string GetPlayerName(string defaultValue);
         public void SetPlayerName(string name);
         
         public void SetString(string key, string value);
@@ -16,5 +16,7 @@
         
         public void SetBool(string key, bool value);
         public bool GetBool(string key, bool defaultValue);
+
+        public void Save();
     }
 }

@@ -2,7 +2,6 @@
 {
     public interface ISDKConfig
     {
-        public SDKMode Mode { get; }
         public string DebugPlayerId { get; }
         public string GameId { get; }
         public float SyncDelay { get; }
