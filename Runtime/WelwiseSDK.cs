@@ -57,7 +57,6 @@ namespace WelwiseGamesSDK
                 service.Initialize();
             }
             
-            _isInitialized = true;
             _sdk.GameSessionTracker.SessionStarted();
         }
 
@@ -132,6 +131,7 @@ namespace WelwiseGamesSDK
 
                 if (Waiters.Count != 0) return;
                 Debug.Log("[SDK] Ready");
+                _isInitialized = true;
                 Ready?.Invoke();
             };
         }
