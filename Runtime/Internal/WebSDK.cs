@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
@@ -36,8 +37,14 @@ namespace WelwiseGamesSDK.Internal
             if (_initializeRunning) return;
             
             _initializeRunning = true;
-            _webGameSaves.Ready += OnReady;
-            _webGameSaves.Load();
+#if UNITY_WEBGL && !UNITY_EDITOR
+            JsLibProvider.JsInit(() =>
+            {
+                _webGameSaves.Ready += OnReady;
+                _webGameSaves.Load();
+            }, Debug.LogError);
+#endif
+
             
             return;
             void OnReady()

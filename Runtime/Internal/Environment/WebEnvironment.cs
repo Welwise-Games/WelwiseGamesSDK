@@ -53,5 +53,21 @@ namespace WelwiseGamesSDK.Internal.Environment
             LanguageCode = DeviceInfo.DetectLanguage();
             Debug.Log($"[WebEnvironment] Language code: {LanguageCode}, device type: {DeviceType}");
         }
+        
+        public void RequestServerTime(Action<long> callback)
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            JsLibProvider.JsGetServerTime((s) =>
+            {
+                if (!long.TryParse(s, out var time))
+                {
+                    Debug.LogError($"[WebEnvironment] Failed to parse server time: {s}, returning default values.");
+                    callback?.Invoke(DateTime.Now.Ticks);
+                    return;
+                }
+                callback?.Invoke(time);
+            }, Debug.LogError);
+#endif
+        }
     }
 }

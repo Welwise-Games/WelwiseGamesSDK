@@ -28,6 +28,7 @@ namespace WelwiseGamesSDK.Internal.GameSaves
         {
             try
             {
+#if UNITY_WEBGL && !UNITY_EDITOR
                 JsLibProvider.JSGetPlayerData(
                     (v) =>
                     {
@@ -39,6 +40,7 @@ namespace WelwiseGamesSDK.Internal.GameSaves
                         Debug.LogError(e);
                         Ready?.Invoke();
                     });
+#endif
             }
             catch (Exception e)
             {
@@ -72,6 +74,7 @@ namespace WelwiseGamesSDK.Internal.GameSaves
             }
             
             _isSaving = true;
+#if UNITY_WEBGL && !UNITY_EDITOR
             JsLibProvider.JSSetPlayerData(json, () =>
             {
                 _isSaving = false;
@@ -81,6 +84,7 @@ namespace WelwiseGamesSDK.Internal.GameSaves
                 _isSaving = false;
                 Debug.LogError(e);
             });
+#endif
         }
     }
 }

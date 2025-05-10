@@ -6,27 +6,17 @@ using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
 using UnityEditor;
 #endif
 
-namespace WelwiseGamesSDK.Internal
+namespace WelwiseGamesSDK.Shared
 {
-    public sealed class SDKSettings : ScriptableObject, ISDKConfig
+    public sealed class SDKSettings : ScriptableObject
     {
-        public string DebugPlayerId => _playerId;
-        public string GameId => _gameId;
-        public float SyncDelay => _syncDelay;
-        public string ApiAuthKey => _apiAuthKey;
-        public string MetaverseId => _metaverseId;
-        public bool UseMetaverse => _useMetaverse;
-        internal SupportedSDKType SupportedSDKType => _supportedSDKType;
+        internal string DebugPlayerId => _playerId;
+        public SupportedSDKType SupportedSDKType => _supportedSDKType;
         internal DeviceType DebugDeviceType => _debugDeviceType;
         internal string DebugLanguageCode => _debugLanguageCode;
         
         [SerializeField] private SupportedSDKType _supportedSDKType;
-        [SerializeField] private string _gameId;
         [SerializeField] private string _playerId;
-        [SerializeField] private float _syncDelay = 35;
-        [SerializeField] private string _apiAuthKey;
-        [SerializeField] private bool _useMetaverse;
-        [SerializeField] private string _metaverseId;
         [SerializeField] private DeviceType _debugDeviceType;
         [SerializeField] private string _debugLanguageCode;
         

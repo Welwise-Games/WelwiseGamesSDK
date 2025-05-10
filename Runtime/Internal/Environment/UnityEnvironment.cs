@@ -24,5 +24,11 @@ namespace WelwiseGamesSDK.Internal.Environment
             DeviceType = deviceType;
             LanguageCode = languageCode;
         }
+        
+        public void RequestServerTime(Action<long> callback)
+        {
+            callback?.Invoke(DateTime.Now.Ticks);
+        }
+        
     }
 }

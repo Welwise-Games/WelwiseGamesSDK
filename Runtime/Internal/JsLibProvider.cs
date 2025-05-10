@@ -1,11 +1,13 @@
-﻿using System;
+﻿#if UNITY_WEBGL && !UNITY_EDITOR
+using System;
 using System.Runtime.InteropServices;
+#endif
 
 namespace WelwiseGamesSDK.Internal
 {
     internal static class JsLibProvider
     {
-#if UNITY_WEBGL
+#if UNITY_WEBGL && !UNITY_EDITOR
         [DllImport("__Internal")] 
         public static extern void JSGetPlayerData(Action<string> onSuccess, Action<string> onError);
         [DllImport("__Internal")]
