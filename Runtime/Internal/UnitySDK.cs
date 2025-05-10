@@ -5,6 +5,7 @@ using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
 using WelwiseGamesSDK.Internal.GameSaves;
+using WelwiseGamesSDK.Internal.PlatformNavigation;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal
@@ -17,7 +18,8 @@ namespace WelwiseGamesSDK.Internal
         public IEnvironment Environment { get; }
         public IAdvertisement Advertisement => _unityAdvertisement;
         public IAnalytics Analytics { get; }
-        
+        public IPlatformNavigation PlatformNavigation { get; }
+
         private readonly UnityAdvertisement _unityAdvertisement;
         private bool _isSimulatingInitialize;
         
@@ -28,6 +30,7 @@ namespace WelwiseGamesSDK.Internal
                 settings.DebugLanguageCode);
             _unityAdvertisement = UnityAdvertisement.Create();
             Analytics = new UnityAnalytics();
+            PlatformNavigation = new UnityPlatformNavigation();
         }
         public void Initialize()
         {

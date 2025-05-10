@@ -8,6 +8,7 @@ namespace WelwiseGamesSDK.Shared
         public IEnvironment Environment { get; }
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
+        public IPlatformNavigation PlatformNavigation { get; }
         
         public void Initialize();
         public event Action Initialized;

@@ -8,7 +8,7 @@ namespace WelwiseGamesSDK.Internal.PlatformNavigation
         public void GoToGame(int id, Action<string> onError)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.JsGoToGame(id, ()=>{},onError);
+            JsLibProvider.GoToGame(id, ()=>{},onError);
 #endif
         }
     }

@@ -57,7 +57,7 @@ namespace WelwiseGamesSDK.Internal.Environment
         public void RequestServerTime(Action<long> callback)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.JsGetServerTime((s) =>
+            JsLibProvider.GetServerTime((s) =>
             {
                 if (!long.TryParse(s, out var time))
                 {

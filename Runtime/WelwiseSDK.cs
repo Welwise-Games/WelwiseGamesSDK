@@ -21,7 +21,8 @@ namespace WelwiseGamesSDK
         public IAdvertisement Advertisement => _sdk.Advertisement;
 
         public IAnalytics Analytics => _sdk.Analytics;
-        
+        public IPlatformNavigation PlatformNavigation => _sdk.PlatformNavigation;
+
         public void Initialize() => _sdk.Initialize();
 
         public event Action Initialized

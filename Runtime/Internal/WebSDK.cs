@@ -4,6 +4,7 @@ using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
 using WelwiseGamesSDK.Internal.GameSaves;
+using WelwiseGamesSDK.Internal.PlatformNavigation;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal
@@ -16,8 +17,9 @@ namespace WelwiseGamesSDK.Internal
         public IEnvironment Environment { get; }
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
-        
-        
+        public IPlatformNavigation PlatformNavigation { get; }
+
+
         private readonly WebGameSaves _webGameSaves;
         private bool _initializeRunning;
 
@@ -28,6 +30,7 @@ namespace WelwiseGamesSDK.Internal
             Analytics = new WebAnalytics();
             Advertisement = new WebAdvertisement();
             _webGameSaves = new WebGameSaves(sdkSettings);
+            PlatformNavigation = new WebPlatformNavigation();
         }
         
         
@@ -38,11 +41,14 @@ namespace WelwiseGamesSDK.Internal
             
             _initializeRunning = true;
 #if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.JsInit(() =>
-            {
-                _webGameSaves.Ready += OnReady;
-                _webGameSaves.Load();
-            }, Debug.LogError);
+            JsLibProvider.Init(
+                onSuccess: () => 
+                {
+                    _webGameSaves.Ready += OnReady;
+                    _webGameSaves.Load();
+                },
+                onError: error => Debug.LogError(error)
+            );
 #endif
 
             

@@ -29,17 +29,16 @@ namespace WelwiseGamesSDK.Internal.GameSaves
             try
             {
 #if UNITY_WEBGL && !UNITY_EDITOR
-                JsLibProvider.JSGetPlayerData(
-                    (v) =>
-                    {
-                        _saveParser.DeserializeJsonToContainer(v, _dataContainer);
+                JsLibProvider.GetPlayerData(
+                    onSuccess: json => {
+                        _saveParser.DeserializeJsonToContainer(json, _dataContainer);
                         Ready?.Invoke();
-                    }, 
-                    (e) =>
-                    {
-                        Debug.LogError(e);
+                    },
+                    onError: error => {
+                        Debug.LogError(error);
                         Ready?.Invoke();
-                    });
+                    }
+                );
 #endif
             }
             catch (Exception e)
@@ -75,11 +74,10 @@ namespace WelwiseGamesSDK.Internal.GameSaves
             
             _isSaving = true;
 #if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.JSSetPlayerData(json, () =>
+            JsLibProvider.SetPlayerData(json, () =>
             {
                 _isSaving = false;
-            },
-            (e) =>
+            },(e) =>
             {
                 _isSaving = false;
                 Debug.LogError(e);
