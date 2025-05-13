@@ -166,6 +166,92 @@ namespace WelwiseGamesSDK.Internal
             JsGoToGame(gameId);
         }
         #endregion
+
+        #region Environment Properties
+        [DllImport("__Internal")]
+        private static extern void JsGetPlayerId();
+        
+        public static void GetPlayerId(Action<string> onSuccess, Action<string> onError)
+        {
+            Action<string> successWrapper = null;
+            Action<string> errorWrapper = null;
+        
+            successWrapper = (playerId) => 
+            {
+                onSuccess?.Invoke(playerId);
+                JsBridge.OnGetPlayerIdSuccess -= successWrapper;
+                JsBridge.OnGetPlayerIdError -= errorWrapper;
+            };
+        
+            errorWrapper = (error) => 
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGetPlayerIdSuccess -= successWrapper;
+                JsBridge.OnGetPlayerIdError -= errorWrapper;
+            };
+        
+            JsBridge.OnGetPlayerIdSuccess += successWrapper;
+            JsBridge.OnGetPlayerIdError += errorWrapper;
+            
+            JsGetPlayerId();
+        }
+        
+        [DllImport("__Internal")]
+        private static extern void JsGetDeviceType();
+        
+        public static void GetDeviceType(Action<string> onSuccess, Action<string> onError)
+        {
+            Action<string> successWrapper = null;
+            Action<string> errorWrapper = null;
+        
+            successWrapper = (deviceType) => 
+            {
+                onSuccess?.Invoke(deviceType);
+                JsBridge.OnGetDeviceTypeSuccess -= successWrapper;
+                JsBridge.OnGetDeviceTypeError -= errorWrapper;
+            };
+        
+            errorWrapper = (error) => 
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGetDeviceTypeSuccess -= successWrapper;
+                JsBridge.OnGetDeviceTypeError -= errorWrapper;
+            };
+        
+            JsBridge.OnGetDeviceTypeSuccess += successWrapper;
+            JsBridge.OnGetDeviceTypeError += errorWrapper;
+            
+            JsGetDeviceType();
+        }
+        
+        [DllImport("__Internal")]
+        private static extern void JsGetLanguageCode();
+        
+        public static void GetLanguageCode(Action<string> onSuccess, Action<string> onError)
+        {
+            Action<string> successWrapper = null;
+            Action<string> errorWrapper = null;
+        
+            successWrapper = (languageCode) => 
+            {
+                onSuccess?.Invoke(languageCode);
+                JsBridge.OnGetLanguageCodeSuccess -= successWrapper;
+                JsBridge.OnGetLanguageCodeError -= errorWrapper;
+            };
+        
+            errorWrapper = (error) => 
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGetLanguageCodeSuccess -= successWrapper;
+                JsBridge.OnGetLanguageCodeError -= errorWrapper;
+            };
+        
+            JsBridge.OnGetLanguageCodeSuccess += successWrapper;
+            JsBridge.OnGetLanguageCodeError += errorWrapper;
+            
+            JsGetLanguageCode();
+        }
+        #endregion
     }
 }
 #endif

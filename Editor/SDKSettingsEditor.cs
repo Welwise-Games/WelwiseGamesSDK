@@ -142,7 +142,7 @@ namespace WelwiseGames.Editor
 
         private void UpdateWebGLTemplate()
         {
-            PlayerSettings.WebGL.template = "Welwise SDK";
+            PlayerSettings.WebGL.template = "PROJECT:Welwise SDK";
             Debug.Log("WebGL template updated to 'Welwise SDK'");
         }
 

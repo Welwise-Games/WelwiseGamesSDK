@@ -7,66 +7,128 @@ namespace WelwiseGamesSDK.Internal.Environment
 {
     internal sealed class WebEnvironment : IEnvironment
     {
-        private const string IdKey = "WS_PLAYER_ID";
-
-        public Guid PlayerId { get; }
-        public DeviceType DeviceType { get; }
-        public string LanguageCode { get; }
-
-        public WebEnvironment()
-        {
-            var id = CookieHandler.LoadData(IdKey);
-            if (string.IsNullOrEmpty(id))
-            {
-                PlayerId = Guid.NewGuid();
-                Debug.LogWarning("[Environment] Player ID was not found in cookie, create new one.");
-                CookieHandler.SaveData(IdKey, PlayerId.ToString());
-            }
-            else
-            {
-                if (!Guid.TryParse(id, out var parsedId))
-                {
-                    parsedId = Guid.NewGuid();
-                    Debug.LogWarning("[Environment] Invalid GUID in cookie, generated new one.");
-                }
-                PlayerId = parsedId;
-            }
-
-            var deviceTypeInt = DeviceInfo.DetectDeviceType();
-            switch (deviceTypeInt)
-            {
-                case 0:
-                    DeviceType = DeviceType.Desktop;
-                    break;
-                case 1:
-                    DeviceType = DeviceType.Mobile;
-                    break;
-                case 2:
-                    DeviceType = DeviceType.Tablet;
-                    break;
-                default:
-                    Debug.LogError($"[WebEnvironment] Unknown device type: {deviceTypeInt}, setting to default values ( DeviceType.Desktop).");
-                    DeviceType = DeviceType.Desktop;
-                    return;
-            }
-
-            LanguageCode = DeviceInfo.DetectLanguage();
-            Debug.Log($"[WebEnvironment] Language code: {LanguageCode}, device type: {DeviceType}");
-        }
+        public event Action Ready;
         
+        public Guid PlayerId { get; private set; }
+        public DeviceType DeviceType { get; private set; }
+        public string LanguageCode { get; private set; }
+
+        private int _loadedCount;
+        private bool _hasErrors;
+        private const int TotalProperties = 3;
+
+        public WebEnvironment() { }
+
+        public void Load()
+        {
+#if UNITY_WEBGL && !UNITY_EDITOR
+            ResetState();
+            RequestPlayerId();
+            RequestDeviceType();
+            RequestLanguageCode();
+#else
+            Debug.LogWarning("[WebEnvironment] WebGL environment is only available in builds");
+#endif
+        }
+
+        private void ResetState()
+        {
+            _loadedCount = 0;
+            _hasErrors = false;
+            PlayerId = Guid.Empty;
+            LanguageCode = string.Empty;
+        }
+#if UNITY_WEBGL && !UNITY_EDITOR
+        private void RequestPlayerId()
+        {
+            
+            JsLibProvider.GetPlayerId(
+                playerId =>
+                {
+                    if (!Guid.TryParse(playerId, out var guid))
+                    {
+                        HandleError($"Invalid PlayerId format: {playerId}");
+                        return;
+                    }
+                    PlayerId = guid;
+                    CheckCompletion();
+                },
+                HandleError);
+        }
+
+        private void RequestDeviceType()
+        {
+            JsLibProvider.GetDeviceType(
+                deviceTypeStr =>
+                {
+                    if (!Enum.TryParse(deviceTypeStr, true, out DeviceType deviceType))
+                    {
+                        HandleError($"Unknown device type: {deviceTypeStr}");
+                        return;
+                    }
+                    DeviceType = deviceType;
+                    CheckCompletion();
+                },
+                HandleError);
+        }
+
+        private void RequestLanguageCode()
+        {
+            JsLibProvider.GetLanguageCode(
+                language =>
+                {
+                    if (string.IsNullOrEmpty(language))
+                    {
+                        HandleError("Empty language code");
+                        return;
+                    }
+                    LanguageCode = language;
+                    CheckCompletion();
+                },
+                HandleError);
+        }
+#endif
+
+        private void CheckCompletion()
+        {
+            if (_hasErrors) return;
+
+            _loadedCount++;
+            if (_loadedCount != TotalProperties) return;
+            Debug.Log("[WebEnvironment] All environment data loaded");
+            Ready?.Invoke();
+        }
+
+        private void HandleError(string error)
+        {
+            if (_hasErrors) return;
+            
+            _hasErrors = true;
+            Debug.LogError($"[WebEnvironment] Initialization failed: {error}");
+            ResetState();
+        }
+
         public void RequestServerTime(Action<long> callback)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.GetServerTime((s) =>
-            {
-                if (!long.TryParse(s, out var time))
+            JsLibProvider.GetServerTime(
+                s =>
                 {
-                    Debug.LogError($"[WebEnvironment] Failed to parse server time: {s}, returning default values.");
+                    if (!long.TryParse(s, out var time))
+                    {
+                        Debug.LogError($"[WebEnvironment] Failed to parse server time: {s}");
+                        callback?.Invoke(DateTime.Now.Ticks);
+                        return;
+                    }
+                    callback?.Invoke(time);
+                },
+                error =>
+                {
+                    Debug.LogError($"[WebEnvironment] Server time error: {error}");
                     callback?.Invoke(DateTime.Now.Ticks);
-                    return;
-                }
-                callback?.Invoke(time);
-            }, Debug.LogError);
+                });
+#else
+            callback?.Invoke(DateTime.Now.Ticks);
 #endif
         }
     }

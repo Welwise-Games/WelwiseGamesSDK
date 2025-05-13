@@ -19,6 +19,14 @@ namespace WelwiseGamesSDK.Internal
         public static event System.Action OnNavigateSuccess;
         public static event System.Action<string> OnNavigateError;
 
+        public static event System.Action<string> OnGetPlayerIdSuccess;
+        public static event System.Action<string> OnGetPlayerIdError;
+        public static event System.Action<string> OnGetDeviceTypeSuccess;
+        public static event System.Action<string> OnGetDeviceTypeError;
+        public static event System.Action<string> OnGetLanguageCodeSuccess;
+        public static event System.Action<string> OnGetLanguageCodeError;
+
+
         public void HandleInitSuccess(string _) => OnInitSuccess?.Invoke();
         public void HandleInitError(string error) => OnInitError?.Invoke(error);
 
@@ -34,6 +42,14 @@ namespace WelwiseGamesSDK.Internal
         public void HandleNavigateSuccess(string _) => OnNavigateSuccess?.Invoke();
         public void HandleNavigateError(string error) => OnNavigateError?.Invoke(error);
 
+        public void HandleGetPlayerIdSuccess(string playerId) => OnGetPlayerIdSuccess?.Invoke(playerId);
+        public void HandleGetPlayerIdError(string error) => OnGetPlayerIdError?.Invoke(error);
+        public void HandleGetDeviceTypeSuccess(string deviceType) => OnGetDeviceTypeSuccess?.Invoke(deviceType);
+        public void HandleGetDeviceTypeError(string error) => OnGetDeviceTypeError?.Invoke(error);
+        public void HandleGetLanguageCodeSuccess(string languageCode) => OnGetLanguageCodeSuccess?.Invoke(languageCode);
+        public void HandleGetLanguageCodeError(string error) => OnGetLanguageCodeError?.Invoke(error);
+
+
         private void OnDestroy()
         {
             OnInitSuccess = null;
@@ -46,6 +62,12 @@ namespace WelwiseGamesSDK.Internal
             OnGetTimeError = null;
             OnNavigateSuccess = null;
             OnNavigateError = null;
+            OnGetPlayerIdSuccess = null;
+            OnGetPlayerIdError = null;
+            OnGetDeviceTypeSuccess = null;
+            OnGetDeviceTypeError = null;
+            OnGetLanguageCodeSuccess = null;
+            OnGetLanguageCodeError = null;
         }
     }
 }
