@@ -21,10 +21,30 @@ namespace WelwiseGamesSDK.Internal
 
         public static event System.Action<string> OnGetPlayerIdSuccess;
         public static event System.Action<string> OnGetPlayerIdError;
+        public static event System.Action<string> OnIsMetaverseSupportedSuccess;
+        public static event System.Action<string> OnIsMetaverseSupportedError;
         public static event System.Action<string> OnGetDeviceTypeSuccess;
         public static event System.Action<string> OnGetDeviceTypeError;
         public static event System.Action<string> OnGetLanguageCodeSuccess;
         public static event System.Action<string> OnGetLanguageCodeError;
+
+        public static event System.Action<string> OnGetMetaverseDataSuccess;
+        public static event System.Action<string> OnGetMetaverseDataError;
+        public static event System.Action OnSetMetaverseDataSuccess;
+        public static event System.Action<string> OnSetMetaverseDataError;
+        
+        
+        public static event System.Action<string> OnGetCombinedDataSuccess;
+        public static event System.Action<string> OnGetCombinedDataError;
+        public static event System.Action OnSetCombinedDataSuccess;
+        public static event System.Action<string> OnSetCombinedDataError;
+
+        public static event System.Action OnGameReadySuccess;
+        public static event System.Action<string> OnGameReadyError;
+        public static event System.Action OnGameplayStartSuccess;
+        public static event System.Action<string> OnGameplayStartError;
+        public static event System.Action OnGameplayStopSuccess;
+        public static event System.Action<string> OnGameplayStopError;
 
 
         public void HandleInitSuccess(string _) => OnInitSuccess?.Invoke();
@@ -44,10 +64,29 @@ namespace WelwiseGamesSDK.Internal
 
         public void HandleGetPlayerIdSuccess(string playerId) => OnGetPlayerIdSuccess?.Invoke(playerId);
         public void HandleGetPlayerIdError(string error) => OnGetPlayerIdError?.Invoke(error);
+        public void HandleIsMetaverseSupportedSuccess(string supported) => OnIsMetaverseSupportedSuccess?.Invoke(supported);
+        public void HandleIsMetaverseSupportedError(string error) => OnIsMetaverseSupportedError?.Invoke(error);
         public void HandleGetDeviceTypeSuccess(string deviceType) => OnGetDeviceTypeSuccess?.Invoke(deviceType);
         public void HandleGetDeviceTypeError(string error) => OnGetDeviceTypeError?.Invoke(error);
         public void HandleGetLanguageCodeSuccess(string languageCode) => OnGetLanguageCodeSuccess?.Invoke(languageCode);
         public void HandleGetLanguageCodeError(string error) => OnGetLanguageCodeError?.Invoke(error);
+
+        public void HandleGetMetaverseDataSuccess(string data) => OnGetMetaverseDataSuccess?.Invoke(data);
+        public void HandleGetMetaverseDataError(string error) => OnGetMetaverseDataError?.Invoke(error);
+        public void HandleSetMetaverseDataSuccess(string _) => OnSetMetaverseDataSuccess?.Invoke();
+        public void HandleSetMetaverseDataError(string error) => OnSetMetaverseDataError?.Invoke(error);
+        
+        public void HandleGetCombinedDataSuccess(string data) => OnGetCombinedDataSuccess?.Invoke(data);
+        public void HandleGetCombinedDataError(string error) => OnGetCombinedDataError?.Invoke(error);
+        public void HandleSetCombinedDataSuccess(string _) => OnSetCombinedDataSuccess?.Invoke();
+        public void HandleSetCombinedDataError(string error) => OnSetCombinedDataError?.Invoke(error);
+
+        public void HandleGameReadySuccess(string _) => OnGameReadySuccess?.Invoke();
+        public void HandleGameReadyError(string error) => OnGameReadyError?.Invoke(error);
+        public void HandleGameplayStartSuccess(string _) => OnGameplayStartSuccess?.Invoke();
+        public void HandleGameplayStartError(string error) => OnGameplayStartError?.Invoke(error);
+        public void HandleGameplayStopSuccess(string _) => OnGameplayStopSuccess?.Invoke();
+        public void HandleGameplayStopError(string error) => OnGameplayStopError?.Invoke(error);
 
 
         private void OnDestroy()
@@ -68,6 +107,22 @@ namespace WelwiseGamesSDK.Internal
             OnGetDeviceTypeError = null;
             OnGetLanguageCodeSuccess = null;
             OnGetLanguageCodeError = null;
+            OnGetMetaverseDataSuccess = null;
+            OnGetMetaverseDataError = null;
+            OnSetMetaverseDataSuccess = null;
+            OnSetMetaverseDataError = null;
+            OnIsMetaverseSupportedSuccess = null;
+            OnIsMetaverseSupportedError = null;
+            OnGetCombinedDataSuccess = null;
+            OnGetCombinedDataError = null;
+            OnSetCombinedDataSuccess = null;
+            OnSetCombinedDataError = null;
+            OnGameReadySuccess = null;
+            OnGameReadyError = null;
+            OnGameplayStartSuccess = null;
+            OnGameplayStartError = null;
+            OnGameplayStopSuccess = null;
+            OnGameplayStopError = null;
         }
     }
 }

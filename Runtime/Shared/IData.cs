@@ -1,10 +1,7 @@
 ﻿namespace WelwiseGamesSDK.Shared
 {
-    public interface ISaves
+    public interface IData
     {
-        public string GetPlayerName(string defaultValue);
-        public void SetPlayerName(string name);
-        
         public void SetString(string key, string value);
         public string GetString(string key, string defaultValue);
         
@@ -16,7 +13,5 @@
         
         public void SetBool(string key, bool value);
         public bool GetBool(string key, bool defaultValue);
-
-        public void Save();
     }
 }

@@ -169,6 +169,35 @@ namespace WelwiseGamesSDK.Internal
 
         #region Environment Properties
         [DllImport("__Internal")]
+        private static extern void JsIsMetaverseSupported();
+
+        public static void IsMetaverseSupported(Action<bool> onSuccess, Action<string> onError)
+        {
+            Action<string> successWrapper = null;
+            Action<string> errorWrapper = null;
+            
+            successWrapper = (supported) => 
+            {
+                onSuccess?.Invoke(supported.ToLower() == "true");
+                JsBridge.OnIsMetaverseSupportedSuccess -= successWrapper;
+                JsBridge.OnIsMetaverseSupportedError -= errorWrapper;
+            };
+        
+            errorWrapper = (error) => 
+            {
+                onError?.Invoke(error);
+                JsBridge.OnIsMetaverseSupportedSuccess -= successWrapper;
+                JsBridge.OnIsMetaverseSupportedError -= errorWrapper;
+            };
+        
+            JsBridge.OnGetPlayerIdSuccess += successWrapper;
+            JsBridge.OnGetPlayerIdError += errorWrapper;
+            
+            JsIsMetaverseSupported();
+        }
+        
+        
+        [DllImport("__Internal")]
         private static extern void JsGetPlayerId();
         
         public static void GetPlayerId(Action<string> onSuccess, Action<string> onError)
@@ -250,6 +279,209 @@ namespace WelwiseGamesSDK.Internal
             JsBridge.OnGetLanguageCodeError += errorWrapper;
             
             JsGetLanguageCode();
+        }
+        #endregion
+
+        #region Metaverse Player Data
+    
+        [DllImport("__Internal")]
+        private static extern void JSGetMetaversePlayerData();
+    
+        public static void GetMetaversePlayerData(Action<string> onSuccess, Action<string> onError)
+        {
+            Action<string> successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = (data) =>
+            {
+                onSuccess?.Invoke(data);
+                JsBridge.OnGetMetaverseDataSuccess -= successWrapper;
+                JsBridge.OnGetMetaverseDataError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGetMetaverseDataSuccess -= successWrapper;
+                JsBridge.OnGetMetaverseDataError -= errorWrapper;
+            };
+    
+            JsBridge.OnGetMetaverseDataSuccess += successWrapper;
+            JsBridge.OnGetMetaverseDataError += errorWrapper;
+    
+            JSGetMetaversePlayerData();
+        }
+    
+        [DllImport("__Internal")]
+        private static extern void JSSetMetaversePlayerData(string jsonData);
+    
+        public static void SetMetaversePlayerData(string jsonData, Action onSuccess, Action<string> onError)
+        {
+            Action successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = () =>
+            {
+                onSuccess?.Invoke();
+                JsBridge.OnSetMetaverseDataSuccess -= successWrapper;
+                JsBridge.OnSetMetaverseDataError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnSetMetaverseDataSuccess -= successWrapper;
+                JsBridge.OnSetMetaverseDataError -= errorWrapper;
+            };
+    
+            JsBridge.OnSetMetaverseDataSuccess += successWrapper;
+            JsBridge.OnSetMetaverseDataError += errorWrapper;
+    
+            JSSetMetaversePlayerData(jsonData);
+        }
+        #endregion
+
+        #region Combined Player Data
+        [DllImport("__Internal")]
+        private static extern void JSGetCombinedPlayerData();
+    
+        public static void GetCombinedPlayerData(Action<string> onSuccess, Action<string> onError)
+        {
+            Action<string> successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = (data) =>
+            {
+                onSuccess?.Invoke(data);
+                JsBridge.OnGetCombinedDataSuccess -= successWrapper;
+                JsBridge.OnGetCombinedDataError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGetCombinedDataSuccess -= successWrapper;
+                JsBridge.OnGetCombinedDataError -= errorWrapper;
+            };
+    
+            JsBridge.OnGetCombinedDataSuccess += successWrapper;
+            JsBridge.OnGetCombinedDataError += errorWrapper;
+    
+            JSGetCombinedPlayerData();
+        }
+    
+        [DllImport("__Internal")]
+        private static extern void JSSetCombinedPlayerData(string jsonData);
+    
+        public static void SetCombinedPlayerData(string jsonData, Action onSuccess, Action<string> onError)
+        {
+            Action successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = () =>
+            {
+                onSuccess?.Invoke();
+                JsBridge.OnSetCombinedDataSuccess -= successWrapper;
+                JsBridge.OnSetCombinedDataError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnSetCombinedDataSuccess -= successWrapper;
+                JsBridge.OnSetCombinedDataError -= errorWrapper;
+            };
+    
+            JsBridge.OnSetCombinedDataSuccess += successWrapper;
+            JsBridge.OnSetCombinedDataError += errorWrapper;
+    
+            JSSetCombinedPlayerData(jsonData);
+        }
+        #endregion
+        
+        #region Game Ready and Gameplay
+        [DllImport("__Internal")]
+        private static extern void JsGameReady();
+    
+        public static void GameReady(Action onSuccess, Action<string> onError)
+        {
+            Action successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = () =>
+            {
+                onSuccess?.Invoke();
+                JsBridge.OnGameReadySuccess -= successWrapper;
+                JsBridge.OnGameReadyError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGameReadySuccess -= successWrapper;
+                JsBridge.OnGameReadyError -= errorWrapper;
+            };
+    
+            JsBridge.OnGameReadySuccess += successWrapper;
+            JsBridge.OnGameReadyError += errorWrapper;
+    
+            JsGameReady();
+        }
+    
+        [DllImport("__Internal")]
+        private static extern void JsGameplayStart();
+    
+        public static void GameplayStart(Action onSuccess, Action<string> onError)
+        {
+            Action successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = () =>
+            {
+                onSuccess?.Invoke();
+                JsBridge.OnGameplayStartSuccess -= successWrapper;
+                JsBridge.OnGameplayStartError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGameplayStartSuccess -= successWrapper;
+                JsBridge.OnGameplayStartError -= errorWrapper;
+            };
+    
+            JsBridge.OnGameplayStartSuccess += successWrapper;
+            JsBridge.OnGameplayStartError += errorWrapper;
+    
+            JsGameplayStart();
+        }
+    
+        [DllImport("__Internal")]
+        private static extern void JsGameplayStop();
+    
+        public static void GameplayStop(Action onSuccess, Action<string> onError)
+        {
+            Action successWrapper = null;
+            Action<string> errorWrapper = null;
+    
+            successWrapper = () =>
+            {
+                onSuccess?.Invoke();
+                JsBridge.OnGameplayStopSuccess -= successWrapper;
+                JsBridge.OnGameplayStopError -= errorWrapper;
+            };
+    
+            errorWrapper = (error) =>
+            {
+                onError?.Invoke(error);
+                JsBridge.OnGameplayStopSuccess -= successWrapper;
+                JsBridge.OnGameplayStopError -= errorWrapper;
+            };
+    
+            JsBridge.OnGameplayStopSuccess += successWrapper;
+            JsBridge.OnGameplayStopError += errorWrapper;
+    
+            JsGameplayStop();
         }
         #endregion
     }

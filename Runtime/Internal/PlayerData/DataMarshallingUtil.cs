@@ -1,10 +1,15 @@
 ﻿using UnityEngine;
 
-namespace WelwiseGamesSDK.Internal.GameSaves
+namespace WelwiseGamesSDK.Internal.PlayerData
 {
-    internal static class ParseKeyValueUtil
+    internal static class DataMarshallingUtil
     {
-        internal static void ParseKeyValue(this DataContainer dataContainer, string key, string value)
+        public static string Serialize(int value) => $"i{value}";
+        public static string Serialize(float value) => $"f{value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";
+        public static string Serialize(bool value) => $"b{value}";
+        public static string Serialize(string value) => $"s{value}";
+        
+        internal static void DeserializeToContainer(this DataContainer dataContainer, string key, string value)
         {
             if (string.IsNullOrEmpty(value)) return;
 

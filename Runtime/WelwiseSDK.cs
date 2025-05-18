@@ -1,5 +1,4 @@
 ﻿using System;
-using WelwiseGamesSDK.Internal;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK
@@ -13,18 +12,12 @@ namespace WelwiseGamesSDK
         internal static void SetSDK(ISDK sdk) => _sdk = sdk;
         public static ISDK Instance => _sdk;
         private static ISDK _sdk;
-
-        public ISaves GameSaves => _sdk.GameSaves;
-
+        public IPlayerData PlayerData => _sdk.PlayerData;
         public IEnvironment Environment => _sdk.Environment;
-
         public IAdvertisement Advertisement => _sdk.Advertisement;
-
         public IAnalytics Analytics => _sdk.Analytics;
         public IPlatformNavigation PlatformNavigation => _sdk.PlatformNavigation;
-
         public void Initialize() => _sdk.Initialize();
-
         public event Action Initialized
         {
             add => _sdk.Initialized += value;

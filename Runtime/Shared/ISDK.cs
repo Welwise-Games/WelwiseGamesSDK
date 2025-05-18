@@ -4,7 +4,7 @@ namespace WelwiseGamesSDK.Shared
 {
     public interface ISDK
     {
-        public ISaves GameSaves { get; }
+        public IPlayerData PlayerData { get; }
         public IEnvironment Environment { get; }
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }

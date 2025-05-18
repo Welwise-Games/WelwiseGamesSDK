@@ -3,8 +3,8 @@ using UnityEngine;
 using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
-using WelwiseGamesSDK.Internal.GameSaves;
 using WelwiseGamesSDK.Internal.PlatformNavigation;
+using WelwiseGamesSDK.Internal.PlayerData;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal
@@ -13,14 +13,15 @@ namespace WelwiseGamesSDK.Internal
     {
         public event Action Initialized;
         public bool IsInitialized { get; private set; }
-        public ISaves GameSaves => _webGameSaves;
+        public IPlayerData PlayerData => _webPlayerData;
         public IEnvironment Environment => _webEnvironment;
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
         public IPlatformNavigation PlatformNavigation { get; }
 
-        private readonly WebGameSaves _webGameSaves;
         private readonly WebEnvironment _webEnvironment;
+        private readonly WebPlayerData _webPlayerData;
+        
         private bool _initializeRunning;
         private bool _environmentReady;
         private bool _savesReady;
@@ -31,8 +32,8 @@ namespace WelwiseGamesSDK.Internal
             Analytics = new WebAnalytics();
             Advertisement = new WebAdvertisement();
             PlatformNavigation = new WebPlatformNavigation();
-            _webGameSaves = new WebGameSaves(sdkSettings);
             _webEnvironment = new WebEnvironment();
+            _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment);
         }
 
         public void Initialize()
@@ -49,8 +50,8 @@ namespace WelwiseGamesSDK.Internal
                     _webEnvironment.Ready += HandleEnvironmentReady;
                     _webEnvironment.Load();
 
-                    _webGameSaves.Ready += HandleSavesReady;
-                    _webGameSaves.Load();
+                    _webPlayerData.Ready += HandleSavesReady;
+                    _webPlayerData.Load();
                 },
                 onError: error =>
                 {
@@ -102,7 +103,7 @@ namespace WelwiseGamesSDK.Internal
         private void CleanupEventHandlers()
         {
             _webEnvironment.Ready -= HandleEnvironmentReady;
-            _webGameSaves.Ready -= HandleSavesReady;
+            _webPlayerData.Ready -= HandleSavesReady;
         }
 
         private void OnDestroy()

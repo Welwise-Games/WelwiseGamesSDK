@@ -7,6 +7,8 @@ namespace WelwiseGamesSDK.Internal.Analytics
     {
         public void SendEvent(string eventName) => Debug.Log($"[{nameof(UnityAnalytics)}] Sending event: {eventName}");
         public void SendEvent(string eventName, string data) => Debug.Log($"[{nameof(UnityAnalytics)}] Sending event: {eventName} with data: {data}");
-        public void SendGameIsReady() => Debug.Log($"[{nameof(UnityAnalytics)}] Sending game is ready");
+        public void GameIsReady() => Debug.Log($"[{nameof(UnityAnalytics)}] Game is ready");
+        public void GameplayStart() => Debug.Log($"[{nameof(UnityAnalytics)}] Gameplay start");
+        public void GameplayEnd() => Debug.Log($"[{nameof(UnityAnalytics)}] Gameplay end");
     }
 }
