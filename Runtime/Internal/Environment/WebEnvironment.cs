@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
 using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
@@ -38,19 +40,44 @@ namespace WelwiseGamesSDK.Internal.Environment
             PlayerId = Guid.Empty;
             LanguageCode = string.Empty;
         }
+
 #if UNITY_WEBGL && !UNITY_EDITOR
         private void RequestPlayerId()
         {
-            
             JsLibProvider.GetPlayerId(
                 playerId =>
                 {
-                    if (!Guid.TryParse(playerId, out var guid))
+                    if (Guid.TryParse(playerId, out var guid))
                     {
-                        HandleError($"Invalid PlayerId format: {playerId}");
-                        return;
+                        PlayerId = guid;
                     }
-                    PlayerId = guid;
+                    else
+                    {
+                        try
+                        {
+                            byte[] data;
+                            try
+                            {
+                                data = Convert.FromBase64String(playerId);
+                            }
+                            catch
+                            {
+                                data = Encoding.UTF8.GetBytes(playerId);
+                            }
+                            
+                            using (var md5 = MD5.Create())
+                            {
+                                byte[] hash = md5.ComputeHash(data);
+                                guid = new Guid(hash);
+                            }
+                            PlayerId = guid;
+                        }
+                        catch (Exception ex)
+                        {
+                            HandleError($"Failed to convert PlayerId to Guid: {ex.Message}");
+                            return;
+                        }
+                    }
                     CheckCompletion();
                 },
                 HandleError);
