@@ -11,7 +11,9 @@ namespace WelwiseGamesSDK.Internal
 {
     internal sealed class WebSDK : ISDK
     {
+        #pragma warning disable
         public event Action Initialized;
+        #pragma warning restore
         public bool IsInitialized { get; private set; }
         public IPlayerData PlayerData => _webPlayerData;
         public IEnvironment Environment => _webEnvironment;
@@ -23,8 +25,6 @@ namespace WelwiseGamesSDK.Internal
         private readonly WebPlayerData _webPlayerData;
         
         private bool _initializeRunning;
-        private bool _environmentReady;
-        private bool _savesReady;
 
         public WebSDK(SDKSettings sdkSettings)
         {
@@ -41,17 +41,15 @@ namespace WelwiseGamesSDK.Internal
             if (IsInitialized || _initializeRunning) return;
 
             _initializeRunning = true;
-            ResetState();
 
-#if UNITY_WEBGL && !UNITY_EDITOR
+#if UNITY_WEBGL &&! UNITY_EDITOR
+            Debug.Log("Initializing WebSDK");
             JsLibProvider.Init(
                 onSuccess: () =>
                 {
+                    Debug.Log("WebSDK init success");
                     _webEnvironment.Ready += HandleEnvironmentReady;
                     _webEnvironment.Load();
-
-                    _webPlayerData.Ready += HandleSavesReady;
-                    _webPlayerData.Load();
                 },
                 onError: error =>
                 {
@@ -61,54 +59,24 @@ namespace WelwiseGamesSDK.Internal
             );
 #endif
         }
-
-        private void ResetState()
-        {
-            _environmentReady = false;
-            _savesReady = false;
-        }
+        
 
         private void HandleEnvironmentReady()
         {
-            _environmentReady = true;
             Debug.Log("[WebSDK] Environment ready");
-            CheckInitializationComplete();
+            _webEnvironment.Ready -= HandleEnvironmentReady;
+            _webPlayerData.Ready += HandleSavesReady;
+            _webPlayerData.Load();
         }
 
         private void HandleSavesReady()
         {
-            _savesReady = true;
             Debug.Log("[WebSDK] Game saves ready");
-            CheckInitializationComplete();
-        }
-
-        private void CheckInitializationComplete()
-        {
-            if (_environmentReady && _savesReady)
-            {
-                FinalizeInitialization();
-            }
-        }
-
-        private void FinalizeInitialization()
-        {
+            _webPlayerData.Ready -= HandleSavesReady;
             IsInitialized = true;
             _initializeRunning = false;
-            Initialized?.Invoke();
-            CleanupEventHandlers();
-            
             Debug.Log("[WebSDK] Full initialization complete");
-        }
 
-        private void CleanupEventHandlers()
-        {
-            _webEnvironment.Ready -= HandleEnvironmentReady;
-            _webPlayerData.Ready -= HandleSavesReady;
-        }
-
-        private void OnDestroy()
-        {
-            CleanupEventHandlers();
         }
     }
 }

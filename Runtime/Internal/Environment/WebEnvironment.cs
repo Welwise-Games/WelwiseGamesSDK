@@ -47,6 +47,7 @@ namespace WelwiseGamesSDK.Internal.Environment
             JsLibProvider.GetPlayerId(
                 playerId =>
                 {
+                    Debug.Log("[WebEnvironment] Get player id");
                     if (Guid.TryParse(playerId, out var guid))
                     {
                         PlayerId = guid;
@@ -141,6 +142,7 @@ namespace WelwiseGamesSDK.Internal.Environment
             JsLibProvider.GetServerTime(
                 s =>
                 {
+                    Debug.Log("[WebEnvironment] Get server time");
                     if (!long.TryParse(s, out var time))
                     {
                         Debug.LogError($"[WebEnvironment] Failed to parse server time: {s}");

@@ -190,8 +190,8 @@ namespace WelwiseGamesSDK.Internal
                 JsBridge.OnIsMetaverseSupportedError -= errorWrapper;
             };
         
-            JsBridge.OnGetPlayerIdSuccess += successWrapper;
-            JsBridge.OnGetPlayerIdError += errorWrapper;
+            JsBridge.OnIsMetaverseSupportedSuccess += successWrapper;
+            JsBridge.OnIsMetaverseSupportedError += errorWrapper;
             
             JsIsMetaverseSupported();
         }
