@@ -1,7 +1,7 @@
 {
     "name": "Unity.WelwiseGamesSDK.Editor",
     "rootNamespace": "WelwiseGamesSDK.Editor",
-    "references": [],
+    "references": ["GUID:97fd6966e603c0f40bc6659f770acf1a"],
     "includePlatforms": [
         "Editor"
     ],

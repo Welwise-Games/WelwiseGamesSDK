@@ -1,23 +1,14 @@
-﻿using System.Runtime.InteropServices;
-using UnityEngine;
+﻿using System;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal.PlatformNavigation
 {
-    internal class WebPlatformNavigation : IPlatformNavigation
+    internal sealed class WebPlatformNavigation : IPlatformNavigation
     {
-#if UNITY_WEBGL && !UNITY_EDITOR
-        [DllImport("__Internal")]
-        private static extern void ChangeGame(string id);
-#endif
-
-
-        public void GoToGame(string id)
+        public void GoToGame(int id, Action<string> onError)
         {
 #if UNITY_WEBGL && !UNITY_EDITOR
-            ChangeGame(id);
-#else
-            Debug.Log("[WebPlatformNavigation] Going to " + id);
+            JsLibProvider.GoToGame(id, ()=>{},onError);
 #endif
         }
     }

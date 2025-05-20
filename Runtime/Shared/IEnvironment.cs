@@ -7,5 +7,6 @@ namespace WelwiseGamesSDK.Shared
         public Guid PlayerId { get; }
         public DeviceType DeviceType { get; }
         public string LanguageCode { get; }
+        public void RequestServerTime(Action<long> callback);
     }
 }

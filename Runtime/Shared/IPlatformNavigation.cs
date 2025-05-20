@@ -1,7 +1,9 @@
-﻿namespace WelwiseGamesSDK.Shared
+﻿using System;
+
+namespace WelwiseGamesSDK.Shared
 {
     public interface IPlatformNavigation
     {
-        public void GoToGame(string id);
+        public void GoToGame(int id, Action<string> onError);
     }
 }
