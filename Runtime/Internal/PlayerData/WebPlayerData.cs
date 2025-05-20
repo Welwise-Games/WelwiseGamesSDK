@@ -91,7 +91,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     Debug.LogError(e);
                 }
-                if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "Гость")
+                if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
                 }
