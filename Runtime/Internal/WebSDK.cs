@@ -76,7 +76,7 @@ namespace WelwiseGamesSDK.Internal
             IsInitialized = true;
             _initializeRunning = false;
             Debug.Log("[WebSDK] Full initialization complete");
-
+            Initialized?.Invoke();
         }
     }
 }
