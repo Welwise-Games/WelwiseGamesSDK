@@ -149,7 +149,9 @@ namespace WelwiseGamesSDK.Internal.PlayerData
              _isSaving = true;
              var combinedData = new MetaverseGameData
              {
-                 PlayerName = _playerName
+                 PlayerName = _playerName,
+                 PlayerGameData = new List<DataEntry>(),
+                 PlayerMetaverseData = new List<DataEntry>(),
              };
              foreach (var kvp in _gameDataContainer.Booleans)
              {
@@ -264,6 +266,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             var playerData = new PlayerData()
             {
                 PlayerName = _playerName,
+                PlayerGameData = new List<DataEntry>(),
             };
                     
             foreach (var kvp in _gameDataContainer.Booleans)
@@ -312,7 +315,8 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 
             var metaverseData = new MetaversePlayerData()
             {
-                PlayerName = _playerName
+                PlayerName = _playerName,
+                PlayerMetaverseData = new List<DataEntry>(),
             };
                     
             foreach (var kvp in _gameDataContainer.Booleans)
