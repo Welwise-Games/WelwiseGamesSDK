@@ -12,6 +12,7 @@ namespace WelwiseGames.Editor
         private SerializedObject _serializedSettings;
         private SerializedProperty _supportedSDKType;
         private SerializedProperty _playerId;
+        private SerializedProperty _muteAudioOnPause;
         private SerializedProperty _debugDeviceType;
         private SerializedProperty _debugLanguageCode;
         private SupportedSDKType _lastSDKType;
@@ -29,9 +30,35 @@ namespace WelwiseGames.Editor
 
             _supportedSDKType = _serializedSettings.FindProperty("_supportedSDKType");
             _playerId = _serializedSettings.FindProperty("_playerId");
+            _muteAudioOnPause = _serializedSettings.FindProperty("_muteAudioOnPause"); // Initialized here
             _debugDeviceType = _serializedSettings.FindProperty("_debugDeviceType");
             _debugLanguageCode = _serializedSettings.FindProperty("_debugLanguageCode");
+            ValidateRequiredPackages();
             _lastSDKType = _settings.SupportedSDKType;
+        }
+        
+        private void ValidateRequiredPackages()
+        {
+            switch (_settings.SupportedSDKType)
+            {
+                case SupportedSDKType.WelwiseGames:
+                    if (!File.Exists(Path.Combine(Application.dataPath, "Plugins/WebGL/welwise-sdk.jslib")))
+                    {
+                        Debug.Log("Welwise Games SDK package missing. Importing...");
+                        ImportPackage("welwise-games-template");
+                        UpdateWebGLTemplate();
+                    }
+                    break;
+                    
+                case SupportedSDKType.YandexGames:
+                    if (!File.Exists(Path.Combine(Application.dataPath, "Plugins/WebGL/yandex-games.jslib")))
+                    {
+                        Debug.Log("Yandex Games SDK package missing. Importing...");
+                        ImportPackage("yandex-games-template");
+                        UpdateWebGLTemplate();
+                    }
+                    break;
+            }
         }
 
         void OnGUI()
@@ -44,6 +71,8 @@ namespace WelwiseGames.Editor
 
             EditorGUILayout.PropertyField(_supportedSDKType, new GUIContent("SDK Type"));
             EditorGUILayout.PropertyField(_playerId, new GUIContent("Debug Player ID"));
+            // Added Mute Audio toggle here
+            EditorGUILayout.PropertyField(_muteAudioOnPause, new GUIContent("Mute Audio On Pause"));
             EditorGUILayout.PropertyField(_debugDeviceType, new GUIContent("Device Type"));
             EditorGUILayout.PropertyField(_debugLanguageCode, new GUIContent("Language Code"));
 

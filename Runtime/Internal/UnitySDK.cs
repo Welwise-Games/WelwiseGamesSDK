@@ -22,6 +22,8 @@ namespace WelwiseGamesSDK.Internal
 
         private readonly UnityAdvertisement _unityAdvertisement;
         private readonly UnityPlayerData _unityPlayerData;
+        private readonly SDKSettings _settings;
+
         private bool _isSimulatingInitialize;
         
         public UnitySDK(SDKSettings settings)
@@ -32,10 +34,12 @@ namespace WelwiseGamesSDK.Internal
             Analytics = new UnityAnalytics();
             PlatformNavigation = new UnityPlatformNavigation();
             _unityPlayerData = new UnityPlayerData();
+            _settings = settings;
         }
         public void Initialize()
         {
             if (IsInitialized) return;
+            SoundMute.CreateIfNeeded(_settings);
             _unityPlayerData.Load();
             if (!_isSimulatingInitialize) _unityAdvertisement.StartCoroutine(InitializeSimulation());
         }

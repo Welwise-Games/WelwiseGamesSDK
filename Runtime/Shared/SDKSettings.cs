@@ -14,8 +14,10 @@ namespace WelwiseGamesSDK.Shared
         public SupportedSDKType SupportedSDKType => _supportedSDKType;
         internal DeviceType DebugDeviceType => _debugDeviceType;
         internal string DebugLanguageCode => _debugLanguageCode;
+        internal bool MuteAudioOnPause => _muteAudioOnPause;
         
         [SerializeField] private SupportedSDKType _supportedSDKType;
+        [SerializeField] private bool _muteAudioOnPause;
         [SerializeField] private string _playerId;
         [SerializeField] private DeviceType _debugDeviceType;
         [SerializeField] private string _debugLanguageCode;

@@ -23,6 +23,7 @@ namespace WelwiseGamesSDK.Internal
 
         private readonly WebEnvironment _webEnvironment;
         private readonly WebPlayerData _webPlayerData;
+        private readonly SDKSettings _settings;
         
         private bool _initializeRunning;
 
@@ -34,6 +35,7 @@ namespace WelwiseGamesSDK.Internal
             PlatformNavigation = new WebPlatformNavigation();
             _webEnvironment = new WebEnvironment();
             _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment);
+            _settings = sdkSettings;
         }
 
         public void Initialize()
@@ -41,6 +43,7 @@ namespace WelwiseGamesSDK.Internal
             if (IsInitialized || _initializeRunning) return;
 
             _initializeRunning = true;
+            SoundMute.CreateIfNeeded(_settings);
 
 #if UNITY_WEBGL &&! UNITY_EDITOR
             Debug.Log("Initializing WebSDK");
