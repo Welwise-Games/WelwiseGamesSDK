@@ -9,7 +9,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        private const string PACKAGE_VERSION = "0.0.1";
+        public const string PACKAGE_VERSION = "0.0.1";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
@@ -108,7 +108,7 @@ namespace WelwiseGames.Editor
             }
         }
         
-        private void HandleSDKTypeChange(SupportedSDKType oldType, SupportedSDKType newType)
+        public static void HandleSDKTypeChange(SupportedSDKType oldType, SupportedSDKType newType)
         {
             try
             {
@@ -149,7 +149,7 @@ namespace WelwiseGames.Editor
             HandleSDKTypeChange(_settings.SupportedSDKType, _settings.SupportedSDKType);
         }
 
-        private bool DeleteFile(string relativePath)
+        private static bool DeleteFile(string relativePath)
         {
             string fullPath = Path.Combine(Application.dataPath, relativePath);
             string assetPath = Path.Combine("Assets", relativePath);
@@ -163,7 +163,7 @@ namespace WelwiseGames.Editor
             return false;
         }
 
-        private void DeleteDirectory(string relativePath)
+        private static void DeleteDirectory(string relativePath)
         {
             string assetPath = Path.Combine("Assets", relativePath);
             
@@ -175,7 +175,7 @@ namespace WelwiseGames.Editor
             }
         }
 
-        private void ImportPackage(string packageName)
+        private static void ImportPackage(string packageName)
         {
             var guids = AssetDatabase.FindAssets(packageName);
             foreach (var guid in guids)
@@ -191,7 +191,7 @@ namespace WelwiseGames.Editor
             Debug.LogError($"Package {packageName}.unitypackage not found!");
         }
 
-        private void UpdateWebGLTemplate()
+        private static void UpdateWebGLTemplate()
         {
             PlayerSettings.WebGL.template = "PROJECT:Welwise SDK";
             Debug.Log("WebGL template updated to 'Welwise SDK'");
