@@ -47,5 +47,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         public int GetInt(string key, int defaultValue) => Ints.GetValueOrDefault(key, defaultValue);
         public float GetFloat(string key, float defaultValue) => Floats.GetValueOrDefault(key, defaultValue);
         public bool GetBool(string key, bool defaultValue) => Booleans.GetValueOrDefault(key, defaultValue);
+        public bool HasKey(string key) => Strings.ContainsKey(key) || Ints.ContainsKey(key) || Booleans.ContainsKey(key) || Floats.ContainsKey(key);
     }
 }
