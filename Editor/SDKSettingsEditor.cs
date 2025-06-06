@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 using WelwiseGamesSDK.Internal;
@@ -8,6 +8,9 @@ namespace WelwiseGames.Editor
 {
     public class SDKSettingsEditor : EditorWindow
     {
+        // ReSharper disable once InconsistentNaming
+        private const string PACKAGE_VERSION = "0.0.1";
+        
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
         private SerializedProperty _supportedSDKType;
@@ -30,9 +33,18 @@ namespace WelwiseGames.Editor
 
             _supportedSDKType = _serializedSettings.FindProperty("_supportedSDKType");
             _playerId = _serializedSettings.FindProperty("_playerId");
-            _muteAudioOnPause = _serializedSettings.FindProperty("_muteAudioOnPause"); // Initialized here
+            _muteAudioOnPause = _serializedSettings.FindProperty("_muteAudioOnPause");
             _debugDeviceType = _serializedSettings.FindProperty("_debugDeviceType");
             _debugLanguageCode = _serializedSettings.FindProperty("_debugLanguageCode");
+            
+            if (_settings.InstalledPackageVersion != PACKAGE_VERSION)
+            {
+                Debug.Log($"Detect new package version ({PACKAGE_VERSION}). Update files...");
+                UpdateFilesForCurrentSDK();
+                _settings.InstalledPackageVersion = PACKAGE_VERSION;
+                SaveChanges();
+            }
+            
             ValidateRequiredPackages();
             _lastSDKType = _settings.SupportedSDKType;
         }
@@ -71,11 +83,14 @@ namespace WelwiseGames.Editor
 
             EditorGUILayout.PropertyField(_supportedSDKType, new GUIContent("SDK Type"));
             EditorGUILayout.PropertyField(_playerId, new GUIContent("Debug Player ID"));
-            // Added Mute Audio toggle here
             EditorGUILayout.PropertyField(_muteAudioOnPause, new GUIContent("Mute Audio On Pause"));
             EditorGUILayout.PropertyField(_debugDeviceType, new GUIContent("Device Type"));
             EditorGUILayout.PropertyField(_debugLanguageCode, new GUIContent("Language Code"));
 
+            // Отображение версии пакета
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField($"Package Version: {PACKAGE_VERSION}", EditorStyles.miniLabel);
+            
             EditorGUILayout.Space(15);
 
             if (GUILayout.Button("Save Settings", GUILayout.Height(30)))
@@ -127,6 +142,13 @@ namespace WelwiseGames.Editor
             }
         }
         
+        // Новый метод: обновление файлов для текущего SDK
+        private void UpdateFilesForCurrentSDK()
+        {
+            Debug.Log($"Updating files for SDK: {_settings.SupportedSDKType}");
+            HandleSDKTypeChange(_settings.SupportedSDKType, _settings.SupportedSDKType);
+        }
+
         private bool DeleteFile(string relativePath)
         {
             string fullPath = Path.Combine(Application.dataPath, relativePath);
