@@ -11,8 +11,12 @@ namespace WelwiseGamesSDK.Shared
         {
             _settings = settings;
         }
-        
-        public void AsSingle() => WelwiseSDK.SetSDK(Build());
+
+        public void AsSingle()
+        {
+            if (WelwiseSDK.Instance != null) return;
+            WelwiseSDK.SetSDK(Build());
+        }
 
         public ISDK AsTransient() => Build();
 
