@@ -48,7 +48,8 @@ namespace WelwiseGamesSDK.Internal
         private IEnumerator InitializeSimulation()
         {
             _isSimulatingInitialize = true;
-            yield return new WaitForSeconds(1.5f);
+            if (_settings.DebugInitializeTime <= 0) yield return new WaitForEndOfFrame();
+            else yield return new WaitForSeconds(_settings.DebugInitializeTime);
             _isSimulatingInitialize = false;
             Initialized?.Invoke();
             IsInitialized = true;

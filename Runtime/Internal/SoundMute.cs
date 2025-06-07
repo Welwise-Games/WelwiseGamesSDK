@@ -13,6 +13,7 @@ namespace WelwiseGamesSDK.Internal
             go.AddComponent<SoundMute>();
             DontDestroyOnLoad(go);
         }
+        
         private void OnApplicationFocus(bool hasFocus)
         {
             HandleGamePause(!hasFocus);

@@ -11,8 +11,7 @@ namespace WelwiseGamesSDK.Internal
         private static JsBridge _bridge;
         private static GameObject _bridgeObject;
 
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-        private static void Initialize()
+        public static void Initialize()
         {
             _bridgeObject = new GameObject("JsBridge");
             _bridge = _bridgeObject.AddComponent<JsBridge>();

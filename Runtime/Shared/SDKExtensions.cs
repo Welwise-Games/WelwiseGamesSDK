@@ -24,5 +24,8 @@ namespace WelwiseGamesSDK.Shared
 
             return tcs.Task;
         }
+        
+        public static bool IsDesktop(this IEnvironment environment) => environment.DeviceType == DeviceType.Desktop;
+        public static bool IsMobile(this IEnvironment environment) => environment.DeviceType == DeviceType.Mobile || environment.DeviceType == DeviceType.Tablet;
     }
 }

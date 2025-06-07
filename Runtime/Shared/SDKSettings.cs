@@ -15,6 +15,8 @@ namespace WelwiseGamesSDK.Shared
         internal DeviceType DebugDeviceType => _debugDeviceType;
         internal string DebugLanguageCode => _debugLanguageCode;
         internal bool MuteAudioOnPause => _muteAudioOnPause;
+        internal bool AutoConstructAndInitializeSingleton => _autoConstructAndInitializeSingleton;
+        internal float DebugInitializeTime => _debugInitializeTime;
         public string InstalledPackageVersion
         {
             get => _installedPackageVersion;
@@ -26,6 +28,8 @@ namespace WelwiseGamesSDK.Shared
         [SerializeField] private string _playerId;
         [SerializeField] private DeviceType _debugDeviceType;
         [SerializeField] private string _debugLanguageCode;
+        [SerializeField] private bool _autoConstructAndInitializeSingleton;
+        [SerializeField] [Range(0f, 10f)] private float _debugInitializeTime;
         [SerializeField] private string _installedPackageVersion = "";
         
         

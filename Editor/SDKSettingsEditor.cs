@@ -1,4 +1,4 @@
-﻿﻿using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 using WelwiseGamesSDK.Internal;
@@ -9,7 +9,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        public const string PACKAGE_VERSION = "0.0.1";
+        public const string PACKAGE_VERSION = "0.0.2";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
@@ -18,6 +18,8 @@ namespace WelwiseGames.Editor
         private SerializedProperty _muteAudioOnPause;
         private SerializedProperty _debugDeviceType;
         private SerializedProperty _debugLanguageCode;
+        private SerializedProperty _autoConstructAndInitializeSingleton;
+        private SerializedProperty _debugInitializeTime;
         private SupportedSDKType _lastSDKType;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
@@ -36,6 +38,8 @@ namespace WelwiseGames.Editor
             _muteAudioOnPause = _serializedSettings.FindProperty("_muteAudioOnPause");
             _debugDeviceType = _serializedSettings.FindProperty("_debugDeviceType");
             _debugLanguageCode = _serializedSettings.FindProperty("_debugLanguageCode");
+            _autoConstructAndInitializeSingleton = _serializedSettings.FindProperty("_autoConstructAndInitializeSingleton");
+            _debugInitializeTime = _serializedSettings.FindProperty("_debugInitializeTime");
             
             if (_settings.InstalledPackageVersion != PACKAGE_VERSION)
             {
@@ -76,29 +80,44 @@ namespace WelwiseGames.Editor
         void OnGUI()
         {
             _serializedSettings.Update();
-            var previousType = (SupportedSDKType)_supportedSDKType.enumValueIndex;
+            
+            EditorGUI.BeginChangeCheck();
+            
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("SDK Configuration", EditorStyles.boldLabel);
-            EditorGUILayout.Space(5);
+            EditorGUILayout.LabelField("Runtime Settings", EditorStyles.boldLabel);
 
             EditorGUILayout.PropertyField(_supportedSDKType, new GUIContent("SDK Type"));
-            EditorGUILayout.PropertyField(_playerId, new GUIContent("Debug Player ID"));
             EditorGUILayout.PropertyField(_muteAudioOnPause, new GUIContent("Mute Audio On Pause"));
+            EditorGUILayout.PropertyField(_autoConstructAndInitializeSingleton, new GUIContent("Auto Singleton"));
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.PropertyField(_playerId, new GUIContent("Player ID"));
+        
+                if (GUILayout.Button("Generate", GUILayout.Width(80)))
+                {
+                    _playerId.stringValue = System.Guid.NewGuid().ToString();
+                    GUI.FocusControl(null);
+                }
+            }
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.PropertyField(_debugDeviceType, new GUIContent("Device Type"));
             EditorGUILayout.PropertyField(_debugLanguageCode, new GUIContent("Language Code"));
-
-            // Отображение версии пакета
+            EditorGUILayout.PropertyField(_debugInitializeTime, new GUIContent("Initialization Time"));
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField($"Package Version: {PACKAGE_VERSION}", EditorStyles.miniLabel);
+            EditorGUILayout.LabelField($"Package Version: {PACKAGE_VERSION}", new GUIStyle(EditorStyles.helpBox)
+            {
+                alignment = TextAnchor.MiddleCenter,
+                wordWrap = true
+            });
             
-            EditorGUILayout.Space(15);
-
-            if (GUILayout.Button("Save Settings", GUILayout.Height(30)))
+            _serializedSettings.ApplyModifiedProperties();
+            
+            if (EditorGUI.EndChangeCheck())
             {
                 SaveChanges();
             }
-
-            _serializedSettings.ApplyModifiedProperties();
             
             if (_settings.SupportedSDKType != _lastSDKType)
             {
@@ -114,7 +133,6 @@ namespace WelwiseGames.Editor
             {
                 bool success = true;
                 
-                // Удаляем общие файлы
                 DeleteDirectory("WebGL Templates/Welwise SDK");
                 
                 switch (newType)
@@ -142,7 +160,6 @@ namespace WelwiseGames.Editor
             }
         }
         
-        // Новый метод: обновление файлов для текущего SDK
         private void UpdateFilesForCurrentSDK()
         {
             Debug.Log($"Updating files for SDK: {_settings.SupportedSDKType}");
@@ -203,7 +220,6 @@ namespace WelwiseGames.Editor
             {
                 EditorUtility.SetDirty(_settings);
                 AssetDatabase.SaveAssets();
-                Debug.Log("SDK settings saved successfully!");
             }
         }
     }
