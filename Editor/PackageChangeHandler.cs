@@ -1,6 +1,12 @@
-﻿using UnityEditor;
+﻿using System;
+using System.Collections;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Unity.EditorCoroutines.Editor;
+using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEngine;
+using UnityEngine.Networking;
 using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGames.Editor
@@ -8,10 +14,16 @@ namespace WelwiseGames.Editor
     [InitializeOnLoad]
     public class PackageChangeHandler
     {
-
+        private const string DisplayName = "Welwise Games SDK";
+        private const string PackageID = "com.welwise.sdk";
+        private const string GithubUser = "Welwise-Games";
+        private const string GithubRepo = "WelwiseGamesSDK";
+        private const string RemoteVersionURL = "https://raw.githubusercontent.com/{0}/{1}/main/package.json";
+        
         static PackageChangeHandler()
         {
             Events.registeredPackages += OnPackagesChanged;
+            EditorApplication.delayCall += CheckForUpdates;
         }
 
         private static void OnPackagesChanged(PackageRegistrationEventArgs args)
@@ -23,6 +35,81 @@ namespace WelwiseGames.Editor
             SDKSettingsEditor.HandleSDKTypeChange(settings.SupportedSDKType, settings.SupportedSDKType);
             settings.InstalledPackageVersion = SDKSettingsEditor.PACKAGE_VERSION;
             AssetDatabase.SaveAssets();
+        } 
+
+        private static void CheckForUpdates()
+        {
+            EditorCoroutineUtility.StartCoroutineOwnerless(CheckVersionCoroutine());
+        }
+    
+        private static IEnumerator CheckVersionCoroutine()
+        {
+            string localVersion = null;
+            var listRequest = Client.List();
+            while (!listRequest.IsCompleted)
+                yield return null;
+
+            if (listRequest.Status == StatusCode.Success)
+            {
+                var package = listRequest.Result.FirstOrDefault(p => p.name == PackageID);
+                if (package != null)
+                {
+                    localVersion = package.version;
+                }
+            }
+
+            if (string.IsNullOrEmpty(localVersion))
+            {
+                Debug.LogWarning($"[{DisplayName}] Failed to get local package version");
+                yield break;
+            }
+
+            var remoteUrl = string.Format(RemoteVersionURL, GithubUser, GithubRepo);
+
+            using UnityWebRequest webRequest = UnityWebRequest.Get(remoteUrl);
+            yield return webRequest.SendWebRequest();
+
+            if (webRequest.result == UnityWebRequest.Result.Success)
+            {
+                var remoteVersion = ParseVersionFromJson( webRequest.downloadHandler.text);
+                    
+                if (!string.IsNullOrEmpty(remoteVersion))
+                {
+                    CompareVersions(localVersion, remoteVersion);
+                }
+                else
+                {
+                    Debug.LogWarning($"[{DisplayName}] Failed to parse remote version");
+                }
+            }
+            else
+            {
+                Debug.LogWarning($"[{DisplayName}] Version check error: {webRequest.error}");
+            }
+        }
+    
+        private static string ParseVersionFromJson(string json)
+        {
+            var versionRegex = new Regex("\"version\":\\s*\"([0-9]+\\.[0-9]+\\.[0-9]+)\"");
+            var match = versionRegex.Match(json);
+
+            return match.Success ?
+                match.Groups[1].Value :
+                string.Empty;
+        }
+    
+        private static void CompareVersions(string currentVersion, string remoteVersion)
+        {
+            if (currentVersion != remoteVersion)
+            {
+                Debug.LogWarning($"<color=yellow>[{DisplayName}]</color> Update available! " +
+                    $"Current: {currentVersion}, New: {remoteVersion}\n" +
+                    $"<color=#569CD6>Please update via Package Manager</color>");
+            }
+            else
+            {
+                Debug.Log($"[{DisplayName}] Package is up to date ({currentVersion})");
+            }
         }
     }
 }
