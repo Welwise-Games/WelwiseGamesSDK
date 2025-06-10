@@ -97,14 +97,24 @@ namespace WelwiseGames.Editor
                 match.Groups[1].Value :
                 string.Empty;
         }
-    
         private static void CompareVersions(string currentVersion, string remoteVersion)
         {
             if (currentVersion != remoteVersion)
             {
-                Debug.LogWarning($"<color=yellow>[{DisplayName}]</color> Update available! " +
-                    $"Current: {currentVersion}, New: {remoteVersion}\n" +
-                    $"<color=#569CD6>Please update via Package Manager</color>");
+                var message = $"[{DisplayName}] Update available!\nCurrent: {currentVersion}, New: {remoteVersion}\nPlease update via Package Manager";
+                Debug.LogWarning($"<color=yellow>{message}</color>");
+
+                var openPackageManager = EditorUtility.DisplayDialog(
+                    $"{DisplayName} Update Available",
+                    $"A new version is available!\nCurrent: {currentVersion}\nNew: {remoteVersion}",
+                    "Open Package Manager",
+                    "Later"
+                );
+
+                if (openPackageManager)
+                {            
+                    EditorApplication.ExecuteMenuItem("Window/Package Manager");
+                }
             }
             else
             {
