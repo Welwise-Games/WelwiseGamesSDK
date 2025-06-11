@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿﻿using UnityEngine;
 using WelwiseGamesSDK.Shared;
 using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
 
@@ -10,6 +10,13 @@ namespace WelwiseGamesSDK.Shared
 {
     public sealed class SDKSettings : ScriptableObject
     {
+        public enum AspectRatioMode
+        {
+            Default,
+            Aspect16_9,
+            Aspect9_16
+        }
+        
         internal string DebugPlayerId => _playerId;
         public SupportedSDKType SupportedSDKType => _supportedSDKType;
         internal DeviceType DebugDeviceType => _debugDeviceType;
@@ -23,6 +30,9 @@ namespace WelwiseGamesSDK.Shared
             set => _installedPackageVersion = value;
         }
         
+        public AspectRatioMode AspectRatio => _aspectRatio;
+        public Texture2D BackgroundImage => _backgroundImage;
+        
         [SerializeField] private SupportedSDKType _supportedSDKType;
         [SerializeField] private bool _muteAudioOnPause;
         [SerializeField] private string _playerId;
@@ -31,6 +41,8 @@ namespace WelwiseGamesSDK.Shared
         [SerializeField] private bool _autoConstructAndInitializeSingleton;
         [SerializeField] [Range(0f, 10f)] private float _debugInitializeTime;
         [SerializeField] private string _installedPackageVersion = "";
+        [SerializeField] private AspectRatioMode _aspectRatio;
+        [SerializeField] private Texture2D _backgroundImage;
         
         
         public static SDKSettings LoadOrCreateSettings()

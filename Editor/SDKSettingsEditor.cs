@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 using WelwiseGamesSDK.Internal;
@@ -9,7 +9,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        public const string PACKAGE_VERSION = "0.0.3";
+        public const string PACKAGE_VERSION = "0.0.4";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
@@ -20,6 +20,8 @@ namespace WelwiseGames.Editor
         private SerializedProperty _debugLanguageCode;
         private SerializedProperty _autoConstructAndInitializeSingleton;
         private SerializedProperty _debugInitializeTime;
+        private SerializedProperty _aspectRatio;
+        private SerializedProperty _backgroundImage;
         private SupportedSDKType _lastSDKType;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
@@ -40,6 +42,8 @@ namespace WelwiseGames.Editor
             _debugLanguageCode = _serializedSettings.FindProperty("_debugLanguageCode");
             _autoConstructAndInitializeSingleton = _serializedSettings.FindProperty("_autoConstructAndInitializeSingleton");
             _debugInitializeTime = _serializedSettings.FindProperty("_debugInitializeTime");
+            _aspectRatio = _serializedSettings.FindProperty("_aspectRatio");
+            _backgroundImage = _serializedSettings.FindProperty("_backgroundImage");
             
             if (_settings.InstalledPackageVersion != PACKAGE_VERSION)
             {
@@ -89,6 +93,48 @@ namespace WelwiseGames.Editor
             EditorGUILayout.PropertyField(_supportedSDKType, new GUIContent("SDK Type"));
             EditorGUILayout.PropertyField(_muteAudioOnPause, new GUIContent("Mute Audio On Pause"));
             EditorGUILayout.PropertyField(_autoConstructAndInitializeSingleton, new GUIContent("Auto Singleton"));
+            
+            // Новая секция для соотношения сторон
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Aspect Ratio Settings", EditorStyles.boldLabel);
+            
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            {
+                // Выбор соотношения сторон
+                EditorGUILayout.PropertyField(_aspectRatio, 
+                    new GUIContent("Aspect Ratio Mode", 
+                    "Select aspect ratio for WebGL build"));
+                
+                if (_aspectRatio.enumValueIndex != (int)SDKSettings.AspectRatioMode.Default)
+                {
+                    EditorGUILayout.Space(5);
+                    EditorGUILayout.BeginVertical(EditorStyles.textArea);
+                    {
+                        // Поле для выбора фонового изображения
+                        EditorGUILayout.PropertyField(_backgroundImage, 
+                            new GUIContent("Background Image", 
+                            "Image displayed around the game"));
+                        
+                        // Подсказка о размерах изображения
+                        EditorGUILayout.HelpBox(
+                            "Recommended size: 1920x1080 or larger. Will be scaled to fit screen.",
+                            MessageType.Info);
+                        
+                        // Предпросмотр изображения
+                        if (_backgroundImage.objectReferenceValue != null)
+                        {
+                            EditorGUILayout.Space(5);
+                            Texture2D preview = (Texture2D)_backgroundImage.objectReferenceValue;
+                            GUILayout.Label("Preview:", EditorStyles.boldLabel);
+                            Rect rect = GUILayoutUtility.GetRect(200, 120, GUILayout.ExpandWidth(false));
+                            EditorGUI.DrawPreviewTexture(rect, preview);
+                        }
+                    }
+                    EditorGUILayout.EndVertical();
+                }
+            }
+            EditorGUILayout.EndVertical();
+            
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
