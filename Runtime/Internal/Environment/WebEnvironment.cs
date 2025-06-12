@@ -110,7 +110,7 @@ namespace WelwiseGamesSDK.Internal.Environment
                         HandleError("Empty language code");
                         return;
                     }
-                    LanguageCode = language;
+                    Language = language;
                     CheckCompletion();
                 },
                 HandleError);

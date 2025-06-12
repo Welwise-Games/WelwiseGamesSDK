@@ -1,5 +1,6 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Unity.EditorCoroutines.Editor;
@@ -19,6 +20,7 @@ namespace WelwiseGames.Editor
         private const string GithubUser = "Welwise-Games";
         private const string GithubRepo = "WelwiseGamesSDK";
         private const string RemoteVersionURL = "https://raw.githubusercontent.com/{0}/{1}/main/package.json";
+        private const string LastNotificationKey = "WelwiseGamesSDK_LastUpdateNotification";
         
         static PackageChangeHandler()
         {
@@ -99,7 +101,16 @@ namespace WelwiseGames.Editor
         }
         private static void CompareVersions(string currentVersion, string remoteVersion)
         {
-            if (currentVersion != remoteVersion)
+            if (currentVersion == remoteVersion) return;
+            var lastNotificationDate = PlayerPrefs.GetString(LastNotificationKey, "");
+            var showNotification = true;
+
+            if (!string.IsNullOrEmpty(lastNotificationDate) && DateTime.TryParse(lastNotificationDate, out var lastDate))
+            {
+                showNotification = (DateTime.Now - lastDate).TotalDays >= 7;
+            }
+
+            if (showNotification)
             {
                 var message = $"[{DisplayName}] Update available!\nCurrent: {currentVersion}, New: {remoteVersion}\nPlease update via Package Manager";
                 Debug.LogWarning($"<color=yellow>{message}</color>");
@@ -115,10 +126,13 @@ namespace WelwiseGames.Editor
                 {            
                     EditorApplication.ExecuteMenuItem("Window/Package Manager");
                 }
+
+                PlayerPrefs.SetString(LastNotificationKey, DateTime.Now.ToString(CultureInfo.InvariantCulture));
+                PlayerPrefs.Save();
             }
             else
             {
-                Debug.Log($"[{DisplayName}] Package is up to date ({currentVersion})");
+                Debug.Log($"[{DisplayName}] Update available ({remoteVersion}), notification suppressed until next week");
             }
         }
     }
