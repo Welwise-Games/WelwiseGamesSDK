@@ -24,6 +24,7 @@ namespace WelwiseGamesSDK.Shared
         internal bool MuteAudioOnPause => _muteAudioOnPause;
         internal bool AutoConstructAndInitializeSingleton => _autoConstructAndInitializeSingleton;
         internal float DebugInitializeTime => _debugInitializeTime;
+        internal bool LoadSaveOnInitialize => _loadSaveOnInitialize;
         public string InstalledPackageVersion
         {
             get => _installedPackageVersion;
@@ -43,6 +44,7 @@ namespace WelwiseGamesSDK.Shared
         [SerializeField] private string _installedPackageVersion = "";
         [SerializeField] private AspectRatioMode _aspectRatio;
         [SerializeField] private Texture2D _backgroundImage;
+        [SerializeField] private bool _loadSaveOnInitialize = true;
         
         
         public static SDKSettings LoadOrCreateSettings()

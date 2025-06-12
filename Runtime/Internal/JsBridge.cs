@@ -33,7 +33,6 @@ namespace WelwiseGamesSDK.Internal
         public static event System.Action OnSetMetaverseDataSuccess;
         public static event System.Action<string> OnSetMetaverseDataError;
         
-        
         public static event System.Action<string> OnGetCombinedDataSuccess;
         public static event System.Action<string> OnGetCombinedDataError;
         public static event System.Action OnSetCombinedDataSuccess;
@@ -45,6 +44,15 @@ namespace WelwiseGamesSDK.Internal
         public static event System.Action<string> OnGameplayStartError;
         public static event System.Action OnGameplayStopSuccess;
         public static event System.Action<string> OnGameplayStopError;
+
+        public static event System.Action OnInterstitialOpen;
+        public static event System.Action OnInterstitialClose;
+        public static event System.Action<string> OnInterstitialError;
+        
+        public static event System.Action OnRewardedOpen;
+        public static event System.Action OnRewardedRewarded;
+        public static event System.Action OnRewardedClose;
+        public static event System.Action<string> OnRewardedError;
 
 
         public void HandleInitSuccess(string _) => OnInitSuccess?.Invoke();
@@ -88,6 +96,15 @@ namespace WelwiseGamesSDK.Internal
         public void HandleGameplayStopSuccess(string _) => OnGameplayStopSuccess?.Invoke();
         public void HandleGameplayStopError(string error) => OnGameplayStopError?.Invoke(error);
 
+        public void HandleInterstitialOpen(string _) => OnInterstitialOpen?.Invoke();
+        public void HandleInterstitialClose(string _) => OnInterstitialClose?.Invoke();
+        public void HandleInterstitialError(string error) => OnInterstitialError?.Invoke(error);
+        
+        public void HandleRewardedOpen(string _) => OnRewardedOpen?.Invoke();
+        public void HandleRewardedRewarded(string _) => OnRewardedRewarded?.Invoke();
+        public void HandleRewardedClose(string _) => OnRewardedClose?.Invoke();
+        public void HandleRewardedError(string error) => OnRewardedError?.Invoke(error);
+
 
         private void OnDestroy()
         {
@@ -123,6 +140,13 @@ namespace WelwiseGamesSDK.Internal
             OnGameplayStartError = null;
             OnGameplayStopSuccess = null;
             OnGameplayStopError = null;
+            OnInterstitialOpen = null;
+            OnInterstitialClose = null;
+            OnInterstitialError = null;
+            OnRewardedOpen = null;
+            OnRewardedRewarded = null;
+            OnRewardedClose = null;
+            OnRewardedError = null;
         }
     }
 }

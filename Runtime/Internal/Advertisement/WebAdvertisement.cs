@@ -8,14 +8,32 @@ namespace WelwiseGamesSDK.Internal.Advertisement
     {
         public void ShowInterstitial(Action<InterstitialState> callbackState)
         {
-            Debug.Log($"<! NOT IMPL !> [{nameof(WebAdvertisement)}] {nameof(ShowInterstitial)}");
-            callbackState?.Invoke(InterstitialState.Closed);
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try
+            {
+                JsLibProvider.ShowInterstitial(callbackState);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[{nameof(WebAdvertisement)}] {nameof(ShowInterstitial)} failed: {e}");
+                callbackState?.Invoke(InterstitialState.Error);
+            }
+#endif
         }
 
         public void ShowRewarded(Action<RewardedState> callbackState)
         {
-            Debug.Log($"<! NOT IMPL !> [{nameof(WebAdvertisement)}] {nameof(ShowRewarded)}");
-            callbackState?.Invoke(RewardedState.Rewarded);
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try
+            {
+                JsLibProvider.ShowRewarded(callbackState);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"[{nameof(WebAdvertisement)}] {nameof(ShowRewarded)} failed: {e}");
+                callbackState?.Invoke(RewardedState.Error);
+            }
+#endif
         }
     }
 }

@@ -68,14 +68,27 @@ namespace WelwiseGamesSDK.Internal
         {
             Debug.Log("[WebSDK] Environment ready");
             _webEnvironment.Ready -= HandleEnvironmentReady;
-            _webPlayerData.Ready += HandleSavesReady;
-            _webPlayerData.Load();
+
+            if (_settings.LoadSaveOnInitialize && !_webPlayerData.IsLoaded)
+            {
+                _webPlayerData.Loaded += HandleSavesReady;
+                _webPlayerData.Load();
+            }
+            else
+            {
+                CompleteInitialization();
+            }
         }
 
         private void HandleSavesReady()
         {
             Debug.Log("[WebSDK] Game saves ready");
-            _webPlayerData.Ready -= HandleSavesReady;
+            _webPlayerData.Loaded -= HandleSavesReady;
+            CompleteInitialization();
+        }
+
+        private void CompleteInitialization()
+        {
             IsInitialized = true;
             _initializeRunning = false;
             Debug.Log("[WebSDK] Full initialization complete");

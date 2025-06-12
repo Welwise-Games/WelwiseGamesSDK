@@ -8,7 +8,7 @@ namespace WelwiseGamesSDK.Internal.Environment
     {
         public Guid PlayerId { get; }
         public DeviceType DeviceType { get; }
-        public string LanguageCode { get; }
+        public string Language { get; }
 
         public UnityEnvironment(string playerId, DeviceType deviceType, string languageCode)
         {
@@ -22,7 +22,7 @@ namespace WelwiseGamesSDK.Internal.Environment
             }
             
             DeviceType = deviceType;
-            LanguageCode = languageCode;
+            Language = languageCode;
         }
         
         public void RequestServerTime(Action<long> callback)

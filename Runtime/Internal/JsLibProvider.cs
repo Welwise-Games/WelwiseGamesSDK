@@ -3,6 +3,7 @@ using System;
 using System.Runtime.InteropServices;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using WelwiseGamesSDK.Shared;
 
 namespace WelwiseGamesSDK.Internal
 {
@@ -481,6 +482,91 @@ namespace WelwiseGamesSDK.Internal
             JsBridge.OnGameplayStopError += errorWrapper;
     
             JsGameplayStop();
+        }
+        #endregion
+
+        #region Advertisement
+        [DllImport("__Internal")]
+        private static extern void JsShowInterstitial();
+        
+        [DllImport("__Internal")]
+        private static extern void JsShowRewarded();
+        
+        public static void ShowInterstitial(Action<InterstitialState> callbackState)
+        {
+            Action openHandler = null;
+            Action closeHandler = null;
+            Action<string> errorHandler = null;
+        
+            openHandler = () =>
+            {
+                callbackState?.Invoke(InterstitialState.Opened);
+                JsBridge.OnInterstitialOpen -= openHandler;
+            };
+        
+            closeHandler = () =>
+            {
+                callbackState?.Invoke(InterstitialState.Closed);
+                Unsubscribe();
+            };
+        
+            errorHandler = (error) =>
+            {
+                callbackState?.Invoke(InterstitialState.Error);
+                Unsubscribe();
+            };
+        
+            void Unsubscribe()
+            {
+                JsBridge.OnInterstitialOpen -= openHandler;
+                JsBridge.OnInterstitialClose -= closeHandler;
+                JsBridge.OnInterstitialError -= errorHandler;
+            }
+        
+            JsBridge.OnInterstitialOpen += openHandler;
+            JsBridge.OnInterstitialClose += closeHandler;
+            JsBridge.OnInterstitialError += errorHandler;
+        
+            JsShowInterstitial();
+        }
+        
+        public static void ShowRewarded(Action<RewardedState> callbackState)
+        {
+            Action openHandler = null;
+            Action rewardedHandler = null;
+            Action closeHandler = null;
+            Action<string> errorHandler = null;
+        
+            openHandler = () => callbackState?.Invoke(RewardedState.Opened);
+            
+            rewardedHandler = () => callbackState?.Invoke(RewardedState.Rewarded);
+            
+            closeHandler = () =>
+            {
+                callbackState?.Invoke(RewardedState.Closed);
+                Unsubscribe();
+            };
+            
+            errorHandler = (error) =>
+            {
+                callbackState?.Invoke(RewardedState.Error);
+                Unsubscribe();
+            };
+        
+            void Unsubscribe()
+            {
+                JsBridge.OnRewardedOpen -= openHandler;
+                JsBridge.OnRewardedRewarded -= rewardedHandler;
+                JsBridge.OnRewardedClose -= closeHandler;
+                JsBridge.OnRewardedError -= errorHandler;
+            }
+        
+            JsBridge.OnRewardedOpen += openHandler;
+            JsBridge.OnRewardedRewarded += rewardedHandler;
+            JsBridge.OnRewardedClose += closeHandler;
+            JsBridge.OnRewardedError += errorHandler;
+        
+            JsShowRewarded();
         }
         #endregion
     }

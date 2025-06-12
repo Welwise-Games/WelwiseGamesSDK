@@ -1,6 +1,6 @@
 {
     "name": "com.welwise.sdk",
-    "version": "2.1.22",
+    "version": "2.2.0",
     "displayName": "WelwiseGamesSDK",
     "description": "SDK for working with the WelwiseGames platform API",
     "unity": "2022.3",

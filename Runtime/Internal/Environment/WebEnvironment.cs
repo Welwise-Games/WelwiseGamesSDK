@@ -13,7 +13,7 @@ namespace WelwiseGamesSDK.Internal.Environment
         
         public Guid PlayerId { get; private set; }
         public DeviceType DeviceType { get; private set; }
-        public string LanguageCode { get; private set; }
+        public string Language { get; private set; }
 
         private int _loadedCount;
         private bool _hasErrors;
@@ -38,7 +38,7 @@ namespace WelwiseGamesSDK.Internal.Environment
             _loadedCount = 0;
             _hasErrors = false;
             PlayerId = Guid.Empty;
-            LanguageCode = string.Empty;
+            Language = string.Empty;
         }
 
 #if UNITY_WEBGL && !UNITY_EDITOR

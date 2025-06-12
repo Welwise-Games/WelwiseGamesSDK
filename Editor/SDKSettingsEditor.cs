@@ -1,4 +1,4 @@
-﻿﻿using System.IO;
+﻿using System.IO;
 using UnityEditor;
 using UnityEngine;
 using WelwiseGamesSDK.Internal;
@@ -9,7 +9,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        public const string PACKAGE_VERSION = "0.0.4";
+        public const string PACKAGE_VERSION = "0.0.5";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
@@ -22,6 +22,7 @@ namespace WelwiseGames.Editor
         private SerializedProperty _debugInitializeTime;
         private SerializedProperty _aspectRatio;
         private SerializedProperty _backgroundImage;
+        private SerializedProperty _loadSaveOnInitialize;
         private SupportedSDKType _lastSDKType;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
@@ -44,6 +45,7 @@ namespace WelwiseGames.Editor
             _debugInitializeTime = _serializedSettings.FindProperty("_debugInitializeTime");
             _aspectRatio = _serializedSettings.FindProperty("_aspectRatio");
             _backgroundImage = _serializedSettings.FindProperty("_backgroundImage");
+            _loadSaveOnInitialize = _serializedSettings.FindProperty("_loadSaveOnInitialize");
             
             if (_settings.InstalledPackageVersion != PACKAGE_VERSION)
             {
@@ -90,9 +92,10 @@ namespace WelwiseGames.Editor
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Runtime Settings", EditorStyles.boldLabel);
 
-            EditorGUILayout.PropertyField(_supportedSDKType, new GUIContent("SDK Type"));
-            EditorGUILayout.PropertyField(_muteAudioOnPause, new GUIContent("Mute Audio On Pause"));
-            EditorGUILayout.PropertyField(_autoConstructAndInitializeSingleton, new GUIContent("Auto Singleton"));
+            EditorGUILayout.PropertyField(_supportedSDKType, new GUIContent("SDK Type", "Selected sdk type, when changing the value, template files and jslib files are changed"));
+            EditorGUILayout.PropertyField(_muteAudioOnPause, new GUIContent("Mute Audio On Pause", "Mute audio when changing focus or pausing the game"));
+            EditorGUILayout.PropertyField(_autoConstructAndInitializeSingleton, new GUIContent("Auto Singleton", "Automatic execution of singleton creation and initialization"));
+            EditorGUILayout.PropertyField(_loadSaveOnInitialize, new GUIContent("Load save on initialize", "Loading a save is done during the initialization phase"));
             
             // Новая секция для соотношения сторон
             EditorGUILayout.Space(15);
@@ -103,7 +106,7 @@ namespace WelwiseGames.Editor
                 // Выбор соотношения сторон
                 EditorGUILayout.PropertyField(_aspectRatio, 
                     new GUIContent("Aspect Ratio Mode", 
-                    "Select aspect ratio for WebGL build"));
+                    "Game display mode on pc"));
                 
                 if (_aspectRatio.enumValueIndex != (int)SDKSettings.AspectRatioMode.Default)
                 {
@@ -113,7 +116,7 @@ namespace WelwiseGames.Editor
                         // Поле для выбора фонового изображения
                         EditorGUILayout.PropertyField(_backgroundImage, 
                             new GUIContent("Background Image", 
-                            "Image displayed around the game"));
+                            "Background image for mode other than Default"));
                         
                         // Подсказка о размерах изображения
                         EditorGUILayout.HelpBox(
@@ -139,7 +142,7 @@ namespace WelwiseGames.Editor
             EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             {
-                EditorGUILayout.PropertyField(_playerId, new GUIContent("Player ID"));
+                EditorGUILayout.PropertyField(_playerId, new GUIContent("Player ID", "The player ID that will be used when working in the Unity editor"));
         
                 if (GUILayout.Button("Generate", GUILayout.Width(80)))
                 {
@@ -148,9 +151,9 @@ namespace WelwiseGames.Editor
                 }
             }
             EditorGUILayout.EndHorizontal();
-            EditorGUILayout.PropertyField(_debugDeviceType, new GUIContent("Device Type"));
-            EditorGUILayout.PropertyField(_debugLanguageCode, new GUIContent("Language Code"));
-            EditorGUILayout.PropertyField(_debugInitializeTime, new GUIContent("Initialization Time"));
+            EditorGUILayout.PropertyField(_debugDeviceType, new GUIContent("Device Type", "The type of device that will be used when working in the Unity editor"));
+            EditorGUILayout.PropertyField(_debugLanguageCode, new GUIContent("Language", "The user language that will be used when working in the Unity editor"));
+            EditorGUILayout.PropertyField(_debugInitializeTime, new GUIContent("Initialization Time", "Initialization time for initializing a plugin in the unity editor, it can be useful to set it longer for testing or shorter for quick development iterations."));
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField($"Package Version: {PACKAGE_VERSION}", new GUIStyle(EditorStyles.helpBox)
             {

@@ -8,15 +8,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 {
     internal sealed class WebPlayerData : PlayerData
     {
-        #pragma warning disable
-        public event Action Ready;
-        #pragma warning restore
-        
         private readonly IEnvironment _environment;
         private readonly SupportedSDKType _supportedSDK;
         
         private bool _isMetaverseSupported;
-        private bool _isLoaded;
         private bool _isSaving;
         
         public WebPlayerData(SDKSettings settings,IEnvironment environment)
@@ -36,11 +31,9 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 else LoadPlayerData();
             }, error =>
             {
-                _isLoaded = true;
+                OnLoaded();
                 Debug.LogError(error);
-                Ready?.Invoke();
             });
-            
 #endif
         }
 
@@ -95,13 +88,11 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     _playerName = CreateFallbackName();
                 }
-                Ready?.Invoke();
-                _isLoaded = true;
+                OnLoaded();
             }, error =>
             {
-                _isLoaded = true;
+                OnLoaded();
                 Debug.LogError(error);
-                Ready?.Invoke();
             });
 #endif
         }
@@ -132,12 +123,11 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     _playerName = CreateFallbackName();
                 }
-                Ready?.Invoke();
-                _isLoaded = true;
+                OnLoaded();
             }, error =>
             {
+                OnLoaded();
                 Debug.LogError(error);
-                Ready?.Invoke();
             });
 #endif
         }
@@ -360,7 +350,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 
         public override void Save()
         {
-            if (!_isLoaded) return;
+            if (!IsLoaded) return;
             if (_isSaving) return;
 
             if (_isMetaverseSupported)
@@ -450,7 +440,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 hash *= prime;
             }
             var id = (int)(hash % 1000);
-            return _environment.LanguageCode switch
+            return _environment.Language switch
             {
                 "ru" => $"Призрак_{id}",
                 _ => $"Ghost_{id}"
