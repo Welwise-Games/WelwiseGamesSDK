@@ -215,7 +215,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                      Value = DataMarshallingUtil.Serialize(kvp.Value)
                  });
              }
-
              return JsonConvert.SerializeObject(combinedData);
         }
 
@@ -245,7 +244,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             {
                 playerData[kvp.Key] = DataMarshallingUtil.Serialize(kvp.Value);
             }
-            
             return JsonConvert.SerializeObject(playerData);
         }
 
@@ -294,7 +292,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     Value = DataMarshallingUtil.Serialize(kvp.Value)
                 });
             }
-
+            
             return JsonConvert.SerializeObject(playerData);
         }
 
@@ -309,7 +307,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 PlayerMetaverseData = new List<DataEntry>(),
             };
                     
-            foreach (var kvp in _gameDataContainer.Booleans)
+            foreach (var kvp in _metaverseDataContainer.Booleans)
             {
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
@@ -318,7 +316,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 });
             }
                     
-            foreach (var kvp in _gameDataContainer.Ints)
+            foreach (var kvp in _metaverseDataContainer.Ints)
             {
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
@@ -327,7 +325,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 });
             }
                     
-            foreach (var kvp in _gameDataContainer.Floats)
+            foreach (var kvp in _metaverseDataContainer.Floats)
             {
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
@@ -336,7 +334,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 });
             }
                     
-            foreach (var kvp in _gameDataContainer.Strings)
+            foreach (var kvp in _metaverseDataContainer.Strings)
             {
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
@@ -344,7 +342,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     Value = DataMarshallingUtil.Serialize(kvp.Value)
                 });
             }
-
             return JsonConvert.SerializeObject(metaverseData);
         }
 
