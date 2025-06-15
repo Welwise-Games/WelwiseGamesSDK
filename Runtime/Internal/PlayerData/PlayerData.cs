@@ -12,6 +12,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         protected readonly DataContainer _metaverseDataContainer = new ();
         
         protected string _playerName;
+        protected string _previousPlayerName;
 
         public event Action Loaded;
         public string GetPlayerName() => _playerName;

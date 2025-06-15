@@ -87,6 +87,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
+                    _previousPlayerName = _playerName;
                 }
                 OnLoaded();
             }, error =>
@@ -122,6 +123,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
+                    _previousPlayerName = _playerName;
                 }
                 OnLoaded();
             }, error =>
@@ -352,13 +354,14 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 
             if (_isMetaverseSupported)
             {
-                if (_gameDataContainer.Changed && _metaverseDataContainer.Changed)
+                if (_gameDataContainer.Changed && _metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
 #if UNITY_WEBGL && !UNITY_EDITOR
                     JsLibProvider.SetCombinedPlayerData(SaveCombinedData(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
+                        _previousPlayerName = _playerName;
                     },
                     error =>
                     {
@@ -367,7 +370,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     });
 #endif
                 }
-                else if (_gameDataContainer.Changed && !_metaverseDataContainer.Changed)
+                else if (_gameDataContainer.Changed && !_metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
 #if UNITY_WEBGL && !UNITY_EDITOR
                     JsLibProvider.SetPlayerData(SavePlayerDataWelwise(), () =>
@@ -382,7 +385,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     });
 #endif
                 }
-                else if (!_gameDataContainer.Changed && _metaverseDataContainer.Changed)
+                else if (!_gameDataContainer.Changed && _metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
                    
 #if UNITY_WEBGL && !UNITY_EDITOR
@@ -400,7 +403,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             }
             else
             {
-                if (_gameDataContainer.Changed)
+                if (_gameDataContainer.Changed || _previousPlayerName != _playerName)
                 {
                     var data = _supportedSDK switch
                     {
