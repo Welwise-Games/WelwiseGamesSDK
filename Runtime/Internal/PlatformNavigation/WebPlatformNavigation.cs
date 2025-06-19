@@ -5,11 +5,7 @@ namespace WelwiseGamesSDK.Internal.PlatformNavigation
 {
     internal sealed class WebPlatformNavigation : IPlatformNavigation
     {
-        public void GoToGame(int id, Action<string> onError)
-        {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.GoToGame(id, ()=>{},onError);
-#endif
-        }
+        public void GoToGame(int id, Action<string> onError) =>
+            PluginRuntime.GoToGame(id, ()=>{},onError);
     }
 }

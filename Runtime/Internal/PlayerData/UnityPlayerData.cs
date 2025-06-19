@@ -51,22 +51,22 @@ namespace WelwiseGamesSDK.Internal.PlayerData
     
             foreach (var kvp in container.Strings)
             {
-                PlayerPrefs.SetString(prefix + kvp.Key, DataMarshallingUtil.Serialize(kvp.Value));
+                PlayerPrefs.SetString(prefix + kvp.Key, DataConvertUtil.Serialize(kvp.Value));
                 keys.Add(kvp.Key);
             }
             foreach (var kvp in container.Ints)
             {
-                PlayerPrefs.SetString(prefix + kvp.Key, DataMarshallingUtil.Serialize(kvp.Value));
+                PlayerPrefs.SetString(prefix + kvp.Key, DataConvertUtil.Serialize(kvp.Value));
                 keys.Add(kvp.Key);
             }
             foreach (var kvp in container.Floats)
             {
-                PlayerPrefs.SetString(prefix + kvp.Key, DataMarshallingUtil.Serialize(kvp.Value));
+                PlayerPrefs.SetString(prefix + kvp.Key, DataConvertUtil.Serialize(kvp.Value));
                 keys.Add(kvp.Key);
             }
             foreach (var kvp in container.Booleans)
             {
-                PlayerPrefs.SetString(prefix + kvp.Key, DataMarshallingUtil.Serialize(kvp.Value));
+                PlayerPrefs.SetString(prefix + kvp.Key, DataConvertUtil.Serialize(kvp.Value));
                 keys.Add(kvp.Key);
             }
     

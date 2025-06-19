@@ -14,34 +14,30 @@ namespace WelwiseGamesSDK.Internal
     {
         public event Action Initialized;
         public bool IsInitialized { get; private set; }
-        public IPlayerData PlayerData => _unityPlayerData;
+        public IPlayerData PlayerData { get; }
         public IEnvironment Environment { get; }
-        public IAdvertisement Advertisement => _unityAdvertisement;
+        public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
         public IPlatformNavigation PlatformNavigation { get; }
 
-        private readonly UnityAdvertisement _unityAdvertisement;
-        private readonly UnityPlayerData _unityPlayerData;
         private readonly SDKSettings _settings;
 
         private bool _isSimulatingInitialize;
         
         public UnitySDK(SDKSettings settings)
         {
-            Environment = new UnityEnvironment(settings.DebugPlayerId, settings.DebugDeviceType,
-                settings.DebugLanguageCode);
-            _unityAdvertisement = UnityAdvertisement.Create();
+            Environment = new UnityEnvironment(settings);
+            Advertisement = new UnityAdvertisement(settings);
             Analytics = new UnityAnalytics();
             PlatformNavigation = new UnityPlatformNavigation();
-            _unityPlayerData = new UnityPlayerData();
+            PlayerData = new UnityPlayerData();
             _settings = settings;
         }
         public void Initialize()
         {
             if (IsInitialized) return;
-            SoundMute.CreateIfNeeded(_settings);
-            _unityPlayerData.Load();
-            if (!_isSimulatingInitialize) _unityAdvertisement.StartCoroutine(InitializeSimulation());
+            PlayerData.Load();
+            if (!_isSimulatingInitialize) PluginRuntime.StartCoroutine(InitializeSimulation());
         }
 
 

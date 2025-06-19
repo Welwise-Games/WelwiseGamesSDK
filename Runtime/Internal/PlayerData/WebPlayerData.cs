@@ -22,8 +22,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 
         public override void Load()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.IsMetaverseSupported(supported =>
+            PluginRuntime.IsMetaverseSupported(supported =>
             {
                 Debug.Log("[WebPlayerData] Get Supported Saves");
                 _isMetaverseSupported = supported;
@@ -34,13 +33,11 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 OnLoaded();
                 Debug.LogError(error);
             });
-#endif
         }
 
         private void LoadPlayerData()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.GetPlayerData(json =>
+            PluginRuntime.GetPlayerData(json =>
             {
                 try
                 {
@@ -95,13 +92,11 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 OnLoaded();
                 Debug.LogError(error);
             });
-#endif
         }
 
         private void LoadCombinedData()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.GetCombinedPlayerData(json =>
+            PluginRuntime.GetCombinedPlayerData(json =>
             {
                 try
                 {
@@ -131,7 +126,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 OnLoaded();
                 Debug.LogError(error);
             });
-#endif
         }
 
         private string SaveCombinedData()
@@ -150,7 +144,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerGameData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -159,7 +153,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerGameData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -168,7 +162,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerGameData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -177,7 +171,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerGameData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -187,7 +181,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerMetaverseData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -196,7 +190,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerMetaverseData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -205,7 +199,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerMetaverseData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              
@@ -214,7 +208,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  combinedData.PlayerMetaverseData.Add(new DataEntry()
                  {
                      Identifier = kvp.Key, 
-                     Value = DataMarshallingUtil.Serialize(kvp.Value)
+                     Value = DataConvertUtil.Serialize(kvp.Value)
                  });
              }
              return JsonConvert.SerializeObject(combinedData);
@@ -229,22 +223,22 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             
             foreach (var kvp in _gameDataContainer.Booleans)
             {
-                playerData[kvp.Key] = DataMarshallingUtil.Serialize(kvp.Value);
+                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
             }
             
             foreach (var kvp in _gameDataContainer.Strings)
             {
-                playerData[kvp.Key] = DataMarshallingUtil.Serialize(kvp.Value);
+                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
             }
             
             foreach (var kvp in _gameDataContainer.Ints)
             {
-                playerData[kvp.Key] = DataMarshallingUtil.Serialize(kvp.Value);
+                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
             }
             
             foreach (var kvp in _gameDataContainer.Floats)
             {
-                playerData[kvp.Key] = DataMarshallingUtil.Serialize(kvp.Value);
+                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
             }
             return JsonConvert.SerializeObject(playerData);
         }
@@ -264,7 +258,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 playerData.PlayerGameData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
                     
@@ -273,7 +267,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 playerData.PlayerGameData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
                     
@@ -282,7 +276,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 playerData.PlayerGameData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
                     
@@ -291,7 +285,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 playerData.PlayerGameData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
             
@@ -314,7 +308,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
                     
@@ -323,7 +317,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
                     
@@ -332,7 +326,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
                     
@@ -341,7 +335,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 metaverseData.PlayerMetaverseData.Add(new DataEntry()
                 {
                     Identifier = kvp.Key, 
-                    Value = DataMarshallingUtil.Serialize(kvp.Value)
+                    Value = DataConvertUtil.Serialize(kvp.Value)
                 });
             }
             return JsonConvert.SerializeObject(metaverseData);
@@ -356,8 +350,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             {
                 if (_gameDataContainer.Changed && _metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-#if UNITY_WEBGL && !UNITY_EDITOR
-                    JsLibProvider.SetCombinedPlayerData(SaveCombinedData(), () =>
+                    PluginRuntime.SetCombinedPlayerData(SaveCombinedData(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
@@ -368,12 +361,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                         Debug.LogError(error);
                         _isSaving = false;
                     });
-#endif
                 }
                 else if (_gameDataContainer.Changed && !_metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-#if UNITY_WEBGL && !UNITY_EDITOR
-                    JsLibProvider.SetPlayerData(SavePlayerDataWelwise(), () =>
+                    PluginRuntime.SetPlayerData(SavePlayerDataWelwise(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
@@ -383,13 +374,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                         Debug.LogError(error);
                         _isSaving = false;
                     });
-#endif
                 }
                 else if (!_gameDataContainer.Changed && _metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-                   
-#if UNITY_WEBGL && !UNITY_EDITOR
-                    JsLibProvider.SetMetaversePlayerData(SaveMetaverseData(), () =>
+                    PluginRuntime.SetMetaversePlayerData(SaveMetaverseData(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
@@ -398,7 +386,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                         Debug.LogError(error);
                         _isSaving = false;
                     });
-#endif
                 }
             }
             else
@@ -411,8 +398,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                         SupportedSDKType.YandexGames => SavePlayerDataYandex(),
                         _ => throw new ArgumentOutOfRangeException()
                     };
-#if UNITY_WEBGL && !UNITY_EDITOR
-                    JsLibProvider.SetPlayerData(data, () =>
+                    PluginRuntime.SetPlayerData(data, () =>
                         {
                             _isSaving = false;
                             if (_gameDataContainer.Changed) Save();
@@ -422,7 +408,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                             Debug.LogError(error);
                             _isSaving = false;
                         });
-#endif
                 }
             }
         }

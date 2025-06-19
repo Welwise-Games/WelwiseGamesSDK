@@ -43,11 +43,9 @@ namespace WelwiseGamesSDK.Internal
             if (IsInitialized || _initializeRunning) return;
 
             _initializeRunning = true;
-            SoundMute.CreateIfNeeded(_settings);
 
-#if UNITY_WEBGL &&! UNITY_EDITOR
             Debug.Log("Initializing WebSDK");
-            JsLibProvider.Init(
+            PluginRuntime.Init(
                 onSuccess: () =>
                 {
                     Debug.Log("WebSDK init success");
@@ -60,7 +58,6 @@ namespace WelwiseGamesSDK.Internal
                     _initializeRunning = false;
                 }
             );
-#endif
         }
         
 

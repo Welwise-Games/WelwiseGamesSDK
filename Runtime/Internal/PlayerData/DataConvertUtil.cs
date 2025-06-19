@@ -2,7 +2,7 @@
 
 namespace WelwiseGamesSDK.Internal.PlayerData
 {
-    internal static class DataMarshallingUtil
+    internal static class DataConvertUtil
     {
         public static string Serialize(int value) => $"i{value}";
         public static string Serialize(float value) => $"f{value.ToString(System.Globalization.CultureInfo.InvariantCulture)}";

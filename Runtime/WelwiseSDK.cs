@@ -8,7 +8,6 @@ namespace WelwiseGamesSDK
     {
         public static SDKBuilder Construct() => new (SDKSettings.LoadOrCreateSettings());
 
-        #region Singletone
         internal static void SetSDK(ISDK sdk) => _sdk = sdk;
         public static ISDK Instance => _sdk;
         private static ISDK _sdk;
@@ -24,6 +23,5 @@ namespace WelwiseGamesSDK
             remove => _sdk.Initialized -= value;
         }
         public bool IsInitialized => _sdk.IsInitialized;
-        #endregion
     }
 }

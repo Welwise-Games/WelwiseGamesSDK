@@ -10,9 +10,9 @@ namespace WelwiseGamesSDK.Internal.Environment
         public DeviceType DeviceType { get; }
         public string Language { get; }
 
-        public UnityEnvironment(string playerId, DeviceType deviceType, string languageCode)
+        public UnityEnvironment(SDKSettings settings)
         {
-            if (string.IsNullOrEmpty(playerId) || !Guid.TryParse(playerId, out var id))
+            if (string.IsNullOrEmpty(settings.DebugPlayerId) || !Guid.TryParse(settings.DebugPlayerId, out var id))
             {
                 PlayerId = Guid.NewGuid();
             }
@@ -21,8 +21,8 @@ namespace WelwiseGamesSDK.Internal.Environment
                 PlayerId = id;
             }
             
-            DeviceType = deviceType;
-            Language = languageCode;
+            DeviceType = settings.DebugDeviceType;
+            Language = settings.DebugLanguageCode;
         }
         
         public void RequestServerTime(Action<long> callback)

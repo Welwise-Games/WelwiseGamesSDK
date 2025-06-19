@@ -18,19 +18,13 @@ namespace WelwiseGamesSDK.Internal.Environment
         private int _loadedCount;
         private bool _hasErrors;
         private const int TotalProperties = 3;
-
-        public WebEnvironment() { }
-
+        
         public void Load()
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
             ResetState();
             RequestPlayerId();
             RequestDeviceType();
             RequestLanguageCode();
-#else
-            Debug.LogWarning("[WebEnvironment] WebGL environment is only available in builds");
-#endif
         }
 
         private void ResetState()
@@ -41,10 +35,9 @@ namespace WelwiseGamesSDK.Internal.Environment
             Language = string.Empty;
         }
 
-#if UNITY_WEBGL && !UNITY_EDITOR
         private void RequestPlayerId()
         {
-            JsLibProvider.GetPlayerId(
+            PluginRuntime.GetPlayerId(
                 playerId =>
                 {
                     Debug.Log("[WebEnvironment] Get player id");
@@ -86,7 +79,7 @@ namespace WelwiseGamesSDK.Internal.Environment
 
         private void RequestDeviceType()
         {
-            JsLibProvider.GetDeviceType(
+            PluginRuntime.GetDeviceType(
                 deviceTypeStr =>
                 {
                     if (!Enum.TryParse(deviceTypeStr, true, out DeviceType deviceType))
@@ -102,7 +95,7 @@ namespace WelwiseGamesSDK.Internal.Environment
 
         private void RequestLanguageCode()
         {
-            JsLibProvider.GetLanguageCode(
+            PluginRuntime.GetLanguageCode(
                 language =>
                 {
                     if (string.IsNullOrEmpty(language))
@@ -115,7 +108,6 @@ namespace WelwiseGamesSDK.Internal.Environment
                 },
                 HandleError);
         }
-#endif
 
         private void CheckCompletion()
         {
@@ -138,8 +130,7 @@ namespace WelwiseGamesSDK.Internal.Environment
 
         public void RequestServerTime(Action<long> callback)
         {
-#if UNITY_WEBGL && !UNITY_EDITOR
-            JsLibProvider.GetServerTime(
+            PluginRuntime.GetServerTime(
                 s =>
                 {
                     Debug.Log("[WebEnvironment] Get server time");
@@ -156,9 +147,6 @@ namespace WelwiseGamesSDK.Internal.Environment
                     Debug.LogError($"[WebEnvironment] Server time error: {error}");
                     callback?.Invoke(DateTime.Now.Ticks);
                 });
-#else
-            callback?.Invoke(DateTime.Now.Ticks);
-#endif
         }
     }
 }

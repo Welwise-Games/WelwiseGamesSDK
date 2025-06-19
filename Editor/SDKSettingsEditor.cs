@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using UnityEditor;
 using UnityEngine;
 using WelwiseGamesSDK.Internal;
@@ -9,7 +10,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        public const string PACKAGE_VERSION = "0.0.7";
+        public const string PACKAGE_VERSION = "0.0.8";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
@@ -23,6 +24,9 @@ namespace WelwiseGames.Editor
         private SerializedProperty _aspectRatio;
         private SerializedProperty _backgroundImage;
         private SerializedProperty _loadSaveOnInitialize;
+        private SerializedProperty _adSimulationDuration;
+        private SerializedProperty _interstitialAdReturnState;
+        private SerializedProperty _rewardedAdReturnState;
         private SupportedSDKType _lastSDKType;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
@@ -31,7 +35,7 @@ namespace WelwiseGames.Editor
             GetWindow<SDKSettingsEditor>("SDK Settings");
         }
 
-        void OnEnable()
+        private void OnEnable()
         {
             _settings = SDKSettings.LoadOrCreateSettings();
             _serializedSettings = new SerializedObject(_settings);
@@ -46,6 +50,9 @@ namespace WelwiseGames.Editor
             _aspectRatio = _serializedSettings.FindProperty("_aspectRatio");
             _backgroundImage = _serializedSettings.FindProperty("_backgroundImage");
             _loadSaveOnInitialize = _serializedSettings.FindProperty("_loadSaveOnInitialize");
+            _adSimulationDuration = _serializedSettings.FindProperty("_adSimulationDuration");
+            _interstitialAdReturnState  = _serializedSettings.FindProperty("_interstitialAdReturnState");
+            _rewardedAdReturnState  = _serializedSettings.FindProperty("_rewardedAdReturnState");
             
             if (_settings.InstalledPackageVersion != PACKAGE_VERSION)
             {
@@ -80,10 +87,12 @@ namespace WelwiseGames.Editor
                         UpdateWebGLTemplate();
                     }
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException();
             }
         }
 
-        void OnGUI()
+        private void OnGUI()
         {
             _serializedSettings.Update();
             
@@ -97,39 +106,30 @@ namespace WelwiseGames.Editor
             EditorGUILayout.PropertyField(_autoConstructAndInitializeSingleton, new GUIContent("Auto Singleton", "Automatic execution of singleton creation and initialization"));
             EditorGUILayout.PropertyField(_loadSaveOnInitialize, new GUIContent("Load save on initialize", "Loading a save is done during the initialization phase"));
             
-            // Новая секция для соотношения сторон
-            EditorGUILayout.Space(15);
-            EditorGUILayout.LabelField("Aspect Ratio Settings", EditorStyles.boldLabel);
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Build Process Settings", EditorStyles.boldLabel);
             
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             {
-                // Выбор соотношения сторон
                 EditorGUILayout.PropertyField(_aspectRatio, 
-                    new GUIContent("Aspect Ratio Mode", 
-                    "Game display mode on pc"));
+                    new GUIContent("Aspect Ratio Mode", "Game display mode on pc"));
                 
                 if (_aspectRatio.enumValueIndex != (int)SDKSettings.AspectRatioMode.Default)
                 {
                     EditorGUILayout.Space(5);
                     EditorGUILayout.BeginVertical(EditorStyles.textArea);
                     {
-                        // Поле для выбора фонового изображения
                         EditorGUILayout.PropertyField(_backgroundImage, 
-                            new GUIContent("Background Image", 
-                            "Background image for mode other than Default"));
+                            new GUIContent("Background Image", "Background image for mode other than Default"));
                         
-                        // Подсказка о размерах изображения
-                        EditorGUILayout.HelpBox(
-                            "Recommended size: 1920x1080 or larger. Will be scaled to fit screen.",
-                            MessageType.Info);
+                        EditorGUILayout.HelpBox("Recommended size: 1920x1080 or larger. Will be scaled to fit screen.", MessageType.Info);
                         
-                        // Предпросмотр изображения
                         if (_backgroundImage.objectReferenceValue != null)
                         {
                             EditorGUILayout.Space(5);
-                            Texture2D preview = (Texture2D)_backgroundImage.objectReferenceValue;
+                            var preview = (Texture2D)_backgroundImage.objectReferenceValue;
                             GUILayout.Label("Preview:", EditorStyles.boldLabel);
-                            Rect rect = GUILayoutUtility.GetRect(200, 120, GUILayout.ExpandWidth(false));
+                            var rect = GUILayoutUtility.GetRect(200, 120, GUILayout.ExpandWidth(false));
                             EditorGUI.DrawPreviewTexture(rect, preview);
                         }
                     }
@@ -154,6 +154,9 @@ namespace WelwiseGames.Editor
             EditorGUILayout.PropertyField(_debugDeviceType, new GUIContent("Device Type", "The type of device that will be used when working in the Unity editor"));
             EditorGUILayout.PropertyField(_debugLanguageCode, new GUIContent("Language", "The user language that will be used when working in the Unity editor"));
             EditorGUILayout.PropertyField(_debugInitializeTime, new GUIContent("Initialization Time", "Initialization time for initializing a plugin in the unity editor, it can be useful to set it longer for testing or shorter for quick development iterations."));
+            EditorGUILayout.PropertyField(_adSimulationDuration, new GUIContent("Ad Duration", "Simulation time of ad display in the editor"));
+            EditorGUILayout.PropertyField(_interstitialAdReturnState, new GUIContent("Interstitial Return", "The result of showing interstitial ads in the editor, can be changed during the game"));
+            EditorGUILayout.PropertyField(_rewardedAdReturnState, new GUIContent("Rewarded Return", "The result of displaying Rewarded ads in the editor, can be changed during the game"));
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField($"Package Version: {PACKAGE_VERSION}", new GUIStyle(EditorStyles.helpBox)
             {
@@ -167,13 +170,11 @@ namespace WelwiseGames.Editor
             {
                 SaveChanges();
             }
-            
-            if (_settings.SupportedSDKType != _lastSDKType)
-            {
-                HandleSDKTypeChange(_lastSDKType, _settings.SupportedSDKType);
-                _lastSDKType = _settings.SupportedSDKType;
-                SaveChanges();
-            }
+
+            if (_settings.SupportedSDKType == _lastSDKType) return;
+            HandleSDKTypeChange(_lastSDKType, _settings.SupportedSDKType);
+            _lastSDKType = _settings.SupportedSDKType;
+            SaveChanges();
         }
         
         public static void HandleSDKTypeChange(SupportedSDKType oldType, SupportedSDKType newType)
@@ -203,7 +204,7 @@ namespace WelwiseGames.Editor
                     AssetDatabase.Refresh();
                 }
             }
-            catch (System.Exception e)
+            catch (Exception e)
             {
                 Debug.LogError($"Error processing SDK change: {e.Message}");
             }
@@ -231,14 +232,12 @@ namespace WelwiseGames.Editor
 
         private static void DeleteDirectory(string relativePath)
         {
-            string assetPath = Path.Combine("Assets", relativePath);
-            
-            if (AssetDatabase.IsValidFolder(assetPath))
-            {
-                FileUtil.DeleteFileOrDirectory(assetPath);
-                FileUtil.DeleteFileOrDirectory(assetPath + ".meta");
-                Debug.Log($"Deleted directory: {assetPath}");
-            }
+            var assetPath = Path.Combine("Assets", relativePath);
+
+            if (!AssetDatabase.IsValidFolder(assetPath)) return;
+            FileUtil.DeleteFileOrDirectory(assetPath);
+            FileUtil.DeleteFileOrDirectory(assetPath + ".meta");
+            Debug.Log($"Deleted directory: {assetPath}");
         }
 
         private static void ImportPackage(string packageName)
@@ -247,12 +246,10 @@ namespace WelwiseGames.Editor
             foreach (var guid in guids)
             {
                 var path = AssetDatabase.GUIDToAssetPath(guid);
-                if (Path.GetFileName(path) == $"{packageName}.unitypackage")
-                {
-                    AssetDatabase.ImportPackage(path, false);
-                    Debug.Log($"Imported {packageName} package");
-                    return;
-                }
+                if (Path.GetFileName(path) != $"{packageName}.unitypackage") continue;
+                AssetDatabase.ImportPackage(path, false);
+                Debug.Log($"Imported {packageName} package");
+                return;
             }
             Debug.LogError($"Package {packageName}.unitypackage not found!");
         }
@@ -265,11 +262,9 @@ namespace WelwiseGames.Editor
 
         private new void SaveChanges()
         {
-            if (_serializedSettings != null && _settings != null)
-            {
-                EditorUtility.SetDirty(_settings);
-                AssetDatabase.SaveAssets();
-            }
+            if (_serializedSettings == null || _settings == null) return;
+            EditorUtility.SetDirty(_settings);
+            AssetDatabase.SaveAssets();
         }
     }
 }

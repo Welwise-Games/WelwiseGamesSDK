@@ -8,8 +8,14 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         public IData GameData => _gameDataContainer;
         public IData MetaverseData => _metaverseDataContainer;
         
-        protected readonly DataContainer _gameDataContainer = new ();
-        protected readonly DataContainer _metaverseDataContainer = new ();
+        protected readonly DataContainer _gameDataContainer;
+        protected readonly DataContainer _metaverseDataContainer;
+
+        protected PlayerData()
+        {
+            _gameDataContainer = new DataContainer(ValidateGameData);
+            _metaverseDataContainer = new DataContainer(ValidateMetaverseData);
+        }
         
         protected string _playerName;
         protected string _previousPlayerName;
@@ -28,5 +34,11 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             IsLoaded = true;
             Loaded?.Invoke();
         }
+
+        private bool ValidateGameData(string key) =>
+            !_metaverseDataContainer.HasKey(key);
+        
+        private bool ValidateMetaverseData(string key) =>
+            !_gameDataContainer.HasKey(key);
     }
 }

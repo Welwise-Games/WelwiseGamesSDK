@@ -1,9 +1,6 @@
-﻿#if UNITY_WEBGL && !UNITY_EDITOR
-using UnityEngine;
-
-namespace WelwiseGamesSDK.Internal
+﻿namespace WelwiseGamesSDK.Internal
 {
-    public class JsBridge : MonoBehaviour
+    internal sealed partial class PluginRuntime
     {
         public static event System.Action OnInitSuccess;
         public static event System.Action<string> OnInitError;
@@ -104,50 +101,5 @@ namespace WelwiseGamesSDK.Internal
         public void HandleRewardedRewarded(string _) => OnRewardedRewarded?.Invoke();
         public void HandleRewardedClose(string _) => OnRewardedClose?.Invoke();
         public void HandleRewardedError(string error) => OnRewardedError?.Invoke(error);
-
-
-        private void OnDestroy()
-        {
-            OnInitSuccess = null;
-            OnInitError = null;
-            OnGetDataSuccess = null;
-            OnGetDataError = null;
-            OnSetDataSuccess = null;
-            OnSetDataError = null;
-            OnGetTimeSuccess = null;
-            OnGetTimeError = null;
-            OnNavigateSuccess = null;
-            OnNavigateError = null;
-            OnGetPlayerIdSuccess = null;
-            OnGetPlayerIdError = null;
-            OnGetDeviceTypeSuccess = null;
-            OnGetDeviceTypeError = null;
-            OnGetLanguageCodeSuccess = null;
-            OnGetLanguageCodeError = null;
-            OnGetMetaverseDataSuccess = null;
-            OnGetMetaverseDataError = null;
-            OnSetMetaverseDataSuccess = null;
-            OnSetMetaverseDataError = null;
-            OnIsMetaverseSupportedSuccess = null;
-            OnIsMetaverseSupportedError = null;
-            OnGetCombinedDataSuccess = null;
-            OnGetCombinedDataError = null;
-            OnSetCombinedDataSuccess = null;
-            OnSetCombinedDataError = null;
-            OnGameReadySuccess = null;
-            OnGameReadyError = null;
-            OnGameplayStartSuccess = null;
-            OnGameplayStartError = null;
-            OnGameplayStopSuccess = null;
-            OnGameplayStopError = null;
-            OnInterstitialOpen = null;
-            OnInterstitialClose = null;
-            OnInterstitialError = null;
-            OnRewardedOpen = null;
-            OnRewardedRewarded = null;
-            OnRewardedClose = null;
-            OnRewardedError = null;
-        }
     }
 }
-#endif

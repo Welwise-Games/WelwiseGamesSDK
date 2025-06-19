@@ -1,4 +1,4 @@
-﻿﻿using UnityEngine;
+﻿using UnityEngine;
 using WelwiseGamesSDK.Shared;
 using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
 
@@ -13,7 +13,9 @@ namespace WelwiseGamesSDK.Shared
         public enum AspectRatioMode
         {
             Default,
+            // ReSharper disable once InconsistentNaming
             Aspect16_9,
+            // ReSharper disable once InconsistentNaming
             Aspect9_16
         }
         
@@ -33,6 +35,9 @@ namespace WelwiseGamesSDK.Shared
         
         public AspectRatioMode AspectRatio => _aspectRatio;
         public Texture2D BackgroundImage => _backgroundImage;
+        public float AdSimulationDuration => _adSimulationDuration;
+        public InterstitialState InterstitialAdReturnState => _interstitialAdReturnState;
+        public RewardedState RewardedAdReturnState => _rewardedAdReturnState;
         
         [SerializeField] private SupportedSDKType _supportedSDKType;
         [SerializeField] private bool _muteAudioOnPause;
@@ -45,6 +50,9 @@ namespace WelwiseGamesSDK.Shared
         [SerializeField] private AspectRatioMode _aspectRatio;
         [SerializeField] private Texture2D _backgroundImage;
         [SerializeField] private bool _loadSaveOnInitialize = true;
+        [SerializeField] [Range(0f, 10f)] private float _adSimulationDuration;
+        [SerializeField] private InterstitialState _interstitialAdReturnState;
+        [SerializeField] private RewardedState _rewardedAdReturnState;
         
         
         public static SDKSettings LoadOrCreateSettings()

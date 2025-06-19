@@ -1,8 +1,9 @@
-﻿﻿using System;
+﻿using System;
 using System.Collections;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -20,7 +21,7 @@ namespace WelwiseGames.Editor
         private const string GithubUser = "Welwise-Games";
         private const string GithubRepo = "WelwiseGamesSDK";
         private const string RemoteVersionURL = "https://raw.githubusercontent.com/{0}/{1}/main/package.json";
-        private const string LastNotificationKey = "WelwiseGamesSDK_LastUpdateNotification";
+        private const string NotificationDataKey = "WelwiseGamesSDK_UpdateNotificationData";
         
         static PackageChangeHandler()
         {
@@ -99,41 +100,78 @@ namespace WelwiseGames.Editor
                 match.Groups[1].Value :
                 string.Empty;
         }
+        
         private static void CompareVersions(string currentVersion, string remoteVersion)
         {
             if (currentVersion == remoteVersion) return;
-            var lastNotificationDate = PlayerPrefs.GetString(LastNotificationKey, "");
-            var showNotification = true;
 
-            if (!string.IsNullOrEmpty(lastNotificationDate) && DateTime.TryParse(lastNotificationDate, out var lastDate))
+            var notificationData = LoadNotificationData();
+            var showNotification = false;
+
+            if (notificationData == null)
             {
-                showNotification = (DateTime.Now - lastDate).TotalDays >= 7;
-            }
-
-            if (showNotification)
-            {
-                var message = $"[{DisplayName}] Update available!\nCurrent: {currentVersion}, New: {remoteVersion}\nPlease update via Package Manager";
-                Debug.LogWarning($"<color=yellow>{message}</color>");
-
-                var openPackageManager = EditorUtility.DisplayDialog(
-                    $"{DisplayName} Update Available",
-                    $"A new version is available!\nCurrent: {currentVersion}\nNew: {remoteVersion}",
-                    "Open Package Manager",
-                    "Later"
-                );
-
-                if (openPackageManager)
-                {            
-                    EditorApplication.ExecuteMenuItem("Window/Package Manager");
-                }
-
-                PlayerPrefs.SetString(LastNotificationKey, DateTime.Now.ToString(CultureInfo.InvariantCulture));
-                PlayerPrefs.Save();
+                showNotification = true;
             }
             else
             {
-                Debug.Log($"[{DisplayName}] Update available ({remoteVersion}), notification suppressed until next week");
+                var isNewVersion = notificationData.Version != remoteVersion;
+                var isTimeExpired = false;
+
+                if (DateTime.TryParse(notificationData.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var lastDate))
+                {
+                    isTimeExpired = (DateTime.Now - lastDate).TotalDays >= 7;
+                }
+
+                showNotification = isNewVersion || isTimeExpired;
+            }
+
+            if (!showNotification) return;
+            ShowUpdateNotification(currentVersion, remoteVersion);
+            SaveNotificationData(remoteVersion);
+        }
+
+        private static NotificationData LoadNotificationData()
+        {
+            var jsonData = PlayerPrefs.GetString(NotificationDataKey, "");
+            return !string.IsNullOrEmpty(jsonData) ? JsonConvert.DeserializeObject<NotificationData>(jsonData) : null;
+        }
+
+        private static void SaveNotificationData(string version)
+        {
+            var data = new NotificationData
+            {
+                Version = version,
+                Date = DateTime.Now.ToString(CultureInfo.InvariantCulture)
+            };
+
+            PlayerPrefs.SetString(NotificationDataKey, JsonUtility.ToJson(data));
+            PlayerPrefs.Save();
+        }
+
+        private static void ShowUpdateNotification(string currentVersion, string remoteVersion)
+        {
+            Debug.LogWarning($"[{DisplayName}] Update available!\nCurrent: {currentVersion}, New: {remoteVersion}\nPlease update via Package Manager");
+
+            var openPackageManager = EditorUtility.DisplayDialog(
+                $"{DisplayName} Update Available",
+                $"A new version is available!\nCurrent: {currentVersion}\nNew: {remoteVersion}",
+                "Open Package Manager",
+                "Later"
+            );
+
+            if (openPackageManager)
+            {            
+                EditorApplication.ExecuteMenuItem("Window/Package Manager");
             }
         }
+        
+        [Serializable]
+        private class NotificationData
+        {
+            public string Version;
+            public string Date;
+        }
+
+        
     }
 }
