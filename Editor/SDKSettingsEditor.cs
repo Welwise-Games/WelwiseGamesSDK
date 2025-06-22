@@ -10,7 +10,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        public const string PACKAGE_VERSION = "0.0.8";
+        public const string PACKAGE_VERSION = "0.0.9";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
