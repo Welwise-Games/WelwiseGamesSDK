@@ -32,9 +32,9 @@ namespace WelwiseGamesSDK.Internal
             IsInitialized = false;
             Analytics = new WebAnalytics();
             Advertisement = new WebAdvertisement();
-            PlatformNavigation = new WebPlatformNavigation();
             _webEnvironment = new WebEnvironment();
             _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment);
+            PlatformNavigation = new WebPlatformNavigation(_webPlayerData);
             _settings = sdkSettings;
         }
 

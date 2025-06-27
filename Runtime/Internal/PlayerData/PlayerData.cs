@@ -5,6 +5,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 {
     internal abstract class PlayerData : IPlayerData
     {
+        public event Action Saved;
         public IData GameData => _gameDataContainer;
         public IData MetaverseData => _metaverseDataContainer;
         
@@ -40,5 +41,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         
         private bool ValidateMetaverseData(string key) =>
             !_gameDataContainer.HasKey(key);
+        
+        protected void OnSaved() => Saved?.Invoke();
     }
 }
