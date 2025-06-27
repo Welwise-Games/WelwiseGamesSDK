@@ -354,6 +354,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
+                        else OnSaved();
                         _previousPlayerName = _playerName;
                     },
                     error =>
@@ -368,6 +369,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
+                        else OnSaved();
                     },
                     error =>
                     {
@@ -381,12 +383,14 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
+                        else OnSaved();
                     }, error =>
                     {
                         Debug.LogError(error);
                         _isSaving = false;
                     });
                 }
+                else OnSaved();
             }
             else
             {
@@ -402,6 +406,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                         {
                             _isSaving = false;
                             if (_gameDataContainer.Changed) Save();
+                            else OnSaved();
                         },
                         error =>
                         {
@@ -409,6 +414,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                             _isSaving = false;
                         });
                 }
+                else OnSaved();
             }
         }
         

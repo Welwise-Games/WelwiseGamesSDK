@@ -10,7 +10,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         // ReSharper disable once InconsistentNaming
-        public const string PACKAGE_VERSION = "0.0.10";
+        public const string PACKAGE_VERSION = "0.0.11";
         
         private SDKSettings _settings;
         private SerializedObject _serializedSettings;
@@ -181,28 +181,30 @@ namespace WelwiseGames.Editor
         {
             try
             {
-                bool success = true;
-                
-                DeleteDirectory("WebGL Templates/Welwise SDK");
-                
+                var success = true;
+        
+                DeleteDirectory("WebGLTemplates/Welwise SDK");
+        
                 switch (newType)
                 {
                     case SupportedSDKType.WelwiseGames:
                         success &= DeleteFile("Plugins/WebGL/yandex-games.jslib");
+                        success &= DeleteFile("Plugins/WebGL/yandex-games.jslib.meta");
                         ImportPackage("welwise-games-template");
                         break;
-                        
+                
                     case SupportedSDKType.YandexGames:
                         success &= DeleteFile("Plugins/WebGL/welwise-sdk.jslib");
+                        success &= DeleteFile("Plugins/WebGL/welwise-sdk.jslib.meta");
                         ImportPackage("yandex-games-template");
                         break;
+                    default:
+                        throw new ArgumentOutOfRangeException(nameof(newType), newType, null);
                 }
 
-                if (success)
-                {
-                    UpdateWebGLTemplate();
-                    AssetDatabase.Refresh();
-                }
+                if (!success) return;
+                UpdateWebGLTemplate();
+                AssetDatabase.Refresh();
             }
             catch (Exception e)
             {
@@ -218,26 +220,21 @@ namespace WelwiseGames.Editor
 
         private static bool DeleteFile(string relativePath)
         {
-            string fullPath = Path.Combine(Application.dataPath, relativePath);
-            string assetPath = Path.Combine("Assets", relativePath);
+            var fullPath = Path.Combine(Application.dataPath, relativePath);
+            var assetPath = Path.Combine("Assets", relativePath);
 
-            if (File.Exists(fullPath))
-            {
-                AssetDatabase.DeleteAsset(assetPath);
-                Debug.Log($"Deleted file: {assetPath}");
-                return true;
-            }
-            return false;
+            if (!File.Exists(fullPath)) return false;
+            AssetDatabase.DeleteAsset(assetPath);
+            return true;
         }
 
         private static void DeleteDirectory(string relativePath)
         {
-            var assetPath = Path.Combine("Assets", relativePath);
+            var path = $"Assets/{relativePath}";
+            if (!AssetDatabase.IsValidFolder(path)) return;
 
-            if (!AssetDatabase.IsValidFolder(assetPath)) return;
-            FileUtil.DeleteFileOrDirectory(assetPath);
-            FileUtil.DeleteFileOrDirectory(assetPath + ".meta");
-            Debug.Log($"Deleted directory: {assetPath}");
+            FileUtil.DeleteFileOrDirectory(path);
+            FileUtil.DeleteFileOrDirectory(path + ".meta");
         }
 
         private static void ImportPackage(string packageName)
@@ -248,7 +245,6 @@ namespace WelwiseGames.Editor
                 var path = AssetDatabase.GUIDToAssetPath(guid);
                 if (Path.GetFileName(path) != $"{packageName}.unitypackage") continue;
                 AssetDatabase.ImportPackage(path, false);
-                Debug.Log($"Imported {packageName} package");
                 return;
             }
             Debug.LogError($"Package {packageName}.unitypackage not found!");

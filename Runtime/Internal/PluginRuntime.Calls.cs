@@ -8,14 +8,14 @@ namespace WelwiseGamesSDK.Internal
     {
         #region Initialization
         [DllImport("__Internal")]
-        private static extern void JsInit();
+        private static extern void JSInit();
 
         public static void Init(Action onSuccess, Action<string> onError)
         {
             OnInitSuccess += SuccessHandler;
             OnInitError += ErrorHandler;
 
-            JsInit();
+            JSInit();
             return;
 
             void ErrorHandler(string error)
@@ -90,14 +90,14 @@ namespace WelwiseGamesSDK.Internal
 
         #region Server Time
         [DllImport("__Internal")]
-        private static extern void JsGetServerTime();
+        private static extern void JSGetServerTime();
 
         public static void GetServerTime(Action<string> onSuccess, Action<string> onError)
         {
             OnGetTimeSuccess += SuccessHandler;
             OnGetTimeError += ErrorHandler;
 
-            JsGetServerTime();
+            JSGetServerTime();
             return;
 
             void ErrorHandler(string error)
@@ -118,14 +118,14 @@ namespace WelwiseGamesSDK.Internal
 
         #region Navigation
         [DllImport("__Internal")]
-        private static extern void JsGoToGame(int gameId);
+        private static extern void JSGoToGame(int gameId);
 
         public static void GoToGame(int gameId, Action onSuccess, Action<string> onError)
         {
             OnNavigateSuccess += SuccessHandler;
             OnNavigateError += ErrorHandler;
 
-            JsGoToGame(gameId);
+            JSGoToGame(gameId);
             return;
 
             void ErrorHandler(string error)
@@ -146,14 +146,14 @@ namespace WelwiseGamesSDK.Internal
 
         #region Environment Properties
         [DllImport("__Internal")]
-        private static extern void JsIsMetaverseSupported();
+        private static extern void JSIsMetaverseSupported();
 
         public static void IsMetaverseSupported(Action<bool> onSuccess, Action<string> onError)
         {
             OnIsMetaverseSupportedSuccess += SuccessHandler;
             OnIsMetaverseSupportedError += ErrorHandler;
             
-            JsIsMetaverseSupported();
+            JSIsMetaverseSupported();
             return;
 
             void ErrorHandler(string error)
@@ -172,14 +172,14 @@ namespace WelwiseGamesSDK.Internal
         }
         
         [DllImport("__Internal")]
-        private static extern void JsGetPlayerId();
+        private static extern void JSGetPlayerId();
         
         public static void GetPlayerId(Action<string> onSuccess, Action<string> onError)
         {
             OnGetPlayerIdSuccess += SuccessHandler;
             OnGetPlayerIdError += ErrorHandler;
             
-            JsGetPlayerId();
+            JSGetPlayerId();
             return;
 
             void ErrorHandler(string error)
@@ -198,14 +198,14 @@ namespace WelwiseGamesSDK.Internal
         }
         
         [DllImport("__Internal")]
-        private static extern void JsGetDeviceType();
+        private static extern void JSGetDeviceType();
         
         public static void GetDeviceType(Action<string> onSuccess, Action<string> onError)
         {
             OnGetDeviceTypeSuccess += SuccessHandler;
             OnGetDeviceTypeError += ErrorHandler;
             
-            JsGetDeviceType();
+            JSGetDeviceType();
             return;
 
             void ErrorHandler(string error)
@@ -224,14 +224,14 @@ namespace WelwiseGamesSDK.Internal
         }
         
         [DllImport("__Internal")]
-        private static extern void JsGetLanguageCode();
+        private static extern void JSGetLanguageCode();
         
         public static void GetLanguageCode(Action<string> onSuccess, Action<string> onError)
         {
             OnGetLanguageCodeSuccess += SuccessHandler;
             OnGetLanguageCodeError += ErrorHandler;
             
-            JsGetLanguageCode();
+            JSGetLanguageCode();
             return;
 
             void ErrorHandler(string error)
@@ -360,14 +360,14 @@ namespace WelwiseGamesSDK.Internal
         
         #region Game Ready and Gameplay
         [DllImport("__Internal")]
-        private static extern void JsGameReady();
+        private static extern void JSGameReady();
     
         public static void GameReady(Action onSuccess, Action<string> onError)
         {
             OnGameReadySuccess += SuccessHandler;
             OnGameReadyError += ErrorHandler;
     
-            JsGameReady();
+            JSGameReady();
             return;
 
             void ErrorHandler(string error)
@@ -386,14 +386,14 @@ namespace WelwiseGamesSDK.Internal
         }
     
         [DllImport("__Internal")]
-        private static extern void JsGameplayStart();
+        private static extern void JSGameplayStart();
     
         public static void GameplayStart(Action onSuccess, Action<string> onError)
         {
             OnGameplayStartSuccess += SuccessHandler;
             OnGameplayStartError += ErrorHandler;
     
-            JsGameplayStart();
+            JSGameplayStart();
             return;
 
             void ErrorHandler(string error)
@@ -412,14 +412,14 @@ namespace WelwiseGamesSDK.Internal
         }
     
         [DllImport("__Internal")]
-        private static extern void JsGameplayStop();
+        private static extern void JSGameplayStop();
     
         public static void GameplayStop(Action onSuccess, Action<string> onError)
         {
             OnGameplayStopSuccess += SuccessHandler;
             OnGameplayStopError += ErrorHandler;
     
-            JsGameplayStop();
+            JSGameplayStop();
             return;
 
             void ErrorHandler(string error)
@@ -440,10 +440,10 @@ namespace WelwiseGamesSDK.Internal
 
         #region Advertisement
         [DllImport("__Internal")]
-        private static extern void JsShowInterstitial();
+        private static extern void JSShowInterstitial();
         
         [DllImport("__Internal")]
-        private static extern void JsShowRewarded();
+        private static extern void JSShowRewarded();
         
         public static void ShowInterstitial(Action<InterstitialState> callbackState)
         {
@@ -451,7 +451,7 @@ namespace WelwiseGamesSDK.Internal
             OnInterstitialClose += CloseHandler;
             OnInterstitialError += ErrorHandler;
         
-            JsShowInterstitial();
+            JSShowInterstitial();
             return;
 
             void Unsubscribe()
@@ -487,7 +487,7 @@ namespace WelwiseGamesSDK.Internal
             OnRewardedClose += CloseHandler;
             OnRewardedError += ErrorHandler;
         
-            JsShowRewarded();
+            JSShowRewarded();
             return;
 
             void Unsubscribe()
