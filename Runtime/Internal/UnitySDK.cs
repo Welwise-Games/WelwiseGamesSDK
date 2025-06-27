@@ -4,6 +4,7 @@ using UnityEngine;
 using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
+using WelwiseGamesSDK.Internal.Payments;
 using WelwiseGamesSDK.Internal.PlatformNavigation;
 using WelwiseGamesSDK.Internal.PlayerData;
 using WelwiseGamesSDK.Shared;
@@ -19,6 +20,7 @@ namespace WelwiseGamesSDK.Internal
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
         public IPlatformNavigation PlatformNavigation { get; }
+        public IPayments Payments { get; }
 
         private readonly SDKSettings _settings;
 
@@ -31,6 +33,7 @@ namespace WelwiseGamesSDK.Internal
             Analytics = new UnityAnalytics();
             PlatformNavigation = new UnityPlatformNavigation();
             PlayerData = new UnityPlayerData();
+            Payments = new UnityPayments();
             _settings = settings;
         }
         public void Initialize()

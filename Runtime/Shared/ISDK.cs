@@ -34,6 +34,11 @@ namespace WelwiseGamesSDK.Shared
         public IPlatformNavigation PlatformNavigation { get; }
         
         /// <summary>
+        /// In-app purchases
+        /// </summary>
+        public IPayments Payments { get; }
+        
+        /// <summary>
         /// Initializes the SDK services
         /// </summary>
         public void Initialize();
