@@ -50,6 +50,27 @@
         public static event System.Action OnRewardedRewarded;
         public static event System.Action OnRewardedClose;
         public static event System.Action<string> OnRewardedError;
+        public static event System.Action OnPaymentsInitSuccess;
+        public static event System.Action<string> OnPaymentsInitError;
+        public static event System.Action<string> OnPaymentsGetCatalogSuccess;
+        public static event System.Action<string> OnPaymentsGetCatalogError;
+        public static event System.Action<string> OnPaymentsGetPurchasesSuccess;
+        public static event System.Action<string> OnPaymentsGetPurchasesError;
+        public static event System.Action<string> OnPaymentsPurchaseSuccess;
+        public static event System.Action<string> OnPaymentsPurchaseError;
+        public static event System.Action<string> OnPaymentsConsumeSuccess;
+        public static event System.Action<string> OnPaymentsConsumeError;
+
+        public void HandlePaymentsInitSuccess(string _) => OnPaymentsInitSuccess?.Invoke();
+        public void HandlePaymentsInitError(string error) => OnPaymentsInitError?.Invoke(error);
+        public void HandlePaymentsGetCatalogSuccess(string json) => OnPaymentsGetCatalogSuccess?.Invoke(json);
+        public void HandlePaymentsGetCatalogError(string error) => OnPaymentsGetCatalogError?.Invoke(error);
+        public void HandlePaymentsGetPurchasesSuccess(string json) => OnPaymentsGetPurchasesSuccess?.Invoke(json);
+        public void HandlePaymentsGetPurchasesError(string error) => OnPaymentsGetPurchasesError?.Invoke(error);
+        public void HandlePaymentsPurchaseSuccess(string json) => OnPaymentsPurchaseSuccess?.Invoke(json);
+        public void HandlePaymentsPurchaseError(string error) => OnPaymentsPurchaseError?.Invoke(error);
+        public void HandlePaymentsConsumeSuccess(string token) => OnPaymentsConsumeSuccess?.Invoke(token);
+        public void HandlePaymentsConsumeError(string error) => OnPaymentsConsumeError?.Invoke(error);
 
 
         public void HandleInitSuccess(string _) => OnInitSuccess?.Invoke();

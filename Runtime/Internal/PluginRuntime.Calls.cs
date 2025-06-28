@@ -515,5 +515,140 @@ namespace WelwiseGamesSDK.Internal
             void OpenHandler() => callbackState?.Invoke(RewardedState.Opened);
         }
         #endregion
+
+        #region Payments
+        [DllImport("__Internal")]
+        private static extern void JSPaymentsInit();
+        
+        public static void PaymentsInit(Action onSuccess, Action<string> onError)
+        {
+            OnPaymentsInitSuccess += SuccessHandler;
+            OnPaymentsInitError += ErrorHandler;
+        
+            JSPaymentsInit();
+            return;
+        
+            void ErrorHandler(string error)
+            {
+                onError?.Invoke(error);
+                OnPaymentsInitSuccess -= SuccessHandler;
+                OnPaymentsInitError -= ErrorHandler;
+            }
+        
+            void SuccessHandler()
+            {
+                onSuccess?.Invoke();
+                OnPaymentsInitSuccess -= SuccessHandler;
+                OnPaymentsInitError -= ErrorHandler;
+            }
+        }
+        
+        [DllImport("__Internal")]
+        private static extern void JSPaymentsGetCatalog();
+        
+        public static void PaymentsGetCatalog(Action<string> onSuccess, Action<string> onError)
+        {
+            OnPaymentsGetCatalogSuccess += SuccessHandler;
+            OnPaymentsGetCatalogError += ErrorHandler;
+        
+            JSPaymentsGetCatalog();
+            return;
+        
+            void ErrorHandler(string error)
+            {
+                onError?.Invoke(error);
+                OnPaymentsGetCatalogSuccess -= SuccessHandler;
+                OnPaymentsGetCatalogError -= ErrorHandler;
+            }
+        
+            void SuccessHandler(string catalog)
+            {
+                onSuccess?.Invoke(catalog);
+                OnPaymentsGetCatalogSuccess -= SuccessHandler;
+                OnPaymentsGetCatalogError -= ErrorHandler;
+            }
+        }
+        
+        [DllImport("__Internal")]
+        private static extern void JSPaymentsGetPurchases();
+        
+        public static void PaymentsGetPurchases(Action<string> onSuccess, Action<string> onError)
+        {
+            OnPaymentsGetPurchasesSuccess += SuccessHandler;
+            OnPaymentsGetPurchasesError += ErrorHandler;
+        
+            JSPaymentsGetPurchases();
+            return;
+        
+            void ErrorHandler(string error)
+            {
+                onError?.Invoke(error);
+                OnPaymentsGetPurchasesSuccess -= SuccessHandler;
+                OnPaymentsGetPurchasesError -= ErrorHandler;
+            }
+        
+            void SuccessHandler(string purchases)
+            {
+                onSuccess?.Invoke(purchases);
+                OnPaymentsGetPurchasesSuccess -= SuccessHandler;
+                OnPaymentsGetPurchasesError -= ErrorHandler;
+            }
+        }
+        
+        [DllImport("__Internal")]
+        private static extern void JSPaymentsPurchase(string productId, string developerPayload);
+        
+        public static void PaymentsPurchase(string productId, string developerPayload, 
+            Action<string> onSuccess, Action<string> onError)
+        {
+            OnPaymentsPurchaseSuccess += SuccessHandler;
+            OnPaymentsPurchaseError += ErrorHandler;
+        
+            JSPaymentsPurchase(productId, developerPayload);
+            return;
+        
+            void ErrorHandler(string error)
+            {
+                onError?.Invoke(error);
+                OnPaymentsPurchaseSuccess -= SuccessHandler;
+                OnPaymentsPurchaseError -= ErrorHandler;
+            }
+        
+            void SuccessHandler(string purchase)
+            {
+                onSuccess?.Invoke(purchase);
+                OnPaymentsPurchaseSuccess -= SuccessHandler;
+                OnPaymentsPurchaseError -= ErrorHandler;
+            }
+        }
+        
+        [DllImport("__Internal")]
+        private static extern void JSPaymentsConsume(string purchaseToken);
+        
+        public static void PaymentsConsume(string purchaseToken, 
+            Action<string> onSuccess, Action<string> onError)
+        {
+            OnPaymentsConsumeSuccess += SuccessHandler;
+            OnPaymentsConsumeError += ErrorHandler;
+        
+            JSPaymentsConsume(purchaseToken);
+            return;
+        
+            void ErrorHandler(string error)
+            {
+                onError?.Invoke(error);
+                OnPaymentsConsumeSuccess -= SuccessHandler;
+                OnPaymentsConsumeError -= ErrorHandler;
+            }
+        
+            void SuccessHandler(string token)
+            {
+                onSuccess?.Invoke(token);
+                OnPaymentsConsumeSuccess -= SuccessHandler;
+                OnPaymentsConsumeError -= ErrorHandler;
+            }
+        }
+        
+        #endregion
     }
 }

@@ -20,16 +20,7 @@ namespace WelwiseGames.Editor
 
             var settings = SDKSettings.LoadOrCreateSettings();
                 
-            string backgroundImagePath = null;
-            if (settings.BackgroundImage != null && settings.AspectRatio != SDKSettings.AspectRatioMode.Default)
-            {
-                var sourcePath = AssetDatabase.GetAssetPath(settings.BackgroundImage);
-                var fileName = Path.GetFileName(sourcePath);
-                var destPath = Path.Combine(buildFolder, fileName);
-                    
-                File.Copy(sourcePath, destPath, true);
-                backgroundImagePath = fileName;
-            }
+            var backgroundImagePath = string.IsNullOrEmpty(settings.BackgroundImagePath) || settings.AspectRatio == SDKSettings.AspectRatioMode.Default  ? null : settings.BackgroundImagePath;
 
             var html = File.ReadAllText(indexHtmlPath);
                 

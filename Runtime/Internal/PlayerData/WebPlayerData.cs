@@ -17,7 +17,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         public WebPlayerData(SDKSettings settings,IEnvironment environment)
         {
             _environment = environment;
-            _supportedSDK = settings.SupportedSDKType;
+            _supportedSDK = settings.SDKType;
         }
 
         public override void Load()
