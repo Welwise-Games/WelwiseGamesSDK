@@ -18,7 +18,10 @@ namespace WelwiseGames.Editor
         private enum TabType
         {
             General,
-            MockPayments,
+            Build,
+            Advertisement,
+            Environment,
+            Payments,
             About
         }
         
@@ -33,6 +36,11 @@ namespace WelwiseGames.Editor
         private string _manifestVersion = "Unknown";
         private ListRequest _listRequest;
         private Vector2 _scrollPosition;
+        
+        // Отложенное сохранение
+        private bool _settingsDirty;
+        private double _lastChangeTime;
+        private const double SaveDelay = 1.0; // Задержка 1 секунда
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
         public static void ShowWindow()
@@ -47,6 +55,9 @@ namespace WelwiseGames.Editor
             ValidateRequiredPackages();
             LoadLogoTexture();
             StartManifestVersionFetch();
+            
+            // Инициализация системы отложенного сохранения
+            _settingsDirty = false;
         }
 
         private void LoadLogoTexture()
@@ -89,33 +100,71 @@ namespace WelwiseGames.Editor
         private void OnDisable()
         {
             EditorApplication.update -= ProgressPackageVersionFetch;
+            SaveIfDirtyImmediate(); // Сохраняем при закрытии окна
+        }
+
+        private void OnLostFocus()
+        {
+            SaveIfDirtyImmediate(); // Сохраняем при потере фокуса
         }
 
         private void InitializeLists()
         {
             _productsList = new ReorderableList(_settings.MockProducts, typeof(Product), true, true, true, true)
                 {
-                    drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Mock Products"),
+                    drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Products"),
                     drawElementCallback = (rect, index, _, _) => DrawProductElement(rect, index),
                     elementHeight = EditorGUIUtility.singleLineHeight * 7,
                     onRemoveCallback = list => 
                     {
                         _settings.MockProducts.RemoveAt(list.index);
-                        SaveSettings();
+                        MarkSettingsDirty(); // Отложенное сохранение
                     }
                 };
 
             _purchasesList = new ReorderableList(_settings.MockPurchases, typeof(Purchase), true, true, true, true)
                 {
-                    drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Mock Purchases"),
+                    drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Purchases"),
                     drawElementCallback = (rect, index, _, _) => DrawPurchaseElement(rect, index),
                     elementHeight = EditorGUIUtility.singleLineHeight * 4,
                     onRemoveCallback = list => 
                     {
                         _settings.MockPurchases.RemoveAt(list.index);
-                        SaveSettings();
+                        MarkSettingsDirty(); // Отложенное сохранение
                     }
                 };
+        }
+        
+        // Система отложенного сохранения
+        private void MarkSettingsDirty()
+        {
+            _settingsDirty = true;
+            _lastChangeTime = EditorApplication.timeSinceStartup;
+            EditorApplication.delayCall -= DelayedSave;
+            EditorApplication.delayCall += DelayedSave;
+        }
+
+        private void DelayedSave()
+        {
+            if (_settingsDirty && EditorApplication.timeSinceStartup - _lastChangeTime >= SaveDelay)
+            {
+                SaveIfDirtyImmediate();
+            }
+        }
+
+        private void SaveIfDirtyImmediate()
+        {
+            if (_settingsDirty)
+            {
+                SaveSettingsImmediate();
+                _settingsDirty = false;
+            }
+        }
+
+        private void SaveSettingsImmediate()
+        {
+            if (_settings == null) return;
+            _settings.Save();
         }
         
         private void DrawProductElement(Rect rect, int index)
@@ -165,10 +214,10 @@ namespace WelwiseGames.Editor
             _settings.MockPurchases[index] = purchase;
         }
 
-        private void DrawMockPaymentsSettings()
+        private void DrawPaymentsSettings()
         {
             EditorGUILayout.Space(15);
-            EditorGUILayout.LabelField("Mock Payments Settings", EditorStyles.boldLabel);
+            EditorGUILayout.LabelField("Payments Settings", EditorStyles.boldLabel);
             
             _settings.PurchaseSimulationDuration = EditorGUILayout.Slider(
                 "Simulation Duration",
@@ -204,7 +253,7 @@ namespace WelwiseGames.Editor
                 Debug.Log($"Detected new template version ({TemplateVersion}). Updating files...");
                 UpdateFilesForCurrentSDK();
                 _settings.InstalledTemplateVersion = TemplateVersion;
-                SaveSettings();
+                SaveSettingsImmediate(); // Немедленное сохранение для критических изменений
             }
             
             switch (_settings.SDKType)
@@ -245,13 +294,23 @@ namespace WelwiseGames.Editor
             switch (_currentTab)
             {
                 case TabType.General:
-                    DrawRuntimeSettings();
-                    DrawBuildSettings();
-                    DrawEditorSettings();
+                    DrawGeneralSettings();
                     break;
                     
-                case TabType.MockPayments:
-                    DrawMockPaymentsSettings();
+                case TabType.Build:
+                    DrawBuildSettings();
+                    break;
+                    
+                case TabType.Advertisement:
+                    DrawAdvertisementSettings();
+                    break;
+                    
+                case TabType.Environment:
+                    DrawEnvironmentSettings();
+                    break;
+                    
+                case TabType.Payments:
+                    DrawPaymentsSettings();
                     break;
                     
                 case TabType.About:
@@ -261,95 +320,81 @@ namespace WelwiseGames.Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                SaveSettings();
+                MarkSettingsDirty(); // Отложенное сохранение вместо немедленного
             }
 
             if (_settings.SDKType != _lastSDKType)
             {
                 HandleSDKTypeChange(_lastSDKType, _settings.SDKType);
                 _lastSDKType = _settings.SDKType;
-                SaveSettings();
+                SaveSettingsImmediate(); // Немедленное сохранение для критических изменений
             }
         }
         
         private void DrawHeader()
         {
             const int headerHeight = 32;
-            const int tabPadding = 0;
-            
+    
             var headerStyle = new GUIStyle(EditorStyles.toolbar)
             {
                 fixedHeight = headerHeight
             };
-        
+
             var tabStyle = new GUIStyle(EditorStyles.toolbarButton)
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold,
-                padding = new RectOffset(10, 10, 0, 0),
+                padding = new RectOffset(10, 10, 0, 0), // Добавлен правый отступ
                 fixedHeight = headerHeight - 4
             };
-        
+
             EditorGUILayout.BeginHorizontal(headerStyle);
             {
-                EditorGUILayout.BeginVertical(GUILayout.Width(180));
+                // Левая часть с логотипом
+                EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
                 {
-                    GUILayout.FlexibleSpace();
-                    EditorGUILayout.BeginHorizontal();
+                    if (_logoTexture != null)
                     {
-                        if (_logoTexture != null)
-                        {
-                            GUILayout.Label(_logoTexture, 
-                                GUILayout.Height(32), 
-                                GUILayout.Width(32));
-                        }
-                        GUILayout.Label("Welwise Games SDK", 
-                            EditorStyles.boldLabel, 
-                            GUILayout.Height(32));
+                        GUILayout.Label(_logoTexture, 
+                            GUILayout.Height(32), 
+                            GUILayout.Width(32));
                     }
-                    EditorGUILayout.EndHorizontal();
-                    GUILayout.FlexibleSpace();
+                    GUILayout.Label("Welwise Games SDK", 
+                        EditorStyles.boldLabel, 
+                        GUILayout.Height(32));
                 }
-                EditorGUILayout.EndVertical();
-                
+                EditorGUILayout.EndHorizontal();
+
+                // Гибкое пространство перед вкладками
                 GUILayout.FlexibleSpace();
-                
-                EditorGUILayout.BeginVertical();
+
+                // Основная область вкладок
+                EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 {
-                    GUILayout.FlexibleSpace();
                     var tabs = Enum.GetNames(typeof(TabType));
-                    var tabWidth = (EditorGUIUtility.currentViewWidth - 350) / tabs.Length;
-                    
-                    EditorGUILayout.BeginHorizontal(GUILayout.Height(headerHeight));
+                    float tabWidth = (EditorGUIUtility.currentViewWidth - 180) / tabs.Length;
+            
+                    for (int i = 0; i < tabs.Length; i++)
                     {
-                        GUILayout.FlexibleSpace();
-                        for (int i = 0; i < tabs.Length; i++)
+                        var style = new GUIStyle(tabStyle);
+                        if ((int)_currentTab == i)
                         {
-                            if (i > 0) GUILayout.Space(tabPadding);
-                            
-                            var style = new GUIStyle(tabStyle);
-                            if ((int)_currentTab == i)
-                            {
-                                style.normal.background = Texture2D.grayTexture;
-                            }
-                            
-                            if (GUILayout.Button(tabs[i], style, 
-                                GUILayout.Width(tabWidth - tabPadding)))
-                            {
-                                _currentTab = (TabType)i;
-                            }
+                            style.normal.background = Texture2D.grayTexture;
                         }
-                        GUILayout.FlexibleSpace();
+                
+                        // Автоматическое растягивание вкладок
+                        if (GUILayout.Button(tabs[i], style, GUILayout.Width(tabWidth)))
+                        {
+                            _currentTab = (TabType)i;
+                        }
                     }
-                    EditorGUILayout.EndHorizontal();
-                    GUILayout.FlexibleSpace();
                 }
-                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
             }
             EditorGUILayout.EndHorizontal();
         }
         
-        private void DrawRuntimeSettings()
+        private void DrawGeneralSettings()
         {
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Runtime Settings", EditorStyles.boldLabel);
@@ -369,6 +414,10 @@ namespace WelwiseGames.Editor
             _settings.LoadSaveOnInitialize = EditorGUILayout.Toggle(
                 "Load Save On Initialize", 
                 _settings.LoadSaveOnInitialize);
+            
+            _settings.DebugInitializeTime = EditorGUILayout.Slider(
+                "Initialization Time", 
+                _settings.DebugInitializeTime, 0f, 10f);
         }
         
         private void DrawBuildSettings()
@@ -412,6 +461,7 @@ namespace WelwiseGames.Editor
                 string.Empty;
             
             _needsTextureReload = true;
+            MarkSettingsDirty();
         }
         
         private void DrawBackgroundPreview()
@@ -431,24 +481,10 @@ namespace WelwiseGames.Editor
             EditorGUI.DrawPreviewTexture(rect, _backgroundTexture);
         }
         
-        private void DrawEditorSettings()
+        private void DrawAdvertisementSettings()
         {
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
-            
-            DrawPlayerIdField();
-            
-            _settings.DebugDeviceType = (DeviceType)EditorGUILayout.EnumPopup(
-                "Device Type", 
-                _settings.DebugDeviceType);
-            
-            _settings.DebugLanguageCode = EditorGUILayout.TextField(
-                "Language", 
-                _settings.DebugLanguageCode);
-            
-            _settings.DebugInitializeTime = EditorGUILayout.Slider(
-                "Initialization Time", 
-                _settings.DebugInitializeTime, 0f, 10f);
+            EditorGUILayout.LabelField("Advertisement Settings", EditorStyles.boldLabel);
             
             _settings.AdSimulationDuration = EditorGUILayout.Slider(
                 "Ad Duration", 
@@ -463,6 +499,22 @@ namespace WelwiseGames.Editor
                 _settings.RewardedAdReturnState);
         }
         
+        private void DrawEnvironmentSettings()
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Environment Settings", EditorStyles.boldLabel);
+            
+            DrawPlayerIdField();
+            
+            _settings.DebugDeviceType = (DeviceType)EditorGUILayout.EnumPopup(
+                "Device Type", 
+                _settings.DebugDeviceType);
+            
+            _settings.DebugLanguageCode = EditorGUILayout.TextField(
+                "Language", 
+                _settings.DebugLanguageCode);
+        }
+        
         private void DrawPlayerIdField()
         {
             EditorGUILayout.BeginHorizontal();
@@ -472,6 +524,7 @@ namespace WelwiseGames.Editor
                 if (GUILayout.Button("Generate", GUILayout.Width(80)))
                 {
                     _settings.DebugPlayerId = Guid.NewGuid().ToString();
+                    MarkSettingsDirty(); // Отложенное сохранение
                     GUI.FocusControl(null);
                 }
             }
@@ -583,12 +636,6 @@ namespace WelwiseGames.Editor
         {
             PlayerSettings.WebGL.template = "PROJECT:Welwise SDK";
             Debug.Log("WebGL template updated to 'Welwise SDK'");
-        }
-
-        private void SaveSettings()
-        {
-            if (_settings == null) return;
-            _settings.Save();
         }
     }
 }
