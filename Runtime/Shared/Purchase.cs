@@ -1,19 +1,14 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace WelwiseGamesSDK.Shared
 {
-    public struct Purchase
+    [Serializable]
+    public class Purchase
     {
-        [JsonProperty("productID")]
-        public string ProductId { get; set; }
-        
-        [JsonProperty("purchaseToken")]
-        public string PurchaseToken { get; set; }
-        
-        [JsonProperty("developerPayload")]
-        public string DeveloperPayload { get; set; }
-        
-        [JsonProperty("signature")]
-        public string Signature { get; set; }
+        [JsonProperty("productID")] public string ProductId;
+        [JsonProperty("purchaseToken")] public string PurchaseToken;
+        [JsonProperty("developerPayload")] public string DeveloperPayload;
+        [JsonProperty("signature")] public string Signature;
     }
 }

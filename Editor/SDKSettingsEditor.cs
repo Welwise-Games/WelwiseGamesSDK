@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -32,6 +32,7 @@ namespace WelwiseGames.Editor
         private ReorderableList _purchasesList;
         private string _manifestVersion = "Unknown";
         private ListRequest _listRequest;
+        private Vector2 _scrollPosition;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
         public static void ShowWindow()
@@ -96,14 +97,24 @@ namespace WelwiseGames.Editor
                 {
                     drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Mock Products"),
                     drawElementCallback = (rect, index, _, _) => DrawProductElement(rect, index),
-                    elementHeight = EditorGUIUtility.singleLineHeight * 7
+                    elementHeight = EditorGUIUtility.singleLineHeight * 7,
+                    onRemoveCallback = list => 
+                    {
+                        _settings.MockProducts.RemoveAt(list.index);
+                        SaveSettings();
+                    }
                 };
 
             _purchasesList = new ReorderableList(_settings.MockPurchases, typeof(Purchase), true, true, true, true)
                 {
                     drawHeaderCallback = rect => EditorGUI.LabelField(rect, "Mock Purchases"),
                     drawElementCallback = (rect, index, _, _) => DrawPurchaseElement(rect, index),
-                    elementHeight = EditorGUIUtility.singleLineHeight * 4
+                    elementHeight = EditorGUIUtility.singleLineHeight * 4,
+                    onRemoveCallback = list => 
+                    {
+                        _settings.MockPurchases.RemoveAt(list.index);
+                        SaveSettings();
+                    }
                 };
         }
         
@@ -164,10 +175,12 @@ namespace WelwiseGames.Editor
                 _settings.PurchaseSimulationDuration, 0.5f, 10f);
             
             EditorGUILayout.Space(10);
+            _scrollPosition = EditorGUILayout.BeginScrollView(_scrollPosition, GUILayout.ExpandHeight(true));
             _productsList.DoLayoutList();
             
             EditorGUILayout.Space(10);
             _purchasesList.DoLayoutList();
+            EditorGUILayout.EndScrollView();
         }
         
         private void LoadSettings()
