@@ -13,7 +13,7 @@ namespace WelwiseGames.Editor
     public class SDKSettingsEditor : EditorWindow
     {
         public const string TemplateVersion = "0.0.11";
-        private const string LogoFileName = "Logo";
+        private const string LogoFileName = "__ws-logo";
         
         private enum TabType
         {
@@ -37,10 +37,9 @@ namespace WelwiseGames.Editor
         private ListRequest _listRequest;
         private Vector2 _scrollPosition;
         
-        // Отложенное сохранение
         private bool _settingsDirty;
         private double _lastChangeTime;
-        private const double SaveDelay = 1.0; // Задержка 1 секунда
+        private const double SaveDelay = 1.0;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
         public static void ShowWindow()
@@ -56,7 +55,6 @@ namespace WelwiseGames.Editor
             LoadLogoTexture();
             StartManifestVersionFetch();
             
-            // Инициализация системы отложенного сохранения
             _settingsDirty = false;
         }
 
@@ -100,12 +98,12 @@ namespace WelwiseGames.Editor
         private void OnDisable()
         {
             EditorApplication.update -= ProgressPackageVersionFetch;
-            SaveIfDirtyImmediate(); // Сохраняем при закрытии окна
+            SaveIfDirtyImmediate();
         }
 
         private void OnLostFocus()
         {
-            SaveIfDirtyImmediate(); // Сохраняем при потере фокуса
+            SaveIfDirtyImmediate();
         }
 
         private void InitializeLists()
@@ -118,7 +116,7 @@ namespace WelwiseGames.Editor
                     onRemoveCallback = list => 
                     {
                         _settings.MockProducts.RemoveAt(list.index);
-                        MarkSettingsDirty(); // Отложенное сохранение
+                        MarkSettingsDirty();
                     }
                 };
 
@@ -130,12 +128,11 @@ namespace WelwiseGames.Editor
                     onRemoveCallback = list => 
                     {
                         _settings.MockPurchases.RemoveAt(list.index);
-                        MarkSettingsDirty(); // Отложенное сохранение
+                        MarkSettingsDirty();
                     }
                 };
         }
         
-        // Система отложенного сохранения
         private void MarkSettingsDirty()
         {
             _settingsDirty = true;
@@ -253,7 +250,7 @@ namespace WelwiseGames.Editor
                 Debug.Log($"Detected new template version ({TemplateVersion}). Updating files...");
                 UpdateFilesForCurrentSDK();
                 _settings.InstalledTemplateVersion = TemplateVersion;
-                SaveSettingsImmediate(); // Немедленное сохранение для критических изменений
+                SaveSettingsImmediate();
             }
             
             switch (_settings.SDKType)
@@ -320,14 +317,14 @@ namespace WelwiseGames.Editor
 
             if (EditorGUI.EndChangeCheck())
             {
-                MarkSettingsDirty(); // Отложенное сохранение вместо немедленного
+                MarkSettingsDirty();
             }
 
             if (_settings.SDKType != _lastSDKType)
             {
                 HandleSDKTypeChange(_lastSDKType, _settings.SDKType);
                 _lastSDKType = _settings.SDKType;
-                SaveSettingsImmediate(); // Немедленное сохранение для критических изменений
+                SaveSettingsImmediate();
             }
         }
         
@@ -344,13 +341,12 @@ namespace WelwiseGames.Editor
             {
                 alignment = TextAnchor.MiddleCenter,
                 fontStyle = FontStyle.Bold,
-                padding = new RectOffset(10, 10, 0, 0), // Добавлен правый отступ
+                padding = new RectOffset(10, 10, 0, 0),
                 fixedHeight = headerHeight - 4
             };
 
             EditorGUILayout.BeginHorizontal(headerStyle);
             {
-                // Левая часть с логотипом
                 EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(false));
                 {
                     if (_logoTexture != null)
@@ -365,10 +361,8 @@ namespace WelwiseGames.Editor
                 }
                 EditorGUILayout.EndHorizontal();
 
-                // Гибкое пространство перед вкладками
                 GUILayout.FlexibleSpace();
 
-                // Основная область вкладок
                 EditorGUILayout.BeginHorizontal(GUILayout.ExpandWidth(true));
                 {
                     var tabs = Enum.GetNames(typeof(TabType));
@@ -382,7 +376,6 @@ namespace WelwiseGames.Editor
                             style.normal.background = Texture2D.grayTexture;
                         }
                 
-                        // Автоматическое растягивание вкладок
                         if (GUILayout.Button(tabs[i], style, GUILayout.Width(tabWidth)))
                         {
                             _currentTab = (TabType)i;
@@ -571,6 +564,7 @@ namespace WelwiseGames.Editor
                     case SupportedSDKType.YandexGames:
                         DeleteFile("Plugins/WebGL/yandex-games.jslib");
                         break;
+                    default: throw new ArgumentOutOfRangeException(nameof(oldType), oldType, null);
                 }
 
                 switch (newType)
@@ -581,6 +575,7 @@ namespace WelwiseGames.Editor
                     case SupportedSDKType.YandexGames:
                         ImportPackage("yandex-games-template");
                         break;
+                    default: throw new ArgumentOutOfRangeException(nameof(newType), newType, null);
                 }
 
                 UpdateWebGLTemplate();
