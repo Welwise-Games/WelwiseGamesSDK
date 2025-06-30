@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -6,7 +6,8 @@ using UnityEditor.PackageManager.Requests;
 using UnityEditorInternal;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
-using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
+using WelwiseGamesSDK.Shared.Types;
+using DeviceType = WelwiseGamesSDK.Shared.Types.DeviceType;
 
 namespace WelwiseGames.Editor
 {
@@ -248,34 +249,34 @@ namespace WelwiseGames.Editor
             if (_settings.InstalledTemplateVersion != TemplateVersion)
             {
                 Debug.Log($"Detected new template version ({TemplateVersion}). Updating files...");
-                UpdateFilesForCurrentSDK();
+                UpdateTemplateForCurrentSDK();
                 _settings.InstalledTemplateVersion = TemplateVersion;
                 SaveSettingsImmediate();
             }
-            
-            switch (_settings.SDKType)
+            else
             {
-                case SupportedSDKType.WelwiseGames:
-                    EnsureFileExists("Plugins/WebGL/welwise-sdk.jslib", "welwise-games-template");
-                    break;
-                    
-                case SupportedSDKType.YandexGames:
-                    EnsureFileExists("Plugins/WebGL/yandex-games.jslib", "yandex-games-template");
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
+                EnsureTemplateFilesExist();
             }
         }
-        
-        private static void EnsureFileExists(string relativePath, string packageName)
+
+        private void EnsureTemplateFilesExist()
         {
-            var fullPath = Path.Combine(Application.dataPath, relativePath);
-            if (File.Exists(fullPath)) return;
-            Debug.Log($"{Path.GetFileName(relativePath)} missing. Importing template...");
-            ImportPackage(packageName);
-            UpdateWebGLTemplate();
+            string templatePath = "Assets/WebGLTemplates/Welwise SDK";
+            string adapterPath = $"{templatePath}/sdk-adapter.js";
+            
+            if (!AssetDatabase.IsValidFolder(templatePath) || 
+                !File.Exists(Path.Combine(Application.dataPath, "WebGLTemplates/Welwise SDK/sdk-adapter.js")))
+            {
+                Debug.Log("Template files missing. Reimporting...");
+                UpdateTemplateForCurrentSDK();
+            }
         }
 
+        private void UpdateTemplateForCurrentSDK()
+        {
+            WebGLTemplateUpdater.UpdateTemplate(_settings.SDKType);
+        }
+        
         private void OnGUI()
         {
             if (_needsTextureReload)
@@ -408,9 +409,50 @@ namespace WelwiseGames.Editor
                 "Load Save On Initialize", 
                 _settings.LoadSaveOnInitialize);
             
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
+    
             _settings.DebugInitializeTime = EditorGUILayout.Slider(
                 "Initialization Time", 
                 _settings.DebugInitializeTime, 0f, 10f);
+
+            EditorGUILayout.LabelField("Module Availability:");
+    
+            EditorGUILayout.BeginVertical(EditorStyles.helpBox);
+            {
+                _settings.EditorAdvertisementModule = EditorGUILayout.ToggleLeft(
+                    "Advertisement Module", 
+                    _settings.EditorAdvertisementModule);
+        
+                _settings.EditorPaymentsModule = EditorGUILayout.ToggleLeft(
+                    "Payments Module", 
+                    _settings.EditorPaymentsModule);
+        
+                _settings.EditorAnalyticsModule = EditorGUILayout.ToggleLeft(
+                    "Analytics Module", 
+                    _settings.EditorAnalyticsModule);
+        
+                _settings.EditorEnvironmentModule = EditorGUILayout.ToggleLeft(
+                    "Environment Module", 
+                    _settings.EditorEnvironmentModule);
+        
+                _settings.EditorPlatformNavigationModule = EditorGUILayout.ToggleLeft(
+                    "Platform Navigation Module", 
+                    _settings.EditorPlatformNavigationModule);
+        
+                _settings.EditorPlayerDataModule = EditorGUILayout.ToggleLeft(
+                    "Player Data Module", 
+                    _settings.EditorPlayerDataModule);
+        
+                _settings.EditorGameDataModule = EditorGUILayout.ToggleLeft(
+                    "Game Data Module", 
+                    _settings.EditorGameDataModule);
+        
+                _settings.EditorMetaverseDataModule = EditorGUILayout.ToggleLeft(
+                    "Metaverse Data Module", 
+                    _settings.EditorMetaverseDataModule);
+            }
+            EditorGUILayout.EndVertical();
         }
         
         private void DrawBuildSettings()
@@ -517,7 +559,7 @@ namespace WelwiseGames.Editor
                 if (GUILayout.Button("Generate", GUILayout.Width(80)))
                 {
                     _settings.DebugPlayerId = Guid.NewGuid().ToString();
-                    MarkSettingsDirty(); // Отложенное сохранение
+                    MarkSettingsDirty();
                     GUI.FocusControl(null);
                 }
             }
@@ -554,83 +596,13 @@ namespace WelwiseGames.Editor
         {
             try
             {
-                DeleteDirectory("WebGLTemplates/Welwise SDK");
-                
-                switch (oldType)
-                {
-                    case SupportedSDKType.WelwiseGames:
-                        DeleteFile("Plugins/WebGL/welwise-sdk.jslib");
-                        break;
-                    case SupportedSDKType.YandexGames:
-                        DeleteFile("Plugins/WebGL/yandex-games.jslib");
-                        break;
-                    default: throw new ArgumentOutOfRangeException(nameof(oldType), oldType, null);
-                }
-
-                switch (newType)
-                {
-                    case SupportedSDKType.WelwiseGames:
-                        ImportPackage("welwise-games-template");
-                        break;
-                    case SupportedSDKType.YandexGames:
-                        ImportPackage("yandex-games-template");
-                        break;
-                    default: throw new ArgumentOutOfRangeException(nameof(newType), newType, null);
-                }
-
-                UpdateWebGLTemplate();
+                WebGLTemplateUpdater.UpdateTemplate(newType);
                 AssetDatabase.Refresh();
             }
             catch (Exception e)
             {
                 Debug.LogError($"Error processing SDK change: {e.Message}");
             }
-        }
-        
-        private void UpdateFilesForCurrentSDK()
-        {
-            Debug.Log($"Updating files for SDK: {_settings.SDKType}");
-            HandleSDKTypeChange(_settings.SDKType, _settings.SDKType);
-        }
-
-        private static void DeleteFile(string relativePath)
-        {
-            var assetPath = Path.Combine("Assets", relativePath);
-            if (!AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath)) 
-                return;
-            
-            AssetDatabase.DeleteAsset(assetPath);
-            return;
-        }
-
-        private static void DeleteDirectory(string relativePath)
-        {
-            var path = $"Assets/{relativePath}";
-            if (!AssetDatabase.IsValidFolder(path)) return;
-            
-            AssetDatabase.DeleteAsset(path);
-        }
-
-        private static void ImportPackage(string packageName)
-        {
-            var guids = AssetDatabase.FindAssets(packageName);
-            foreach (var guid in guids)
-            {
-                var path = AssetDatabase.GUIDToAssetPath(guid);
-                if (Path.GetFileName(path) != $"{packageName}.unitypackage") 
-                    continue;
-                
-                AssetDatabase.ImportPackage(path, false);
-                return;
-            }
-            
-            Debug.LogError($"Package {packageName}.unitypackage not found!");
-        }
-
-        private static void UpdateWebGLTemplate()
-        {
-            PlayerSettings.WebGL.template = "PROJECT:Welwise SDK";
-            Debug.Log("WebGL template updated to 'Welwise SDK'");
         }
     }
 }

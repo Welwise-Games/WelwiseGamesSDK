@@ -1,5 +1,6 @@
 ﻿using System;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
 
 namespace WelwiseGamesSDK
 {

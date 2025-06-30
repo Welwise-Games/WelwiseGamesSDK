@@ -1,7 +1,7 @@
 ﻿using System;
 using Newtonsoft.Json;
 
-namespace WelwiseGamesSDK.Shared
+namespace WelwiseGamesSDK.Shared.Types
 {
     [Serializable]
     public class Product

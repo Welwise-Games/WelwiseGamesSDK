@@ -2,16 +2,21 @@
 using System.Collections;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
+using WelwiseGamesSDK.Shared.Types;
 
 namespace WelwiseGamesSDK.Internal.Advertisement
 {
     internal sealed class UnityAdvertisement : IAdvertisement
     {
+        public bool IsAvailable { get; }
+
         private readonly SDKSettings _settings;
 
-        public UnityAdvertisement(SDKSettings settings)
+        public UnityAdvertisement(SDKSettings settings, bool isAvailable)
         {
             _settings = settings;
+            IsAvailable = isAvailable;
         }
 
         public void ShowInterstitial(Action<InterstitialState> callbackState = null) =>

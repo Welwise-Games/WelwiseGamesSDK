@@ -35,8 +35,10 @@ namespace WelwiseGames.Editor
             if (settings.InstalledTemplateVersion == SDKSettingsEditor.TemplateVersion) 
                 return;
             
-            Debug.Log($"Detected new package version ({SDKSettingsEditor.TemplateVersion}). Updating files...");
-            SDKSettingsEditor.HandleSDKTypeChange(settings.SDKType, settings.SDKType);
+            Debug.Log($"Detected new template version ({SDKSettingsEditor.TemplateVersion}). Updating files...");
+            
+            WebGLTemplateUpdater.UpdateTemplate(settings.SDKType);
+            
             settings.InstalledTemplateVersion = SDKSettingsEditor.TemplateVersion;
             settings.Save();
         } 

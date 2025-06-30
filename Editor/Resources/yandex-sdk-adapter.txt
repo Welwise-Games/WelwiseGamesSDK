@@ -1,0 +1,514 @@
+(function() {
+    const yaLoaderCode = `
+        var YaGamesLoader;(()=>{"use strict";var e={r:e=>{"undefined"!=typeof Symbol&&Symbol.toStringTag&&Object.defineProperty(e,Symbol.toStringTag,{value:"Module"}),Object.defineProperty(e,"__esModule",{value:!0})}};(()=>{if(void 0!==e){var r=e.u,o=e.e,t={},a={};e.u=function(e){return r(e)+(t.hasOwnProperty(e)?"?"+t[e]:"")},e.e=function(t){return o(t).catch((function(o){var n=a.hasOwnProperty(t)?a[t]:3;if(n<1){var s=r(t);throw o.message="Loading chunk "+t+" failed after 3 retries.\\n("+s+")",o.request=s,o}return new Promise((function(r){setTimeout((function(){a[t]=n-1,r(e.e(t))}),0)}))}))}}})();var r={};e.r(r);var o,t=Object.defineProperty,a=Object.getOwnPropertySymbols,n=Object.prototype.hasOwnProperty,s=Object.prototype.propertyIsEnumerable,i=(e,r,o)=>r in e?t(e,r,{enumerable:!0,configurable:!0,writable:!0,value:o}):e[r]=o,d=(e,r)=>{for(var o in r||(r={}))n.call(r,o)&&i(e,o,r[o]);if(a)for(var o of a(r))s.call(r,o)&&i(e,o,r[o]);return e};if(window===window.top||window.sdkLoaderWasInited){const e=window.sdkLoaderWasInited?"The SDK Loader was loaded more than once":"SDK initialization outside of frame";console.warn(e)}else{let e,r,t,a;window.sdkLoaderWasInited=!0;let n=!1,s=!1,i=!1;window.isSdkLoader=!0,window.YaGames={init:o=>{var d;return s?null==(d=window.YaGames)?void 0:d.init(o):i?Promise.reject(v):a?(console.warn("YaGames was initialized"),a):(a=new Promise(((a,s)=>{e=a,r=s,t=o,n=!0})),a)}};const c={type:"unknown",isMobile:()=>!1,isTablet:()=>!1,isDesktop:()=>!1,isTV:()=>!1},l=(e,r={})=>{var o,t;window.parent.postMessage({source:"YandexGamesSDK",messageId:\`${Date.now()}-${Math.random()}\`,type:"error",data:{block:"ErrorCounter/common: sdk-loader",error:{message:\`[SDK LOADER]: ${e}\`},additional:d(d(d({},r),(null==(o=r.error)?void 0:o.message)?{originalMessage:null==(t=r.error)?void 0:t.message}:{}),r.source?{originalSource:r.source}:{}),level:"error",source:"sdk-loader",type:"error"}},"*")};Object.defineProperty(window.YaGames,"deviceInfo",{get:()=>(l("accessing deviceInfo in YaGames"),c)};const u=e=>{const r=document.querySelectorAll(\`script[src="${e}"]\`);for(let e of Array.from(r))e.remove()},m=/^(https|yandexgames):\\/\\/[^\\/][^.][\\w.\\/\\-]+\\/sdk\\/v2(\\?|$)/,w=/(^|yandex\\.net)\\/sdk\\/(v\\d+|_)\\/v2(\\.[0-9a-f]*)?\\.js/,f="url sdk not valid",v="load sdk file error",p=3,g=(o,a)=>{const d=document.createElement("script");d.src=o,d.onload=()=>{var o;s=!0,n&&(null==(o=window.YaGames)||o.init(t).then((r=>{e(r)})).catch((e=>{l("Error while init sdk",{error:e}),r(e)})))},d.onerror=(e,t,s,d,c)=>{u(o),a>0?g(o,--a):(i=!0,l(v,{event:e,error:c,source:t}),n&&r(v))},(document.head||document.documentElement).append(d)},h=(e,o="")=>{if(e&&(m.test(e)||w.test(e))){const r=new URL(e,location.origin);o&&r.searchParams.set("dvh",o),g(r.toString(),p)}else i=!0,n&&r(f),l(f)},y=new URLSearchParams(location.search).get("sdk");y?h(y):(o=function*(){return new Promise(((e,r)=>{const o=\`${Date.now()}-${Math.random()}\`,t=setTimeout((()=>{r(new Error("Get external iframe timeout"))}),500);window.addEventListener("message",(function r(a){const{data:n}=function(e){try{return{data:JSON.parse(e),error:null}}catch(e){return{data:null,error:e}}}(a.data);n&&n.messageId===o&&(window.removeEventListener("message",r),clearTimeout(t),e(n.payload))})),window.parent.postMessage(JSON.stringify({source:"YandexGamesSDK",actionName:"GET_IFRAME_ORIGIN_SRC",channel:"EARLY_SDK_EVENT",messageId:o}),"*")}))},new Promise(((e,r)=>{var t=e=>{try{n(o.next(e))}catch(e){r(e)}},a=e=>{try{n(o.throw(e))}catch(e){r(e)}},n=r=>r.done?e(r.value):Promise.resolve(r.value).then(t,a);n((o=o.apply(void 0,null)).next())}))).then((e=>{const r=new URL(e),o=r.searchParams,t=o.get("sdk"),a=o.get("dvh")||"";if(t)h(t,a);else{const e=new URLSearchParams(r.search).get("sdk");h(e)}})).catch((e=>{l("Error while get iframe src",{error:e}),console.error("SDK initialization failed",e)}))}YaGamesLoader=r})();
+    `;
+
+    const script = document.createElement('script');
+    script.text = yaLoaderCode;
+    document.head.appendChild(script);
+    
+    window.__sdk_adapter = {
+        GetModules: function() {
+            return [
+                "Advertisement",
+                "Environment",
+                "PlayerData",
+                "Analytics",
+                "Payments",
+                "GameData",
+            ];
+        },
+        
+        Init: function() {
+            YaGames.init()
+                .then(ysdk => {
+                    ysdk.getPlayer({ scopes: true })
+                        .then(player => {
+                            window.__yandex_sdk = { ysdk, player };
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                            }
+                        })
+                        .catch(error => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage(
+                                    'PluginRuntime',
+                                    'HandleInitError',
+                                    error.message || String(error)
+                                );
+                            }
+                        });
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleInitError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        GetPlayerData: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.player) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDataError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            window.__yandex_sdk.player.getData()
+                .then(data => {
+                    try {
+                        data.playerName = window.__yandex_sdk.player.getMode() !== 'lite' ? 
+                            window.__yandex_sdk.player.getName() || '' : 
+                            '';
+                    } catch (e) {
+                        data.playerName = '';
+                    }
+                    
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetDataSuccess',
+                            JSON.stringify(data)
+                        );
+                    }
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetDataError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        SetPlayerData: function(jsonData) {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.player) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            try {
+                const data = JSON.parse(jsonData);
+                window.__yandex_sdk.player.setData(data)
+                    .then(() => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleSetDataError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            } catch (e) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'Invalid JSON format');
+                }
+            }
+        },
+
+        GetServerTime: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            try {
+                const timestamp = window.__yandex_sdk.ysdk.serverTime();
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+                }
+            } catch (error) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetTimeError',
+                        error.message || String(error)
+                    );
+                }
+            }
+        },
+
+        GoToGame: function(gameId) {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleNavigateSuccess', '');
+            }
+        },
+
+        GetPlayerId: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.player) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            try {
+                const playerId = window.__yandex_sdk.player.getUniqueID() || '';
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', playerId);
+                }
+            } catch (error) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetPlayerIdError',
+                        error.message || String(error)
+                    );
+                }
+            }
+        },
+
+        GetDeviceType: function() {
+            try {
+                const userAgent = navigator.userAgent.toLowerCase();
+                let deviceType = 'desktop';
+
+                if (/mobile|android|iphone|ipod|iemobile/i.test(userAgent)) {
+                    deviceType = 'mobile';
+                } else if (/tablet|ipad|playbook|xoom|tab|kindle/i.test(userAgent)) {
+                    deviceType = 'tablet';
+                }
+
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeSuccess', deviceType);
+                }
+            } catch (error) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetDeviceTypeError',
+                        error.message || String(error)
+                    );
+                }
+            }
+        },
+
+        GetLanguageCode: function() {
+            try {
+                const lang = (navigator.language || navigator.userLanguage || 'en').substring(0, 2);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
+                }
+            } catch (error) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetLanguageCodeError',
+                        error.message || String(error)
+                    );
+                }
+            }
+        },
+
+
+        IsMetaverseSupported: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleIsMetaverseSupportedSuccess', 'false');
+            }
+        },
+
+        GameReady: function() {
+            if (window.__yandex_sdk?.ysdk?.features?.LoadingAPI) {
+                window.__yandex_sdk.ysdk.features.LoadingAPI.ready();
+            }
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
+            }
+        },
+
+        GameplayStart: function() {
+            if (window.__yandex_sdk?.ysdk?.features?.GameplayAPI) {
+                window.__yandex_sdk.ysdk.features.GameplayAPI.start();
+            }
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
+            }
+        },
+
+        GameplayStop: function() {
+            if (window.__yandex_sdk?.ysdk?.features?.GameplayAPI) {
+                window.__yandex_sdk.ysdk.features.GameplayAPI.stop();
+            }
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
+            }
+        },
+
+        ShowInterstitial: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk?.adv) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'SDK not initialized');
+                }
+                return;
+            }
+        
+            try {
+                window.__yandex_sdk.ysdk.adv.showFullscreenAdv({
+                    callbacks: {
+                        onOpen: () => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialOpen', '');
+                            }
+                        },
+                        onClose: () => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                            }
+                        },
+                        onError: (e) => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage(
+                                    'PluginRuntime', 
+                                    'HandleInterstitialError', 
+                                    e.message || String(e)
+                                );
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime', 
+                        'HandleInterstitialError', 
+                        e.message || String(e)
+                    );
+                }
+            }
+        },
+        
+        ShowRewarded: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk?.adv) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'SDK not initialized');
+                }
+                return;
+            }
+        
+            try {
+                window.__yandex_sdk.ysdk.adv.showRewardedVideo({
+                    callbacks: {
+                        onOpen: () => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+                            }
+                        },
+                        onRewarded: () => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
+                            }
+                        },
+                        onClose: () => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                            }
+                        },
+                        onError: (e) => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage(
+                                    'PluginRuntime', 
+                                    'HandleRewardedError', 
+                                    e.message || String(e)
+                                );
+                            }
+                        }
+                    }
+                });
+            } catch (e) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime', 
+                        'HandleRewardedError', 
+                        e.message || String(e)
+                    );
+                }
+            }
+        },
+
+        PaymentsInit: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsInitError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            window.__yandex_sdk.ysdk.getPayments({ signed: true })
+                .then(payments => {
+                    window.__yandex_sdk.payments = payments;
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsInitSuccess', '');
+                    }
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsInitError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        PaymentsGetCatalog: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.payments) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsGetCatalogError', 'Payments not initialized');
+                }
+                return;
+            }
+
+            window.__yandex_sdk.payments.getCatalog()
+                .then(products => {
+                    const catalog = products.map(product => ({
+                        id: product.id,
+                        title: product.title,
+                        description: product.description,
+                        imageURI: product.imageURI,
+                        price: product.price,
+                        priceValue: product.priceValue,
+                        priceCurrencyCode: product.priceCurrencyCode
+                    }));
+
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsGetCatalogSuccess',
+                            JSON.stringify(catalog)
+                        );
+                    }
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsGetCatalogError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        PaymentsGetPurchases: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.payments) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsGetPurchasesError', 'Payments not initialized');
+                }
+                return;
+            }
+
+            window.__yandex_sdk.payments.getPurchases()
+                .then(purchases => {
+                    const result = purchases.map(purchase => ({
+                        productID: purchase.productID,
+                        purchaseToken: purchase.purchaseToken,
+                        developerPayload: purchase.developerPayload,
+                        signature: purchase.signature
+                    }));
+
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsGetPurchasesSuccess',
+                            JSON.stringify(result)
+                        );
+                    }
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsGetPurchasesError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        PaymentsPurchase: function(productId, developerPayload) {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.payments) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsPurchaseError', 'Payments not initialized');
+                }
+                return;
+            }
+
+            const options = { id: productId };
+            if (developerPayload) {
+                options.developerPayload = developerPayload;
+            }
+
+            window.__yandex_sdk.payments.purchase(options)
+                .then(purchase => {
+                    const result = {
+                        productID: purchase.productID,
+                        purchaseToken: purchase.purchaseToken,
+                        developerPayload: purchase.developerPayload,
+                        signature: purchase.signature
+                    };
+
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsPurchaseSuccess',
+                            JSON.stringify(result)
+                        );
+                    }
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsPurchaseError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        PaymentsConsume: function(purchaseToken) {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.payments) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsConsumeError', 'Payments not initialized');
+                }
+                return;
+            }
+
+            window.__yandex_sdk.payments.consumePurchase(purchaseToken)
+                .then(() => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsConsumeSuccess',
+                            purchaseToken
+                        );
+                    }
+                })
+                .catch(error => {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsConsumeError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        }
+    };
+})();

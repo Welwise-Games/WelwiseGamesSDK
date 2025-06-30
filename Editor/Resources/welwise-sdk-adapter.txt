@@ -1,0 +1,460 @@
+fetch('./config.json')
+    .then(res => res.json())
+    .then(config => {
+        return new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = config.SDK_URL;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    })
+    .then(() => {
+        if (!window.WelwiseGames || typeof window.WelwiseGames.init !== 'function') {
+            throw new Error('Welwise SDK not properly loaded');
+        }
+
+        window.__sdk_adapter = {
+            GetModules: function() {
+                return [
+                    "Advertisement",
+                    "Environment",
+                    "PlatformNavigation",
+                    "PlayerData",
+                    "GameData",
+                    "MetaverseData"
+                ];
+            },
+            
+            Init: function() {
+                WelwiseGames.init()
+                    .then(sdk => {
+                        window.__wg_sdk = sdk;
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleInitError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+            GetPlayerData: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDataError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.player.getData()
+                    .then(data => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetDataSuccess',
+                                JSON.stringify(data)
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetDataError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+
+            SetPlayerData: function(jsonData) {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(jsonData);
+                    window.__wg_sdk.player.setData(data)
+                        .then(() => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                            }
+                        })
+                        .catch(error => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage(
+                                    'PluginRuntime',
+                                    'HandleSetDataError',
+                                    error.message || String(error)
+                                );
+                            }
+                        });
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'Invalid JSON format');
+                    }
+                }
+            },
+
+            GetServerTime: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.serverTime()
+                    .then(timestamp => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetTimeError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+
+            GoToGame: function(gameId) {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleNavigateError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.PlatformNavigation.goToGame(gameId)
+                    .then(() => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleNavigateSuccess', '');
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleNavigateError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+
+            GetPlayerId: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdError', 'SDK not initialized');
+                    }
+                    return;
+                }
+                const playerId = window.__wg_sdk.Environment.PlayerId || '';
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', playerId);
+                }
+            },
+
+            GetDeviceType: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeError', 'SDK not initialized');
+                    }
+                    return;
+                }
+                const deviceType = window.__wg_sdk.Environment.DeviceType || '';
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeSuccess', deviceType);
+                }
+            },
+
+            GetLanguageCode: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeError', 'SDK not initialized');
+                    }
+                    return;
+                }
+                const languageCode = window.__wg_sdk.Environment.LanguageCode || '';
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', languageCode);
+                }
+            },
+
+            GetMetaversePlayerData: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetMetaverseDataError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.metaversePlayer.getData()
+                    .then(data => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetMetaverseDataSuccess',
+                                JSON.stringify(data)
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetMetaverseDataError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+
+            SetMetaversePlayerData: function(jsonData) {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetMetaverseDataError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(jsonData);
+                    window.__wg_sdk.metaversePlayer.setData(data)
+                        .then(() => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetMetaverseDataSuccess', '');
+                            }
+                        })
+                        .catch(error => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage(
+                                    'PluginRuntime',
+                                    'HandleSetMetaverseDataError',
+                                    error.message || String(error)
+                                );
+                            }
+                        });
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetMetaverseDataError', 'Invalid JSON format');
+                    }
+                }
+            },
+
+            IsMetaverseSupported: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleIsMetaverseSupportedError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                try {
+                    const supported = window.__wg_sdk.isMetaverseSupported();
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleIsMetaverseSupportedSuccess',
+                            supported ? 'true' : 'false'
+                        );
+                    }
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleIsMetaverseSupportedError',
+                            e.message || String(e)
+                        );
+                    }
+                }
+            },
+
+            GetCombinedPlayerData: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetCombinedDataError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.metaversePlayer.getGameData()
+                    .then(data => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetCombinedDataSuccess',
+                                JSON.stringify(data)
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetCombinedDataError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+
+            SetCombinedPlayerData: function(jsonData) {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetCombinedDataError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                try {
+                    const data = JSON.parse(jsonData);
+                    window.__wg_sdk.metaversePlayer.setGameData(data)
+                        .then(() => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetCombinedDataSuccess', '');
+                            }
+                        })
+                        .catch(error => {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage(
+                                    'PluginRuntime',
+                                    'HandleSetCombinedDataError',
+                                    error.message || String(error)
+                                );
+                            }
+                        });
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetCombinedDataError', 'Invalid JSON format');
+                    }
+                }
+            },
+
+            GameReady: function() {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
+                }
+            },
+
+            GameplayStart: function() {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
+                }
+            },
+
+            GameplayStop: function() {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
+                }
+            },
+
+            ShowInterstitial: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                try {
+                    window.__wg_sdk.AdvManager.showMidgame({
+                        callbacks: {
+                            onOpen: () => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialOpen', '');
+                                }
+                            },
+                            onClose: () => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                                }
+                            },
+                            onError: (e) => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage(
+                                        'PluginRuntime',
+                                        'HandleInterstitialError',
+                                        e.message || String(e)
+                                    );
+                                }
+                            }
+                        }
+                    });
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleInterstitialError',
+                            e.message || String(e)
+                        );
+                    }
+                }
+            },
+
+            ShowRewarded: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                try {
+                    window.__wg_sdk.AdvManager.showRewarded({
+                        callbacks: {
+                            onOpen: () => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+                                }
+                            },
+                            onRewarded: () => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
+                                }
+                            },
+                            onClose: () => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                                }
+                            },
+                            onError: (e) => {
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage(
+                                        'PluginRuntime',
+                                        'HandleRewardedError',
+                                        e.message || String(e)
+                                    );
+                                }
+                            }
+                        }
+                    });
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleRewardedError',
+                            e.message || String(e)
+                        );
+                    }
+                }
+            }
+        };
+    })
+    .catch(err => {
+        console.error('SDK initialization failed:', err);
+
+    });

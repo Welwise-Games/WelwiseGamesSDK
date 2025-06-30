@@ -1,4 +1,4 @@
-﻿namespace WelwiseGamesSDK.Shared
+﻿namespace WelwiseGamesSDK.Shared.Types
 {
     /// <summary>
     /// Represents the type of device running the application.

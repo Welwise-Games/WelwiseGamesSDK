@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using WelwiseGamesSDK.Shared.Modules;
+using WelwiseGamesSDK.Shared.Types;
 
 namespace WelwiseGamesSDK.Shared
 {
@@ -30,27 +32,6 @@ namespace WelwiseGamesSDK.Shared
             }
         }
         
-        /// <summary>
-        /// Loads player data asynchronously.
-        /// </summary>
-        public static Task LoadAsync(this IPlayerData playerData)
-        {
-            if (playerData.IsLoaded)
-                return Task.CompletedTask;
-
-            var tcs = new TaskCompletionSource<bool>();
-
-            playerData.Loaded += Handler;
-            playerData.Load();
-
-            return tcs.Task;
-
-            void Handler()
-            {
-                playerData.Loaded -= Handler;
-                tcs.TrySetResult(true);
-            }
-        }
         
         /// <summary>
         /// Checks if environment represents a desktop device.

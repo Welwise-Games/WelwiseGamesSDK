@@ -2,7 +2,7 @@
 
 namespace WelwiseGamesSDK.Shared
 {
-    public interface IInitializable : IModule
+    public interface IInitializable
     {
         public void Initialize();
         public bool IsInitialized { get; }

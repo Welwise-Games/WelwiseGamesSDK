@@ -1,4 +1,4 @@
-﻿namespace WelwiseGamesSDK.Shared
+﻿namespace WelwiseGamesSDK.Shared.Types
 {
     /// <summary>
     /// Specifies supported SDK platform implementations.

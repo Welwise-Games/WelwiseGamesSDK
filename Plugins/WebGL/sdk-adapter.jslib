@@ -1,4 +1,24 @@
 mergeInto(LibraryManager.library, {
+    JSGetModules: function() {
+        if (window.__sdk_adapter && typeof window.__sdk_adapter.GetModules === 'function') {
+            try {
+                const modules = window.__sdk_adapter.GetModules();
+                const jsonStr = JSON.stringify(modules);
+                
+                const buffer = _malloc(jsonStr.length + 1);
+                stringToUTF8(jsonStr, buffer, jsonStr.length + 1);
+                return buffer;
+            } catch (e) {
+                console.error("Error getting modules:", e);
+            }
+        }
+        return 0;
+    },
+    
+    FreeMemory: function(ptr) {
+        _free(ptr);
+    },
+    
     JSInit: function() {
         if (window.__sdk_adapter && typeof window.__sdk_adapter.Init === 'function') {
             window.__sdk_adapter.Init();

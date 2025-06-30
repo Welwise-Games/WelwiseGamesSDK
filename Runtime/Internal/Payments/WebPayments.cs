@@ -4,18 +4,13 @@ using System.Linq;
 using Newtonsoft.Json;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
+using WelwiseGamesSDK.Shared.Types;
 
 namespace WelwiseGamesSDK.Internal.Payments
 {
     public class WebPayments : IPayments
-    {
-        private bool _isInitialized;
-        private List<Product> _products = new List<Product>();
-        private List<Purchase> _purchases = new List<Purchase>();
-
-        public bool IsAvailable => true;
-        public bool IsInitialized => _isInitialized;
-        
+    {        
         public event Action Initialized;
         public event Action<Purchase> PurchaseSuccess;
         public event Action<string, string> PurchaseFailed;
@@ -25,9 +20,21 @@ namespace WelwiseGamesSDK.Internal.Payments
         public event Action PurchasesUpdated;
         public event Action<string> CatalogLoadFailed;
         public event Action<string> PurchasesLoadFailed;
+        
+        private List<Product> _products = new List<Product>();
+        private List<Purchase> _purchases = new List<Purchase>();
+        public bool IsAvailable { get; }
+        public bool IsInitialized => _isInitialized;
+        
+        private bool _isInitialized;
 
         public IReadOnlyList<Product> Products => _products.AsReadOnly();
         public IReadOnlyList<Purchase> Purchases => _purchases.AsReadOnly();
+        
+        public WebPayments(bool isAvailable)
+        {
+            IsAvailable = isAvailable;
+        }
 
         public void Initialize()
         {

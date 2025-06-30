@@ -1,12 +1,13 @@
 ﻿using System;
+using WelwiseGamesSDK.Shared.Types;
 
-namespace WelwiseGamesSDK.Shared
+namespace WelwiseGamesSDK.Shared.Modules
 {
     /// <summary>
     /// Provides information about the runtime environment.
     /// Implement this interface to access device-specific information.
     /// </summary>
-    public interface IEnvironment
+    public interface IEnvironment : IModule
     {
         /// <summary>
         /// Unique identifier of the current player

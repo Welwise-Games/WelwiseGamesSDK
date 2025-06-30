@@ -1,12 +1,13 @@
 ﻿using System;
+using WelwiseGamesSDK.Shared.Types;
 
-namespace WelwiseGamesSDK.Shared
+namespace WelwiseGamesSDK.Shared.Modules
 {
     /// <summary>
     /// Provides advertisement display capabilities.
     /// Implement this interface to show interstitial and rewarded ads.
     /// </summary>
-    public interface IAdvertisement
+    public interface IAdvertisement : IModule
     {
         /// <summary>
         /// Displays an interstitial advertisement.

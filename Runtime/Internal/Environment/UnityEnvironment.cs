@@ -1,17 +1,20 @@
 ﻿using System;
 using WelwiseGamesSDK.Shared;
-using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
+using WelwiseGamesSDK.Shared.Modules;
+using DeviceType = WelwiseGamesSDK.Shared.Types.DeviceType;
 
 namespace WelwiseGamesSDK.Internal.Environment
 {
     internal sealed class UnityEnvironment : IEnvironment
     {
+        public bool IsAvailable { get; }
         public Guid PlayerId { get; }
         public DeviceType DeviceType { get; }
         public string Language { get; }
 
-        public UnityEnvironment(SDKSettings settings)
+        public UnityEnvironment(SDKSettings settings, bool isAvailable)
         {
+            IsAvailable = isAvailable;
             if (string.IsNullOrEmpty(settings.DebugPlayerId) || !Guid.TryParse(settings.DebugPlayerId, out var id))
             {
                 PlayerId = Guid.NewGuid();
@@ -29,6 +32,5 @@ namespace WelwiseGamesSDK.Internal.Environment
         {
             callback?.Invoke(DateTime.Now.Ticks);
         }
-        
     }
 }

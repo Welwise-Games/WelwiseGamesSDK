@@ -12,35 +12,38 @@ namespace WelwiseGames.Editor
 
         public void OnPostprocessBuild(BuildReport report)
         {
-            if (report.summary.platform != BuildTarget.WebGL) return;
+            if (report.summary.platform != BuildTarget.WebGL) 
+                return;
+
             var buildFolder = report.summary.outputPath;
             var indexHtmlPath = Path.Combine(buildFolder, "index.html");
                 
-            if (!File.Exists(indexHtmlPath)) return;
+            if (!File.Exists(indexHtmlPath)) 
+                return;
 
             var settings = SDKSettings.LoadOrCreateSettings();
-                
-            var backgroundImagePath = string.IsNullOrEmpty(settings.BackgroundImagePath) || settings.AspectRatio == SDKSettings.AspectRatioMode.Default  ? null : settings.BackgroundImagePath;
+            var backgroundImagePath = settings.AspectRatio != SDKSettings.AspectRatioMode.Default && 
+                                      !string.IsNullOrEmpty(settings.BackgroundImagePath)
+                ? settings.BackgroundImagePath
+                : "background.jpg";
 
-            var html = File.ReadAllText(indexHtmlPath);
-                
             var aspectRatioValue = settings.AspectRatio switch
             {
                 SDKSettings.AspectRatioMode.Aspect16_9 => "'16_9'",
                 SDKSettings.AspectRatioMode.Aspect9_16 => "'9_16'",
                 _ => "'default'"
             };
+
+            var html = File.ReadAllText(indexHtmlPath);
+                
+            // Заменяем конфигурационные значения
+            html = html.Replace(
+                "aspectRatioMode: 'default',", 
+                $"aspectRatioMode: {aspectRatioValue},");
                 
             html = html.Replace(
-                "const aspectRatioMode = 'default';", 
-                $"const aspectRatioMode = {aspectRatioValue};");
-                
-            if (backgroundImagePath != null)
-            {
-                html = html.Replace(
-                    "let backgroundImageUrl = 'background.jpg';", 
-                    $"let backgroundImageUrl = '{backgroundImagePath}';");
-            }
+                "backgroundImageUrl: 'background.jpg'", 
+                $"backgroundImageUrl: '{backgroundImagePath}'");
                 
             File.WriteAllText(indexHtmlPath, html);
         }

@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using WelwiseGamesSDK.Shared.Types;
 
-namespace WelwiseGamesSDK.Shared
+namespace WelwiseGamesSDK.Shared.Modules
 {
     public interface IPayments : IModule, IInitializable
     {

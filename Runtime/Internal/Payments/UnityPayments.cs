@@ -4,20 +4,13 @@ using System.Collections;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
 using WelwiseGamesSDK.Internal;
+using WelwiseGamesSDK.Shared.Modules;
+using WelwiseGamesSDK.Shared.Types;
 
 namespace WelwiseGamesSDK.Internal.Payments
 {
     public class UnityPayments : IPayments
     {
-        private SDKSettings _settings;
-        private List<Product> _products = new List<Product>();
-        private List<Purchase> _purchases = new List<Purchase>();
-        
-        public bool IsAvailable => true;
-        public bool IsInitialized { get; private set; }
-        public IReadOnlyList<Product> Products => _products.AsReadOnly();
-        public IReadOnlyList<Purchase> Purchases => _purchases.AsReadOnly();
-        
         public event Action Initialized;
         public event Action<Purchase> PurchaseSuccess;
         public event Action<string, string> PurchaseFailed;
@@ -27,6 +20,21 @@ namespace WelwiseGamesSDK.Internal.Payments
         public event Action PurchasesUpdated;
         public event Action<string> CatalogLoadFailed;
         public event Action<string> PurchasesLoadFailed;
+        
+        private List<Product> _products = new List<Product>();
+        private List<Purchase> _purchases = new List<Purchase>();
+        public bool IsAvailable { get; }
+        public bool IsInitialized { get; private set; }
+        public IReadOnlyList<Product> Products => _products.AsReadOnly();
+        public IReadOnlyList<Purchase> Purchases => _purchases.AsReadOnly();
+        
+        private SDKSettings _settings;
+
+        public UnityPayments(bool isAvailable)
+        {
+            IsAvailable = isAvailable;
+        }
+
 
         public void Initialize()
         {

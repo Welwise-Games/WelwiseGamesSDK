@@ -4,6 +4,8 @@ using System.IO;
 using UnityEngine;
 using Newtonsoft.Json;
 using UnityEditor;
+using WelwiseGamesSDK.Shared.Types;
+using DeviceType = WelwiseGamesSDK.Shared.Types.DeviceType;
 
 namespace WelwiseGamesSDK.Shared
 {
@@ -34,6 +36,14 @@ namespace WelwiseGamesSDK.Shared
         public List<Product> MockProducts = new List<Product>();
         public List<Purchase> MockPurchases = new List<Purchase>();
         public float PurchaseSimulationDuration = 2f;
+        public bool EditorAdvertisementModule = true;
+        public bool EditorPaymentsModule = true;
+        public bool EditorAnalyticsModule = true;
+        public bool EditorEnvironmentModule = true;
+        public bool EditorPlatformNavigationModule = true;
+        public bool EditorPlayerDataModule = true;
+        public bool EditorGameDataModule = true;
+        public bool EditorMetaverseDataModule = true;
         
         public static SDKSettings LoadOrCreateSettings()
         {

@@ -1,10 +1,10 @@
-﻿namespace WelwiseGamesSDK.Shared
+﻿namespace WelwiseGamesSDK.Shared.Types
 {
     /// <summary>
-    /// Represents possible states of a rewarded advertisement.
-    /// Used in rewarded ad callbacks.
+    /// Represents possible states of an interstitial advertisement.
+    /// Used in interstitial ad callbacks.
     /// </summary>
-    public enum RewardedState
+    public enum InterstitialState
     {
         /// <summary>
         /// Ad failed to load or display
@@ -17,13 +17,8 @@
         Opened,
         
         /// <summary>
-        /// Ad was closed without reward
+        /// Ad was closed
         /// </summary>
         Closed,
-        
-        /// <summary>
-        /// User earned reward by completing the ad
-        /// </summary>
-        Rewarded,
     }
 }

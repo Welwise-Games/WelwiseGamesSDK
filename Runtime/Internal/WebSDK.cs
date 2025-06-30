@@ -3,10 +3,12 @@ using UnityEngine;
 using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
+using WelwiseGamesSDK.Internal.ModuleSupport;
 using WelwiseGamesSDK.Internal.Payments;
 using WelwiseGamesSDK.Internal.PlatformNavigation;
 using WelwiseGamesSDK.Internal.PlayerData;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
 
 namespace WelwiseGamesSDK.Internal
 {
@@ -31,13 +33,18 @@ namespace WelwiseGamesSDK.Internal
 
         public WebSDK(SDKSettings sdkSettings)
         {
+            var moduleSupport = new WebModuleSupport();
             IsInitialized = false;
-            Analytics = new WebAnalytics();
-            Advertisement = new WebAdvertisement();
-            _webEnvironment = new WebEnvironment();
-            _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment);
-            PlatformNavigation = new WebPlatformNavigation(_webPlayerData);
-            Payments = new WebPayments();
+            Analytics = new WebAnalytics(moduleSupport.CheckModule(SupportedModuleKeys.AnalyticsModuleKey));
+            Advertisement = new WebAdvertisement(moduleSupport.CheckModule(SupportedModuleKeys.AdvertisementModuleKey));
+            _webEnvironment = new WebEnvironment(moduleSupport.CheckModule(SupportedModuleKeys.EnvironmentModuleKey));
+            _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment, 
+                moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey),
+                moduleSupport.CheckModule(SupportedModuleKeys.GameDataModuleKey),
+                moduleSupport.CheckModule(SupportedModuleKeys.MetaverseDataModuleKey));
+            PlatformNavigation = new WebPlatformNavigation(_webPlayerData, 
+                moduleSupport.CheckModule(SupportedModuleKeys.PlatformNavigationModuleKey));
+            Payments = new WebPayments(moduleSupport.CheckModule(SupportedModuleKeys.PaymentsModuleKey));
             _settings = sdkSettings;
         }
 
@@ -69,10 +76,10 @@ namespace WelwiseGamesSDK.Internal
             Debug.Log("[WebSDK] Environment ready");
             _webEnvironment.Ready -= HandleEnvironmentReady;
 
-            if (_settings.LoadSaveOnInitialize && !_webPlayerData.IsLoaded)
+            if (_settings.LoadSaveOnInitialize && !_webPlayerData.IsInitialized)
             {
-                _webPlayerData.Loaded += HandleSavesReady;
-                _webPlayerData.Load();
+                _webPlayerData.Initialized += HandleSavesReady;
+                _webPlayerData.Initialize();
             }
             else
             {
@@ -83,7 +90,7 @@ namespace WelwiseGamesSDK.Internal
         private void HandleSavesReady()
         {
             Debug.Log("[WebSDK] Game saves ready");
-            _webPlayerData.Loaded -= HandleSavesReady;
+            _webPlayerData.Initialized -= HandleSavesReady;
             CompleteInitialization();
         }
 

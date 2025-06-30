@@ -3,12 +3,14 @@ using System.Security.Cryptography;
 using System.Text;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
-using DeviceType = WelwiseGamesSDK.Shared.DeviceType;
+using WelwiseGamesSDK.Shared.Modules;
+using DeviceType = WelwiseGamesSDK.Shared.Types.DeviceType;
 
 namespace WelwiseGamesSDK.Internal.Environment
 {
     internal sealed class WebEnvironment : IEnvironment
     {
+        public bool IsAvailable { get; }
         public event Action Ready;
         
         public Guid PlayerId { get; private set; }
@@ -17,6 +19,12 @@ namespace WelwiseGamesSDK.Internal.Environment
 
         private int _loadedCount;
         private bool _hasErrors;
+
+        public WebEnvironment(bool isAvailable)
+        {
+            IsAvailable = isAvailable;
+        }
+
         private const int TotalProperties = 3;
         
         public void Load()

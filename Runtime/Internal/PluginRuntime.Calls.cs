@@ -1,11 +1,33 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Types;
 
 namespace WelwiseGamesSDK.Internal
 {
     internal sealed partial class PluginRuntime
     {
+        #region Module Support Check
+
+        [DllImport("__Internal")]
+        private static extern IntPtr JSGetModules();
+
+        public static string GetAvailableModules()
+        {
+            var ptr = JSGetModules();
+            if (ptr == IntPtr.Zero) return string.Empty;
+        
+            var json = Marshal.PtrToStringAuto(ptr);
+            FreeMemory(ptr);
+        
+            return json;
+        }
+
+        [DllImport("__Internal")]
+        private static extern void FreeMemory(IntPtr ptr);
+
+        #endregion
+        
         #region Initialization
         [DllImport("__Internal")]
         private static extern void JSInit();
