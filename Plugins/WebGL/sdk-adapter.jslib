@@ -138,8 +138,9 @@ mergeInto(LibraryManager.library, {
     },
 
     JSSetMetaversePlayerData: function(jsonDataPtr) {
+        var jsonString = UTF8ToString(jsonDataPtr);
         if (window.__sdk_adapter && typeof window.__sdk_adapter.SetMetaversePlayerData === 'function') {
-            window.__sdk_adapter.SetMetaversePlayerData(jsonDataPtr);
+            window.__sdk_adapter.SetMetaversePlayerData(jsonString);
         } else {
             console.error("SDK Adapter: SetMetaversePlayerData not implemented");
             unityInstance.SendMessage(
@@ -177,8 +178,9 @@ mergeInto(LibraryManager.library, {
     },
 
     JSSetCombinedPlayerData: function(jsonDataPtr) {
+        var jsonString = UTF8ToString(jsonDataPtr);
         if (window.__sdk_adapter && typeof window.__sdk_adapter.SetCombinedPlayerData === 'function') {
-            window.__sdk_adapter.SetCombinedPlayerData(jsonDataPtr);
+            window.__sdk_adapter.SetCombinedPlayerData(jsonString);
         } else {
             console.error("SDK Adapter: SetCombinedPlayerData not implemented");
             unityInstance.SendMessage(
@@ -217,7 +219,7 @@ mergeInto(LibraryManager.library, {
 
     JSGameplayStop: function() {
         if (window.__sdk_adapter && typeof window.__sdk_adapter.GameplayStop === 'function') {
-            window.__sdk_adapter.GameplayStop(); // Исправлено: было JsGameplayStop
+            window.__sdk_adapter.GameplayStop();
         } else {
             console.error("SDK Adapter: GameplayStop not implemented");
             try {
@@ -253,6 +255,7 @@ mergeInto(LibraryManager.library, {
             );
         }
     },
+    
     JSPaymentsInit: function() {
         if (window.__sdk_adapter && typeof window.__sdk_adapter.PaymentsInit === 'function') {
             window.__sdk_adapter.PaymentsInit();

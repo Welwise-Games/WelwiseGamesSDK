@@ -44,6 +44,7 @@ fetch('./config.json')
                         }
                     });
             },
+            
             GetPlayerData: function() {
                 if (!window.__wg_sdk) {
                     if (window.unityInstance) {
@@ -456,5 +457,11 @@ fetch('./config.json')
     })
     .catch(err => {
         console.error('SDK initialization failed:', err);
-
+        if (window.unityInstance) {
+            window.unityInstance.SendMessage(
+                'PluginRuntime',
+                'HandleInitError',
+                err.message || String(err)
+            );
+        }
     });
