@@ -1,12 +1,12 @@
 ﻿using System;
 
-namespace WelwiseGamesSDK.Shared
+namespace WelwiseGamesSDK.Shared.Modules
 {
     /// <summary>
     /// Provides platform navigation capabilities.
     /// Implement this interface for platform game navigation.
     /// </summary>
-    public interface IPlatformNavigation
+    public interface IPlatformNavigation : IModule
     {
         /// <summary>
         /// Navigates to another game in the platform ecosystem.

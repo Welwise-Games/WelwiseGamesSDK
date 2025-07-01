@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
+using WelwiseGamesSDK.Shared.Types;
 
 namespace WelwiseGamesSDK.Internal.PlayerData
 {
@@ -14,13 +16,15 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         private bool _isMetaverseSupported;
         private bool _isSaving;
         
-        public WebPlayerData(SDKSettings settings,IEnvironment environment)
+        public WebPlayerData(SDKSettings settings, IEnvironment environment, 
+            bool isAvailableSelf, bool isGameDataAvailable, bool isMetaverseDataAvailable) 
+            : base(isAvailableSelf, isGameDataAvailable, isMetaverseDataAvailable)
         {
             _environment = environment;
-            _supportedSDK = settings.SupportedSDKType;
+            _supportedSDK = settings.SDKType;
         }
 
-        public override void Load()
+        public override void Initialize()
         {
             PluginRuntime.IsMetaverseSupported(supported =>
             {
@@ -343,7 +347,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
 
         public override void Save()
         {
-            if (!IsLoaded) return;
+            if (!IsInitialized) return;
             if (_isSaving) return;
 
             if (_isMetaverseSupported)

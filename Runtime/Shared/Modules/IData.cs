@@ -1,10 +1,10 @@
-﻿namespace WelwiseGamesSDK.Shared
+﻿namespace WelwiseGamesSDK.Shared.Modules
 {
     /// <summary>
     /// Provides persistent data storage capabilities.
     /// Implement this interface for platform-agnostic data persistence.
     /// </summary>
-    public interface IData
+    public interface IData : IModule
     {
         /// <summary>
         /// Stores a string value with the specified key.

@@ -1,10 +1,10 @@
-﻿namespace WelwiseGamesSDK.Shared
+﻿namespace WelwiseGamesSDK.Shared.Modules
 {
     /// <summary>
     /// Provides analytics tracking capabilities for game events.
     /// Implement this interface to send custom events and gameplay milestones.
     /// </summary>
-    public interface IAnalytics
+    public interface IAnalytics : IModule
     {
         /// <summary>
         /// Sends a custom analytics event without additional data.

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
-using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
 
 namespace WelwiseGamesSDK.Internal.PlayerData
 {
     internal sealed class DataContainer : IData
     {
+        public bool IsAvailable { get; }
         public bool Changed;
         
         public readonly Dictionary<string, float> Floats = new();
@@ -15,9 +16,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         public readonly Dictionary<string, bool> Booleans = new();
         private readonly Func<string, bool> _setValidator;
 
-        public DataContainer(Func<string, bool> setValidator)
+        public DataContainer(Func<string, bool> setValidator, bool isAvailable)
         {
             _setValidator = setValidator;
+            IsAvailable = isAvailable;
         }
 
         public void Clear()

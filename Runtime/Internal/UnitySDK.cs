@@ -4,9 +4,12 @@ using UnityEngine;
 using WelwiseGamesSDK.Internal.Advertisement;
 using WelwiseGamesSDK.Internal.Analytics;
 using WelwiseGamesSDK.Internal.Environment;
+using WelwiseGamesSDK.Internal.ModuleSupport;
+using WelwiseGamesSDK.Internal.Payments;
 using WelwiseGamesSDK.Internal.PlatformNavigation;
 using WelwiseGamesSDK.Internal.PlayerData;
 using WelwiseGamesSDK.Shared;
+using WelwiseGamesSDK.Shared.Modules;
 
 namespace WelwiseGamesSDK.Internal
 {
@@ -19,6 +22,7 @@ namespace WelwiseGamesSDK.Internal
         public IAdvertisement Advertisement { get; }
         public IAnalytics Analytics { get; }
         public IPlatformNavigation PlatformNavigation { get; }
+        public IPayments Payments { get; }
 
         private readonly SDKSettings _settings;
 
@@ -26,17 +30,21 @@ namespace WelwiseGamesSDK.Internal
         
         public UnitySDK(SDKSettings settings)
         {
-            Environment = new UnityEnvironment(settings);
-            Advertisement = new UnityAdvertisement(settings);
-            Analytics = new UnityAnalytics();
-            PlatformNavigation = new UnityPlatformNavigation();
-            PlayerData = new UnityPlayerData();
+            var moduleSupport = new UnityModuleSupport(settings);
+            Environment = new UnityEnvironment(settings, moduleSupport.CheckModule(SupportedModuleKeys.EnvironmentModuleKey));
+            Advertisement = new UnityAdvertisement(settings, moduleSupport.CheckModule(SupportedModuleKeys.AdvertisementModuleKey));
+            Analytics = new UnityAnalytics(moduleSupport.CheckModule(SupportedModuleKeys.AnalyticsModuleKey));
+            PlatformNavigation = new UnityPlatformNavigation(moduleSupport.CheckModule(SupportedModuleKeys.PlatformNavigationModuleKey));
+            PlayerData = new UnityPlayerData(moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey), 
+                moduleSupport.CheckModule(SupportedModuleKeys.GameDataModuleKey),
+                moduleSupport.CheckModule(SupportedModuleKeys.MetaverseDataModuleKey));
+            Payments = new UnityPayments(moduleSupport.CheckModule(SupportedModuleKeys.PaymentsModuleKey));
             _settings = settings;
         }
         public void Initialize()
         {
             if (IsInitialized) return;
-            PlayerData.Load();
+            PlayerData.Initialize();
             if (!_isSimulatingInitialize) PluginRuntime.StartCoroutine(InitializeSimulation());
         }
 

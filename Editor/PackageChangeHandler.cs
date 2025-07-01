@@ -32,12 +32,15 @@ namespace WelwiseGames.Editor
         private static void OnPackagesChanged(PackageRegistrationEventArgs args)
         {
             var settings = SDKSettings.LoadOrCreateSettings();
-
-            if (settings.InstalledPackageVersion == SDKSettingsEditor.PACKAGE_VERSION) return;
-            Debug.Log($"Detect new package version ({SDKSettingsEditor.PACKAGE_VERSION}). Update files...");
-            SDKSettingsEditor.HandleSDKTypeChange(settings.SupportedSDKType, settings.SupportedSDKType);
-            settings.InstalledPackageVersion = SDKSettingsEditor.PACKAGE_VERSION;
-            AssetDatabase.SaveAssets();
+            if (settings.InstalledTemplateVersion == SDKSettingsEditor.TemplateVersion) 
+                return;
+            
+            Debug.Log($"Detected new template version ({SDKSettingsEditor.TemplateVersion}). Updating files...");
+            
+            WebGLTemplateUpdater.UpdateTemplate(settings.SDKType);
+            
+            settings.InstalledTemplateVersion = SDKSettingsEditor.TemplateVersion;
+            settings.Save();
         } 
 
         private static void CheckForUpdates()
@@ -47,120 +50,97 @@ namespace WelwiseGames.Editor
     
         private static IEnumerator CheckVersionCoroutine()
         {
-            string localVersion = null;
-            var listRequest = Client.List();
-            while (!listRequest.IsCompleted)
-                yield return null;
+            string localVersion = GetLocalPackageVersion();
+            if (string.IsNullOrEmpty(localVersion)) 
+                yield break;
 
-            if (listRequest.Status == StatusCode.Success)
-            {
-                var package = listRequest.Result.FirstOrDefault(p => p.name == PackageID);
-                if (package != null)
-                {
-                    localVersion = package.version;
-                }
-            }
+            var remoteUrl = string.Format(RemoteVersionURL, GithubUser, GithubRepo);
+            using var webRequest = UnityWebRequest.Get(remoteUrl);
+            yield return webRequest.SendWebRequest();
 
-            if (string.IsNullOrEmpty(localVersion))
+            if (webRequest.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogWarning($"[{DisplayName}] Failed to get local package version");
+                Debug.LogWarning($"[{DisplayName}] Version check error: {webRequest.error}");
                 yield break;
             }
 
-            var remoteUrl = string.Format(RemoteVersionURL, GithubUser, GithubRepo);
+            var remoteVersion = ParseVersionFromJson(webRequest.downloadHandler.text);
+            if (string.IsNullOrEmpty(remoteVersion)) 
+                yield break;
 
-            using UnityWebRequest webRequest = UnityWebRequest.Get(remoteUrl);
-            yield return webRequest.SendWebRequest();
+            CompareVersions(localVersion, remoteVersion);
+        }
+        
+        private static string GetLocalPackageVersion()
+        {
+            var listRequest = Client.List();
+            while (!listRequest.IsCompleted)
+                System.Threading.Thread.Sleep(100);
 
-            if (webRequest.result == UnityWebRequest.Result.Success)
-            {
-                var remoteVersion = ParseVersionFromJson( webRequest.downloadHandler.text);
-                    
-                if (!string.IsNullOrEmpty(remoteVersion))
-                {
-                    CompareVersions(localVersion, remoteVersion);
-                }
-                else
-                {
-                    Debug.LogWarning($"[{DisplayName}] Failed to parse remote version");
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"[{DisplayName}] Version check error: {webRequest.error}");
-            }
+            return listRequest.Status == StatusCode.Success ? 
+                listRequest.Result.FirstOrDefault(p => p.name == PackageID)?.version : 
+                null;
         }
     
         private static string ParseVersionFromJson(string json)
         {
-            var versionRegex = new Regex("\"version\":\\s*\"([0-9]+\\.[0-9]+\\.[0-9]+)\"");
-            var match = versionRegex.Match(json);
-
-            return match.Success ?
-                match.Groups[1].Value :
-                string.Empty;
+            var match = new Regex("\"version\":\\s*\"([\\d.]+)\"").Match(json);
+            return match.Success ? match.Groups[1].Value : null;
         }
         
         private static void CompareVersions(string currentVersion, string remoteVersion)
         {
             if (currentVersion == remoteVersion) return;
 
-            var notificationData = LoadNotificationData();
-            var showNotification = false;
+            var notification = LoadNotificationData();
+            var shouldNotify = notification == null || 
+                              IsNewVersion(notification, remoteVersion) || 
+                              IsNotificationExpired(notification);
 
-            if (notificationData == null)
-            {
-                showNotification = true;
-            }
-            else
-            {
-                var isNewVersion = notificationData.Version != remoteVersion;
-                var isTimeExpired = false;
-
-                if (DateTime.TryParse(notificationData.Date, CultureInfo.InvariantCulture, DateTimeStyles.None, out var lastDate))
-                {
-                    isTimeExpired = (DateTime.Now - lastDate).TotalDays >= 7;
-                }
-
-                showNotification = isNewVersion || isTimeExpired;
-            }
-
-            if (!showNotification) return;
+            if (!shouldNotify) return;
+            
             ShowUpdateNotification(currentVersion, remoteVersion);
             SaveNotificationData(remoteVersion);
+        }
+        
+        private static bool IsNewVersion(NotificationData notification, string remoteVersion)
+        {
+            return notification.Version != remoteVersion;
+        }
+        
+        private static bool IsNotificationExpired(NotificationData notification)
+        {
+            return DateTime.TryParse(notification.Date, CultureInfo.InvariantCulture, 
+                DateTimeStyles.None, out var lastDate) && 
+                (DateTime.Now - lastDate).TotalDays >= 7;
         }
 
         private static NotificationData LoadNotificationData()
         {
-            var jsonData = PlayerPrefs.GetString(NotificationDataKey, "");
-            return !string.IsNullOrEmpty(jsonData) ? JsonConvert.DeserializeObject<NotificationData>(jsonData) : null;
+            var json = PlayerPrefs.GetString(NotificationDataKey);
+            return string.IsNullOrEmpty(json) ? null : JsonConvert.DeserializeObject<NotificationData>(json);
         }
 
         private static void SaveNotificationData(string version)
         {
-            var data = new NotificationData
+            PlayerPrefs.SetString(NotificationDataKey, JsonConvert.SerializeObject(new NotificationData
             {
                 Version = version,
                 Date = DateTime.Now.ToString(CultureInfo.InvariantCulture)
-            };
-
-            PlayerPrefs.SetString(NotificationDataKey, JsonUtility.ToJson(data));
+            }));
             PlayerPrefs.Save();
         }
 
         private static void ShowUpdateNotification(string currentVersion, string remoteVersion)
         {
-            Debug.LogWarning($"[{DisplayName}] Update available!\nCurrent: {currentVersion}, New: {remoteVersion}\nPlease update via Package Manager");
+            Debug.LogWarning($"[{DisplayName}] Update available! Current: {currentVersion}, New: {remoteVersion}");
 
-            var openPackageManager = EditorUtility.DisplayDialog(
+            if (EditorUtility.DisplayDialog(
                 $"{DisplayName} Update Available",
-                $"A new version is available!\nCurrent: {currentVersion}\nNew: {remoteVersion}",
+                $"New version {remoteVersion} is available!\nCurrent version: {currentVersion}",
                 "Open Package Manager",
-                "Later"
-            );
-
-            if (openPackageManager)
-            {            
+                "Later"))
+            {
                 EditorApplication.ExecuteMenuItem("Window/Package Manager");
             }
         }
@@ -171,7 +151,5 @@ namespace WelwiseGames.Editor
             public string Version;
             public string Date;
         }
-
-        
     }
 }

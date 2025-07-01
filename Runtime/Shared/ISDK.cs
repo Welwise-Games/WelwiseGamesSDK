@@ -1,4 +1,5 @@
 ﻿using System;
+using WelwiseGamesSDK.Shared.Modules;
 
 namespace WelwiseGamesSDK.Shared
 {
@@ -6,7 +7,7 @@ namespace WelwiseGamesSDK.Shared
     /// Main entry point for SDK functionality.
     /// Provides access to all core SDK services.
     /// </summary>
-    public interface ISDK
+    public interface ISDK : IInitializable
     {
         /// <summary>
         /// Player profile and data management
@@ -34,18 +35,8 @@ namespace WelwiseGamesSDK.Shared
         public IPlatformNavigation PlatformNavigation { get; }
         
         /// <summary>
-        /// Initializes the SDK services
+        /// In-app purchases
         /// </summary>
-        public void Initialize();
-        
-        /// <summary>
-        /// Event triggered when SDK initialization completes
-        /// </summary>
-        public event Action Initialized;
-        
-        /// <summary>
-        /// Indicates if SDK has been initialized
-        /// </summary>
-        public bool IsInitialized { get; }
+        public IPayments Payments { get; }
     }
 }

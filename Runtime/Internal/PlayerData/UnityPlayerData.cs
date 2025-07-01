@@ -9,7 +9,11 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         private const string GamePrefix = "WS_SDK_GAME__";
         private const string MetaversePrefix = "WS_SDK_METAVERSE__";
 
-        public override void Load()
+        public UnityPlayerData(bool isAvailableSelf, bool isGameDataAvailable, bool isMetaverseDataAvailable) : 
+            base(isAvailableSelf, isGameDataAvailable, isMetaverseDataAvailable) {}
+  
+
+        public override void Initialize()
         {
             _playerName = PlayerPrefs.GetString(PlayerNameKey, "Ghost");
             LoadContainerData(_gameDataContainer, GamePrefix);
