@@ -13,7 +13,7 @@ namespace WelwiseGames.Editor
 {
     public class SDKSettingsEditor : EditorWindow
     {
-        public const string TemplateVersion = "0.0.12";
+        public const string TemplateVersion = "0.0.13";
         private const string LogoFileName = "__ws-logo";
         
         private enum TabType
