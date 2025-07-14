@@ -37,7 +37,7 @@ namespace WelwiseGames.Editor
             
             Debug.Log($"Detected new template version ({SDKSettingsEditor.TemplateVersion}). Updating files...");
             
-            WebGLTemplateUpdater.UpdateTemplate(settings.SDKType);
+            WebGLTemplateUpdater.UpdateTemplate(settings.SDKType, settings.UseThreeJsLoader);
             
             settings.InstalledTemplateVersion = SDKSettingsEditor.TemplateVersion;
             settings.Save();

@@ -40,11 +40,16 @@ namespace WelwiseGames.Editor
             html = html.Replace(
                 "aspectRatioMode: 'default',", 
                 $"aspectRatioMode: {aspectRatioValue},");
-                
+        
             html = html.Replace(
                 "backgroundImageUrl: 'background.jpg'", 
                 $"backgroundImageUrl: '{backgroundImagePath}'");
-                
+    
+            // Добавляем замену для ThreeJS опции
+            html = html.Replace(
+                "useThreeJsLoader: true", 
+                $"useThreeJsLoader: {settings.UseThreeJsLoader.ToString().ToLower()}");
+        
             File.WriteAllText(indexHtmlPath, html);
         }
     }

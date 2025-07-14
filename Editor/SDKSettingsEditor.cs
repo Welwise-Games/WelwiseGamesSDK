@@ -13,7 +13,7 @@ namespace WelwiseGames.Editor
 {
     public class SDKSettingsEditor : EditorWindow
     {
-        public const string TemplateVersion = "0.0.14";
+        public const string TemplateVersion = "0.0.15";
         private const string LogoFileName = "__ws-logo";
         
         private enum TabType
@@ -41,6 +41,7 @@ namespace WelwiseGames.Editor
         private bool _settingsDirty;
         private double _lastChangeTime;
         private const double SaveDelay = 1.0;
+        private bool _threeJsChanged = false;
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
         public static void ShowWindow()
@@ -263,18 +264,41 @@ namespace WelwiseGames.Editor
         {
             string templatePath = "Assets/WebGLTemplates/Welwise SDK";
             string adapterPath = $"{templatePath}/sdk-adapter.js";
-            
+    
+            bool needsUpdate = false;
+    
+            // Проверка базовых файлов
             if (!AssetDatabase.IsValidFolder(templatePath) || 
                 !File.Exists(Path.Combine(Application.dataPath, "WebGLTemplates/Welwise SDK/sdk-adapter.js")))
             {
                 Debug.Log("Template files missing. Reimporting...");
+                needsUpdate = true;
+            }
+    
+            // Проверка ThreeJS файлов
+            string threeCanvasPath = $"{templatePath}/threeCanvas.js";
+            bool threeJsExists = File.Exists(threeCanvasPath);
+    
+            if (_settings.UseThreeJsLoader && !threeJsExists)
+            {
+                Debug.Log("ThreeJS files missing but required. Reimporting...");
+                needsUpdate = true;
+            }
+            else if (!_settings.UseThreeJsLoader && threeJsExists)
+            {
+                Debug.Log("ThreeJS files present but not required. Removing...");
+                needsUpdate = true;
+            }
+
+            if (needsUpdate)
+            {
                 UpdateTemplateForCurrentSDK();
             }
         }
 
         private void UpdateTemplateForCurrentSDK()
         {
-            WebGLTemplateUpdater.UpdateTemplate(_settings.SDKType);
+            WebGLTemplateUpdater.UpdateTemplate(_settings.SDKType, _settings.UseThreeJsLoader);
         }
         
         private void OnGUI()
@@ -326,6 +350,12 @@ namespace WelwiseGames.Editor
                 HandleSDKTypeChange(_lastSDKType, _settings.SDKType);
                 _lastSDKType = _settings.SDKType;
                 SaveSettingsImmediate();
+            }
+            
+            if (_threeJsChanged)
+            {
+                UpdateTemplateForCurrentSDK();
+                MarkSettingsDirty();
             }
         }
         
@@ -457,24 +487,26 @@ namespace WelwiseGames.Editor
         
         private void DrawBuildSettings()
         {
+            
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Build Process Settings", EditorStyles.boldLabel);
-            
+    
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             {
+                var p = _settings.UseThreeJsLoader;
+                _settings.UseThreeJsLoader = EditorGUILayout.Toggle(
+                    "Use ThreeJS Loader", 
+                    _settings.UseThreeJsLoader);
+                _threeJsChanged = p != _settings.UseThreeJsLoader;
+        
                 _settings.AspectRatio = (SDKSettings.AspectRatioMode)EditorGUILayout.EnumPopup(
                     "Aspect Ratio Mode", 
                     _settings.AspectRatio);
-                
+        
                 if (_settings.AspectRatio != SDKSettings.AspectRatioMode.Default)
                 {
-                    EditorGUILayout.Space(5);
-                    EditorGUILayout.BeginVertical(EditorStyles.textArea);
-                    {
-                        DrawBackgroundImageField();
-                        DrawBackgroundPreview();
-                    }
-                    EditorGUILayout.EndVertical();
+                    DrawBackgroundImageField();
+                    DrawBackgroundPreview();
                 }
             }
             EditorGUILayout.EndVertical();
@@ -592,11 +624,11 @@ namespace WelwiseGames.Editor
             return Path.ChangeExtension(path, null);
         }
         
-        public static void HandleSDKTypeChange(SupportedSDKType oldType, SupportedSDKType newType)
+        private void HandleSDKTypeChange(SupportedSDKType oldType, SupportedSDKType newType)
         {
             try
             {
-                WebGLTemplateUpdater.UpdateTemplate(newType);
+                WebGLTemplateUpdater.UpdateTemplate(newType, _settings.UseThreeJsLoader);
                 AssetDatabase.Refresh();
             }
             catch (Exception e)
