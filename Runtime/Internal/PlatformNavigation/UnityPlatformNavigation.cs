@@ -14,7 +14,7 @@ namespace WelwiseGamesSDK.Internal.PlatformNavigation
             IsAvailable = isAvailable;
         }
         
-        public void GoToGame(int id, Action<string> onError)
+        public void GoToGame(string id, Action<string> onError)
         {
             Debug.Log($"[{nameof(UnityPlatformNavigation)}] Go to game ID: {id}");
             Debug.Break();

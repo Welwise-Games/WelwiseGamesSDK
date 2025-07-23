@@ -140,9 +140,9 @@ namespace WelwiseGamesSDK.Internal
 
         #region Navigation
         [DllImport("__Internal")]
-        private static extern void JSGoToGame(int gameId);
+        private static extern void JSGoToGame(string gameId);
 
-        public static void GoToGame(int gameId, Action onSuccess, Action<string> onError)
+        public static void GoToGame(string gameId, Action onSuccess, Action<string> onError)
         {
             OnNavigateSuccess += SuccessHandler;
             OnNavigateError += ErrorHandler;

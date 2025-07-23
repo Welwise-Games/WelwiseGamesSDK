@@ -10,7 +10,7 @@ namespace WelwiseGamesSDK.Internal.PlatformNavigation
         public bool IsAvailable { get; }
         private readonly PlayerData.PlayerData _playerData;
         private bool _isNavigating;
-        private int _currentId;
+        private string _currentId;
         private Action<string> _currentCallback;
 
         public WebPlatformNavigation(PlayerData.PlayerData playerData, bool isAvailable)
@@ -27,7 +27,7 @@ namespace WelwiseGamesSDK.Internal.PlatformNavigation
             PluginRuntime.GoToGame(_currentId, () => { }, _currentCallback);
         }
 
-        public void GoToGame(int id, Action<string> onError)
+        public void GoToGame(string id, Action<string> onError)
         {
             _currentId = id;
             _currentCallback = onError;

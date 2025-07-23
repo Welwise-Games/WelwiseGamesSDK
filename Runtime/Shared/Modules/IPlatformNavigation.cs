@@ -11,8 +11,8 @@ namespace WelwiseGamesSDK.Shared.Modules
         /// <summary>
         /// Navigates to another game in the platform ecosystem.
         /// </summary>
-        /// <param name="id">Target game identifier</param>
+        /// <param name="id">Target slug game identifier</param>
         /// <param name="onError">Callback for handling navigation errors</param>
-        public void GoToGame(int id, Action<string> onError);
+        public void GoToGame(string id, Action<string> onError);
     }
 }

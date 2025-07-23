@@ -73,8 +73,9 @@ mergeInto(LibraryManager.library, {
     },
 
     JSGoToGame: function(gameId) {
+        var stringId = UTF8ToString(gameId);
         if (window.__sdk_adapter && typeof window.__sdk_adapter.GoToGame === 'function') {
-            window.__sdk_adapter.GoToGame(gameId);
+            window.__sdk_adapter.GoToGame(stringId);
         } else {
             console.error("SDK Adapter: JsGoToGame not implemented");
             unityInstance.SendMessage(
