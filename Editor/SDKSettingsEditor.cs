@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -8,11 +8,16 @@ using UnityEngine;
 using WelwiseGamesSDK.Shared;
 using WelwiseGamesSDK.Shared.Types;
 using DeviceType = WelwiseGamesSDK.Shared.Types.DeviceType;
+using System.Collections.Generic;
 
 namespace WelwiseGames.Editor
 {
     public class SDKSettingsEditor : EditorWindow
     {
+        private const string PlayerNameKey = "WS_PLAYER_NAME__";
+        private const string GamePrefix = "WS_SDK_GAME__";
+        private const string MetaversePrefix = "WS_SDK_METAVERSE__";
+        
         public const string TemplateVersion = "0.0.16";
         private const string LogoFileName = "__ws-logo";
         
@@ -23,6 +28,7 @@ namespace WelwiseGames.Editor
             Advertisement,
             Environment,
             Payments,
+            PlayerData,
             About
         }
         
@@ -42,6 +48,12 @@ namespace WelwiseGames.Editor
         private double _lastChangeTime;
         private const double SaveDelay = 1.0;
         private bool _threeJsChanged = false;
+
+        // Fields for new data entry
+        private string _newKeyName = "";
+        private string _newKeyValue = "";
+        private int _newKeyTypeIndex = 3; // 0:int, 1:float, 2:bool, 3:string
+        private int _newKeyContainerIndex = 0; // 0:Game, 1:Metaverse
 
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
         public static void ShowWindow()
@@ -335,6 +347,10 @@ namespace WelwiseGames.Editor
                     DrawPaymentsSettings();
                     break;
                     
+                case TabType.PlayerData:
+                    DrawPlayerDataTab();
+                    break;
+                    
                 case TabType.About:
                     DrawAboutTab();
                     break;
@@ -434,10 +450,6 @@ namespace WelwiseGames.Editor
             _settings.AutoConstructAndInitializeSingleton = EditorGUILayout.Toggle(
                 "Auto Singleton", 
                 _settings.AutoConstructAndInitializeSingleton);
-            
-            _settings.LoadSaveOnInitialize = EditorGUILayout.Toggle(
-                "Load Save On Initialize", 
-                _settings.LoadSaveOnInitialize);
             
             EditorGUILayout.Space(15);
             EditorGUILayout.LabelField("Editor Settings", EditorStyles.boldLabel);
@@ -635,6 +647,301 @@ namespace WelwiseGames.Editor
             {
                 Debug.LogError($"Error processing SDK change: {e.Message}");
             }
+        }
+        
+        private void DrawPlayerDataTab()
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Player Data Settings", EditorStyles.boldLabel);
+
+            // Перенесена настройка из General
+            _settings.LoadSaveOnInitialize = EditorGUILayout.Toggle(
+                "Load Save On Initialize", 
+                _settings.LoadSaveOnInitialize);
+
+            EditorGUILayout.Space(15);
+            
+            // Кнопка удаления всех данных
+            if (GUILayout.Button("Delete All Player Data", GUILayout.Height(30)))
+            {
+                if (EditorUtility.DisplayDialog("Delete All Player Data", 
+                    "Are you sure you want to delete ALL SDK player data? This cannot be undone.", 
+                    "Delete", "Cancel"))
+                {
+                    DeleteAllPlayerData();
+                }
+            }
+
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Saved Data", EditorStyles.boldLabel);
+
+            // Отображение сохраненных данных
+            DrawSavedPlayerData();
+        }
+
+        private void DeleteAllPlayerData()
+        {
+            // Удаление всех ключей SDK
+            PlayerPrefs.DeleteKey(PlayerNameKey);
+            
+            DeleteKeysForPrefix(GamePrefix);
+            DeleteKeysForPrefix(MetaversePrefix);
+            
+            PlayerPrefs.Save();
+            Debug.Log("All SDK player data deleted");
+        }
+
+        private void DeleteKeysForPrefix(string prefix)
+        {
+            string keysKey = prefix + "__keys";
+            string keys = PlayerPrefs.GetString(keysKey, "");
+            
+            if (!string.IsNullOrEmpty(keys))
+            {
+                foreach (string key in keys.Split(','))
+                {
+                    PlayerPrefs.DeleteKey(prefix + key);
+                }
+            }
+            
+            PlayerPrefs.DeleteKey(keysKey);
+        }
+
+        private void DrawSavedPlayerData()
+        {
+            // Player Name
+            DrawPlayerNameSection();
+            
+            // Game Data
+            DrawDataContainer(GamePrefix, "Game Data");
+            
+            // Metaverse Data
+            DrawDataContainer(MetaversePrefix, "Metaverse Data");
+            
+            // Добавление новых полей
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.Space(20);
+                EditorGUILayout.LabelField("Add New Field", EditorStyles.boldLabel);
+                DrawNewFieldUI();
+            }
+        }
+
+        private void DrawPlayerNameSection()
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField("Player Name", EditorStyles.miniBoldLabel);
+            
+            string currentName = PlayerPrefs.GetString(
+                PlayerNameKey, 
+                "Ghost"
+            );
+            
+            using (new EditorGUILayout.HorizontalScope())
+            {
+                if (Application.isPlaying)
+                {
+                    EditorGUILayout.LabelField(currentName);
+                }
+                else
+                {
+                    string newName = EditorGUILayout.TextField(currentName);
+                    if (newName != currentName)
+                    {
+                        PlayerPrefs.SetString(
+                            PlayerNameKey, 
+                            newName
+                        );
+                        PlayerPrefs.Save();
+                    }
+                }
+                
+                if (!Application.isPlaying && GUILayout.Button("Delete", GUILayout.Width(60)))
+                {
+                    PlayerPrefs.DeleteKey(PlayerNameKey);
+                    PlayerPrefs.Save();
+                }
+            }
+        }
+
+        private void DrawDataContainer(string prefix, string label)
+        {
+            EditorGUILayout.Space(10);
+            EditorGUILayout.LabelField(label, EditorStyles.miniBoldLabel);
+            
+            string keysKey = prefix + "__keys";
+            string keysStr = PlayerPrefs.GetString(keysKey, "");
+            
+            if (string.IsNullOrEmpty(keysStr))
+            {
+                EditorGUILayout.LabelField("No data");
+                return;
+            }
+            
+            foreach (string key in keysStr.Split(','))
+            {
+                string fullKey = prefix + key;
+                if (!PlayerPrefs.HasKey(fullKey)) continue;
+                
+                string valueStr = PlayerPrefs.GetString(fullKey);
+                char valueType = valueStr.Length > 0 ? valueStr[0] : ' ';
+                string valueContent = valueStr.Length > 1 ? valueStr.Substring(1) : "";
+                
+                using (new EditorGUILayout.HorizontalScope())
+                {
+                    // Отображение ключа
+                    EditorGUILayout.LabelField(key, GUILayout.Width(150));
+                    
+                    // Отображение и редактирование значения
+                    if (Application.isPlaying)
+                    {
+                        EditorGUILayout.LabelField(valueContent);
+                    }
+                    else
+                    {
+                        string newValue = DrawValueField(valueType, valueContent);
+                        
+                        if (newValue != valueContent)
+                        {
+                            PlayerPrefs.SetString(
+                                fullKey, 
+                                valueType + newValue
+                            );
+                            PlayerPrefs.Save();
+                        }
+                    }
+                    
+                    // Кнопка удаления
+                    if (!Application.isPlaying && 
+                        GUILayout.Button("Delete", GUILayout.Width(60)))
+                    {
+                        PlayerPrefs.DeleteKey(fullKey);
+                        
+                        // Обновление списка ключей
+                        List<string> keys = new List<string>(keysStr.Split(','));
+                        keys.Remove(key);
+                        PlayerPrefs.SetString(
+                            keysKey, 
+                            string.Join(",", keys)
+                        );
+                        
+                        PlayerPrefs.Save();
+                        return; // Прервать для обновления интерфейса
+                    }
+                }
+            }
+        }
+
+        private string DrawValueField(char valueType, string currentValue)
+        {
+            switch (valueType)
+            {
+                case 'i': // int
+                    int intVal;
+                    int.TryParse(currentValue, out intVal);
+                    return EditorGUILayout.IntField(intVal).ToString();
+                
+                case 'f': // float
+                    float floatVal;
+                    float.TryParse(
+                        currentValue, 
+                        System.Globalization.NumberStyles.Float, 
+                        System.Globalization.CultureInfo.InvariantCulture, 
+                        out floatVal
+                    );
+                    return EditorGUILayout.FloatField(floatVal)
+                        .ToString(System.Globalization.CultureInfo.InvariantCulture);
+                
+                case 'b': // bool
+                    bool boolVal;
+                    bool.TryParse(currentValue, out boolVal);
+                    return EditorGUILayout.Toggle(boolVal).ToString();
+                
+                default: // string
+                    return EditorGUILayout.TextField(currentValue);
+            }
+        }
+
+        private void DrawNewFieldUI()
+        {
+            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            {
+                // Выбор контейнера
+                _newKeyContainerIndex = EditorGUILayout.Popup(
+                    "Container",
+                    _newKeyContainerIndex,
+                    new[] { "Game Data", "Metaverse Data" }
+                );
+                
+                // Имя ключа
+                _newKeyName = EditorGUILayout.TextField("Key Name", _newKeyName);
+                
+                // Тип значения
+                _newKeyTypeIndex = EditorGUILayout.Popup(
+                    "Value Type",
+                    _newKeyTypeIndex,
+                    new[] { "Integer", "Float", "Boolean", "String" }
+                );
+                
+                // Значение
+                _newKeyValue = EditorGUILayout.TextField("Value", _newKeyValue);
+                
+                // Кнопка добавления
+                if (GUILayout.Button("Add Field") && !string.IsNullOrEmpty(_newKeyName))
+                {
+                    AddNewField();
+                }
+            }
+        }
+
+        private void AddNewField()
+        {
+            string prefix = _newKeyContainerIndex == 0 ? 
+                GamePrefix : 
+                MetaversePrefix;
+            
+            string fullKey = prefix + _newKeyName;
+            
+            // Проверка существования ключа
+            if (PlayerPrefs.HasKey(fullKey))
+            {
+                Debug.LogWarning($"Key '{_newKeyName}' already exists!");
+                return;
+            }
+            
+            // Форматирование значения
+            char typePrefix = _newKeyTypeIndex switch
+            {
+                0 => 'i', // int
+                1 => 'f', // float
+                2 => 'b', // bool
+                _ => 's'  // string
+            };
+            
+            // Сохранение значения
+            PlayerPrefs.SetString(fullKey, typePrefix + _newKeyValue);
+            
+            // Обновление списка ключей
+            string keysKey = prefix + "__keys";
+            string existingKeys = PlayerPrefs.GetString(keysKey, "");
+            
+            List<string> keys = new List<string>();
+            if (!string.IsNullOrEmpty(existingKeys))
+            {
+                keys.AddRange(existingKeys.Split(','));
+            }
+            
+            if (!keys.Contains(_newKeyName))
+            {
+                keys.Add(_newKeyName);
+                PlayerPrefs.SetString(keysKey, string.Join(",", keys));
+            }
+            
+            PlayerPrefs.Save();
+            
+            // Сброс полей
+            _newKeyName = "";
+            _newKeyValue = "";
         }
     }
 }
