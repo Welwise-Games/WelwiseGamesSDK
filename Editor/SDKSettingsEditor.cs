@@ -55,6 +55,9 @@ namespace WelwiseGames.Editor
         private int _newKeyTypeIndex = 3; // 0:int, 1:float, 2:bool, 3:string
         private int _newKeyContainerIndex = 0; // 0:Game, 1:Metaverse
 
+        // PlayerData scroll position
+        private Vector2 _playerDataScrollPosition;
+
         [MenuItem("Tools/WelwiseGamesSDK/SDK Settings")]
         public static void ShowWindow()
         {
@@ -686,8 +689,18 @@ namespace WelwiseGames.Editor
             EditorGUILayout.Space(15);
             EditorGUILayout.LabelField("Saved Data", EditorStyles.boldLabel);
 
-            // Отображение сохраненных данных
+            // Отображение сохраненных данных с прокруткой
+            _playerDataScrollPosition = EditorGUILayout.BeginScrollView(_playerDataScrollPosition, GUILayout.ExpandHeight(true));
             DrawSavedPlayerData();
+            EditorGUILayout.EndScrollView();
+
+            // Добавление новых полей
+            if (!Application.isPlaying)
+            {
+                EditorGUILayout.Space(20);
+                EditorGUILayout.LabelField("Add New Field", EditorStyles.boldLabel);
+                DrawNewFieldUI();
+            }
         }
 
         private void DeleteAllPlayerData()
@@ -728,14 +741,6 @@ namespace WelwiseGames.Editor
             
             // Metaverse Data
             DrawDataContainer(MetaversePrefix, "Metaverse Data");
-            
-            // Добавление новых полей
-            if (!Application.isPlaying)
-            {
-                EditorGUILayout.Space(20);
-                EditorGUILayout.LabelField("Add New Field", EditorStyles.boldLabel);
-                DrawNewFieldUI();
-            }
         }
 
         private void DrawPlayerNameSection()
