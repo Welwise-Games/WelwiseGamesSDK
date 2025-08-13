@@ -18,7 +18,7 @@ namespace WelwiseGames.Editor
         private const string GamePrefix = "WS_SDK_GAME__";
         private const string MetaversePrefix = "WS_SDK_METAVERSE__";
         
-        public const string TemplateVersion = "0.0.16";
+        public const string TemplateVersion = "0.0.17";
         private const string LogoFileName = "__ws-logo";
         
         private enum TabType
@@ -564,6 +564,17 @@ namespace WelwiseGames.Editor
         {
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Advertisement Settings", EditorStyles.boldLabel);
+            _settings.ShowAdOnStart = EditorGUILayout.Toggle(
+                "Show Ad On Start", 
+                _settings.ShowAdOnStart
+            );
+    
+            if (_settings.ShowAdOnStart) {
+                EditorGUILayout.HelpBox(
+                    "Start ad will be shown before game loads. Work only with Welwise Platform",
+                    MessageType.Info
+                );
+            }
             
             _settings.AdSimulationDuration = EditorGUILayout.Slider(
                 "Ad Duration", 

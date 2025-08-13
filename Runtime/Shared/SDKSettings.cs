@@ -45,6 +45,7 @@ namespace WelwiseGamesSDK.Shared
         public bool EditorGameDataModule = true;
         public bool EditorMetaverseDataModule = true;
         public bool UseThreeJsLoader = true;
+        public bool ShowAdOnStart = true;
         
         public static SDKSettings LoadOrCreateSettings()
         {
