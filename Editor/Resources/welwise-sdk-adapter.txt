@@ -43,21 +43,26 @@ fetch('./config.json')
             },
             
             Init: function() {
-                WelwiseGames.init()
-                    .then(sdk => {
-                        window.__wg_sdk = sdk;
+                const initPromise = WelwiseGames.init()
+                .then(sdk => {
+                    window.__wg_sdk = sdk;
+                    return sdk;
+                });
+
+                const sendUnityMessage = (handler, message = '') => {
+                    const checkInterval = setInterval(() => {
                         if (window.unityInstance) {
-                            window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                            clearInterval(checkInterval);
+                            window.unityInstance.SendMessage('PluginRuntime', handler, message);
                         }
-                    })
+                    }, 100);
+                };
+
+                initPromise
+                    .then(() => sendUnityMessage('HandleInitSuccess'))
                     .catch(error => {
-                        if (window.unityInstance) {
-                            window.unityInstance.SendMessage(
-                                'PluginRuntime',
-                                'HandleInitError',
-                                error.message || String(error)
-                            );
-                        }
+                        const errorMessage = error.message || String(error);
+                        sendUnityMessage('HandleInitError', errorMessage);
                     });
             },
             
