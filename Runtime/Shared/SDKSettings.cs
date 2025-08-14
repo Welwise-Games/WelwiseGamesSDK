@@ -49,40 +49,20 @@ namespace WelwiseGamesSDK.Shared
         
         public static SDKSettings LoadOrCreateSettings()
         {
-            try
+            var settingsAsset = Resources.Load<TextAsset>("sdk_settings");
+            if (settingsAsset != null)
             {
-                var settingsPath = GetSettingsPath();
-                if (File.Exists(settingsPath))
+                try
                 {
-                    var json = File.ReadAllText(settingsPath);
-                    return JsonConvert.DeserializeObject<SDKSettings>(json);
+                    return JsonConvert.DeserializeObject<SDKSettings>(settingsAsset.text);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError($"Failed to deserialize SDK settings: {e.Message}");
                 }
             }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to load SDK settings: {e.Message}");
-            }
 
-            return new SDKSettings
-            {
-                DebugPlayerId = Guid.NewGuid().ToString(),
-                SDKType = SupportedSDKType.WelwiseGames,
-                DebugDeviceType = DeviceType.Desktop,
-                DebugLanguageCode = "en",
-                MuteAudioOnPause = true,
-                AutoConstructAndInitializeSingleton = true,
-                DebugInitializeTime = 2f,
-                LoadSaveOnInitialize = true,
-                InstalledTemplateVersion = "",
-                AspectRatio = AspectRatioMode.Default,
-                BackgroundImagePath = "",
-                AdSimulationDuration = 5f,
-                InterstitialAdReturnState = InterstitialState.Closed,
-                RewardedAdReturnState = RewardedState.Closed,
-                MockProducts = new List<Product>(),
-                MockPurchases = new List<Purchase>(),
-                PurchaseSimulationDuration = 2f
-            };
+            return CreateDefaultSettings();
         }
         
         public void Save()
@@ -114,6 +94,30 @@ namespace WelwiseGamesSDK.Shared
         {
             var resourcesPath = Path.Combine(Application.dataPath, "Resources");
             return Path.Combine(resourcesPath, "sdk_settings.json");
+        }
+        
+        private static SDKSettings CreateDefaultSettings()
+        {
+            return new SDKSettings
+            {
+                DebugPlayerId = Guid.NewGuid().ToString(),
+                SDKType = SupportedSDKType.WelwiseGames,
+                DebugDeviceType = DeviceType.Desktop,
+                DebugLanguageCode = "en",
+                MuteAudioOnPause = true,
+                AutoConstructAndInitializeSingleton = true,
+                DebugInitializeTime = 2f,
+                LoadSaveOnInitialize = true,
+                InstalledTemplateVersion = "",
+                AspectRatio = AspectRatioMode.Default,
+                BackgroundImagePath = "",
+                AdSimulationDuration = 5f,
+                InterstitialAdReturnState = InterstitialState.Closed,
+                RewardedAdReturnState = RewardedState.Closed,
+                MockProducts = new List<Product>(),
+                MockPurchases = new List<Purchase>(),
+                PurchaseSimulationDuration = 2f
+            };
         }
     }
 }
