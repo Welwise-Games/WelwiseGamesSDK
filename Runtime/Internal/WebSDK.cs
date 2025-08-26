@@ -36,8 +36,8 @@ namespace WelwiseGamesSDK.Internal
             var moduleSupport = new WebModuleSupport();
             IsInitialized = false;
             Analytics = new WebAnalytics(moduleSupport.CheckModule(SupportedModuleKeys.AnalyticsModuleKey));
-            Advertisement = new WebAdvertisement(moduleSupport.CheckModule(SupportedModuleKeys.AdvertisementModuleKey));
             _webEnvironment = new WebEnvironment(moduleSupport.CheckModule(SupportedModuleKeys.EnvironmentModuleKey));
+            Advertisement = new WebAdvertisement(moduleSupport.CheckModule(SupportedModuleKeys.AdvertisementModuleKey), _webEnvironment);
             _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment, 
                 moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey),
                 moduleSupport.CheckModule(SupportedModuleKeys.GameDataModuleKey),
