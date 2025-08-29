@@ -169,16 +169,25 @@
         },
 
         GetDeviceType: function() {
-            try {
-                const userAgent = navigator.userAgent.toLowerCase();
-                let deviceType = 'desktop';
-
-                if (/mobile|android|iphone|ipod|iemobile/i.test(userAgent)) {
-                    deviceType = 'mobile';
-                } else if (/tablet|ipad|playbook|xoom|tab|kindle/i.test(userAgent)) {
-                    deviceType = 'tablet';
+            if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeError', 'SDK not initialized');
                 }
-
+                return;
+            }
+        
+            try {
+                const deviceInfo = window.__yandex_sdk.ysdk.deviceInfo;
+                let deviceType = 'desktop';
+        
+                if (deviceInfo.isMobile()) {
+                    deviceType = 'mobile';
+                } else if (deviceInfo.isTablet()) {
+                    deviceType = 'tablet';
+                } else if (deviceInfo.isTV()) {
+                    deviceType = 'tv';
+                }
+        
                 if (window.unityInstance) {
                     window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeSuccess', deviceType);
                 }
@@ -192,10 +201,17 @@
                 }
             }
         },
-
+        
         GetLanguageCode: function() {
+            if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeError', 'SDK not initialized');
+                }
+                return;
+            }
+        
             try {
-                const lang = (navigator.language || navigator.userLanguage || 'en').substring(0, 2);
+                const lang = window.__yandex_sdk.ysdk.environment.i18n.lang;
                 if (window.unityInstance) {
                     window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
                 }

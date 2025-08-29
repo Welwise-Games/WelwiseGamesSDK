@@ -14,6 +14,7 @@ namespace WelwiseGamesSDK.Internal.Advertisement
 
         private CursorLockMode _previousCursorLockMode;
         private bool _previousCursorVisible;
+        private float _previousVolume;
 
         public WebAdvertisement(bool isAvailable, IEnvironment environment)
         {
@@ -23,49 +24,70 @@ namespace WelwiseGamesSDK.Internal.Advertisement
 
         public void ShowInterstitial(Action<InterstitialState> callbackState)
         {
-            HideCursor();
-            
+            var wasShown = true;
+
             PluginRuntime.ShowInterstitial(CallbackProxy);
-            
             return;
             void CallbackProxy(InterstitialState state)
             {
-                RestoreCursor();
+                switch (state)
+                {
+                    case InterstitialState.Opened:
+                        wasShown = true;
+                        AdOpened();
+                        break;
+                    default:
+                        RestoreAfterAd(wasShown);
+                        break;
+                }
                 callbackState(state);
             }
         }
 
         public void ShowRewarded(Action<RewardedState> callbackState)
         {
-            HideCursor();
+            var wasShown = true;
             
             PluginRuntime.ShowRewarded(CallbackProxy);
             return;
 
             void CallbackProxy(RewardedState state)
             {
-                RestoreCursor();
+                switch (state)
+                {
+                    case RewardedState.Opened:
+                        wasShown = true;
+                        AdOpened();
+                        break;
+                    default:
+                        RestoreAfterAd(wasShown);
+                        break;
+                }
                 callbackState(state);
             }
         }
 
-        private void HideCursor()
+        private void AdOpened()
         {
             if (!_environment.IsAvailable || _environment.DeviceType != DeviceType.Desktop) return;
             
             _previousCursorVisible = Cursor.visible;
             _previousCursorLockMode = Cursor.lockState;
+            _previousVolume = AudioListener.volume;
             
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
+            AudioListener.volume = 0;
         }
 
-        private void RestoreCursor()
+        private void RestoreAfterAd(bool wasShown)
         {
+            if (!wasShown) return;
             if (!_environment.IsAvailable || _environment.DeviceType != DeviceType.Desktop) return;
 
             Cursor.visible = _previousCursorVisible;
             Cursor.lockState = _previousCursorLockMode;
+            AudioListener.volume = _previousVolume;
         }
     }
 }
