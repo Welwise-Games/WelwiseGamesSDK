@@ -40,7 +40,7 @@ namespace WelwiseGamesSDK.Internal.Advertisement
                         RestoreAfterAd(wasShown);
                         break;
                 }
-                callbackState(state);
+                callbackState?.Invoke(state);
             }
         }
 
@@ -63,7 +63,7 @@ namespace WelwiseGamesSDK.Internal.Advertisement
                         RestoreAfterAd(wasShown);
                         break;
                 }
-                callbackState(state);
+                callbackState?.Invoke(state);
             }
         }
 
