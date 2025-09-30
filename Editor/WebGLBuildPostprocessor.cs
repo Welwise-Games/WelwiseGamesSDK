@@ -49,10 +49,6 @@ namespace WelwiseGames.Editor
             html = html.Replace(
                 "useThreeJsLoader: true", 
                 $"useThreeJsLoader: {settings.UseThreeJsLoader.ToString().ToLower()}");
-            html = html.Replace(
-                "showAdOnStart: false", 
-                $"showAdOnStart: {settings.ShowAdOnStart.ToString().ToLower()}"
-            );
         
             File.WriteAllText(indexHtmlPath, html);
         }

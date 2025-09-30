@@ -12,23 +12,6 @@ fetch('./config.json')
     .then(() => {
         if (!window.WelwiseGames || typeof window.WelwiseGames.init !== 'function') {
             throw new Error('Welwise SDK not properly loaded');
-        }
-
-        if (window.AppConfig?.showAdOnStart){
-            WelwiseGames.init()
-                .then(sdk => {
-                    sdk.AdvManager.showMidgame({
-                        callbacks: {
-                            onOpen: () => {},
-                            onClose: () => {},
-                            onError: e => {}
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error(error);
-                });
-        }
         
         window.__sdk_adapter = {
             GetModules: function() {

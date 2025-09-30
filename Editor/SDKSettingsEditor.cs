@@ -1,4 +1,4 @@
-﻿﻿using System;
+﻿using System;
 using System.IO;
 using UnityEditor;
 using UnityEditor.PackageManager;
@@ -567,17 +567,6 @@ namespace WelwiseGames.Editor
         {
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Advertisement Settings", EditorStyles.boldLabel);
-            _settings.ShowAdOnStart = EditorGUILayout.Toggle(
-                "Show Ad On Start", 
-                _settings.ShowAdOnStart
-            );
-    
-            if (_settings.ShowAdOnStart) {
-                EditorGUILayout.HelpBox(
-                    "Start ad will be shown before game loads. Work only with Welwise Platform",
-                    MessageType.Info
-                );
-            }
             
             _settings.AdSimulationDuration = EditorGUILayout.Slider(
                 "Ad Duration", 
