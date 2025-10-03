@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -55,9 +55,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                             {
                                 _gameDataContainer.DeserializeToContainer(entry.Identifier, entry.Value);
                             }
-
                             break;
+                            
                         case SupportedSDKType.YandexGames:
+                        case SupportedSDKType.GameDistribution: // Добавлена обработка GameDistribution
                             var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
                             foreach (var kvp in dict)
                             {
@@ -77,6 +78,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                                 }
                             }
                             break;
+                            
                         default:
                             throw new ArgumentOutOfRangeException();
                     }
@@ -85,11 +87,14 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     Debug.LogError(e);
                 }
+                
+                // Fallback для имени игрока
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
                     _previousPlayerName = _playerName;
                 }
+                
                 OnLoaded();
             }, error =>
             {
@@ -119,11 +124,13 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     Debug.LogError(e);
                 }
+                
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
                     _previousPlayerName = _playerName;
                 }
+                
                 OnLoaded();
             }, error =>
             {
@@ -143,78 +150,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                  PlayerGameData = new List<DataEntry>(),
                  PlayerMetaverseData = new List<DataEntry>(),
              };
-             foreach (var kvp in _gameDataContainer.Booleans)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
              
-             foreach (var kvp in _gameDataContainer.Ints)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
+             AddContainerDataToEntries(_gameDataContainer, combinedData.PlayerGameData);
+             AddContainerDataToEntries(_metaverseDataContainer, combinedData.PlayerMetaverseData);
              
-             foreach (var kvp in _gameDataContainer.Floats)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _gameDataContainer.Strings)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             // ------
-             foreach (var kvp in _metaverseDataContainer.Booleans)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _metaverseDataContainer.Ints)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _metaverseDataContainer.Floats)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _metaverseDataContainer.Strings)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
              return JsonConvert.SerializeObject(combinedData);
         }
 
@@ -225,25 +164,12 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             
             Dictionary<string, string> playerData = new();
             
-            foreach (var kvp in _gameDataContainer.Booleans)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
+            // Добавляем имя игрока
+            playerData["playerName"] = _playerName;
             
-            foreach (var kvp in _gameDataContainer.Strings)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
+            // Добавляем данные контейнера
+            AddContainerDataToDictionary(_gameDataContainer, playerData);
             
-            foreach (var kvp in _gameDataContainer.Ints)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
-            
-            foreach (var kvp in _gameDataContainer.Floats)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
             return JsonConvert.SerializeObject(playerData);
         }
 
@@ -256,42 +182,24 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 PlayerName = _playerName,
                 PlayerGameData = new List<DataEntry>(),
             };
-                    
-            foreach (var kvp in _gameDataContainer.Booleans)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _gameDataContainer.Ints)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _gameDataContainer.Floats)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _gameDataContainer.Strings)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
+            
+            AddContainerDataToEntries(_gameDataContainer, playerData.PlayerGameData);
+            
+            return JsonConvert.SerializeObject(playerData);
+        }
+        
+        private string SavePlayerDataGameDistribution()
+        {
+            _gameDataContainer.Changed = false;
+            _isSaving = true;
+            
+            Dictionary<string, string> playerData = new();
+            
+            // Добавляем имя игрока
+            playerData["playerName"] = _playerName;
+            
+            // Добавляем данные контейнера
+            AddContainerDataToDictionary(_gameDataContainer, playerData);
             
             return JsonConvert.SerializeObject(playerData);
         }
@@ -306,43 +214,73 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 PlayerName = _playerName,
                 PlayerMetaverseData = new List<DataEntry>(),
             };
-                    
-            foreach (var kvp in _metaverseDataContainer.Booleans)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _metaverseDataContainer.Ints)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _metaverseDataContainer.Floats)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _metaverseDataContainer.Strings)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
+            
+            AddContainerDataToEntries(_metaverseDataContainer, metaverseData.PlayerMetaverseData);
+            
             return JsonConvert.SerializeObject(metaverseData);
+        }
+        
+        // Вспомогательные методы для сериализации данных
+        private void AddContainerDataToEntries(DataContainer container, List<DataEntry> entries)
+        {
+            foreach (var kvp in container.Booleans)
+            {
+                entries.Add(new DataEntry()
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+            
+            foreach (var kvp in container.Ints)
+            {
+                entries.Add(new DataEntry()
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+            
+            foreach (var kvp in container.Floats)
+            {
+                entries.Add(new DataEntry()
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+            
+            foreach (var kvp in container.Strings)
+            {
+                entries.Add(new DataEntry()
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+        }
+        
+        private void AddContainerDataToDictionary(DataContainer container, Dictionary<string, string> dict)
+        {
+            foreach (var kvp in container.Booleans)
+            {
+                dict[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
+            }
+            
+            foreach (var kvp in container.Strings)
+            {
+                dict[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
+            }
+            
+            foreach (var kvp in container.Ints)
+            {
+                dict[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
+            }
+            
+            foreach (var kvp in container.Floats)
+            {
+                dict[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
+            }
         }
 
         public override void Save()
@@ -404,8 +342,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     {
                         SupportedSDKType.WelwiseGames => SavePlayerDataWelwise(),
                         SupportedSDKType.YandexGames => SavePlayerDataYandex(),
+                        SupportedSDKType.GameDistribution => SavePlayerDataGameDistribution(), // Добавлен GameDistribution
                         _ => throw new ArgumentOutOfRangeException()
                     };
+                    
                     PluginRuntime.SetPlayerData(data, () =>
                         {
                             _isSaving = false;
@@ -441,7 +381,6 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 _ => $"Ghost_{id}"
             };
         }
-        
         
         public class DataEntry
         {
@@ -485,7 +424,4 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             public List<DataEntry> PlayerGameData { get; set; }
         }
     }
-    
-    
-    
 }

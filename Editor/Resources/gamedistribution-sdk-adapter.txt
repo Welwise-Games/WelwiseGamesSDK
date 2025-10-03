@@ -1,0 +1,292 @@
+(function() {
+    console.log('[GD_ADAPTER] GameDistribution adapter loading...');
+
+    window.__sdk_adapter = {
+        GetModules: function() {
+            return [
+                "Advertisement",
+                "Environment"
+            ];
+        },
+        
+        Init: function() {
+            console.log('[GD_ADAPTER] Starting initialization...');
+            
+            // Если SDK уже готов, сразу отправляем успех
+            if (window.gdSdkReady && window.gdSdkInitPromise) {
+                console.log('[GD_ADAPTER] SDK already ready');
+                window.gdSdkInitPromise.then(() => {
+                    if (window.unityInstance) {
+                        console.log('[GD_ADAPTER] Sending init success');
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                    }
+                }).catch(error => {
+                    console.error('[GD_ADAPTER] Init promise rejected:', error);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', error);
+                    }
+                });
+                return;
+            }
+
+            // Используем существующий promise или создаем новый
+            var initPromise = window.gdSdkInitPromise;
+            
+            if (!initPromise) {
+                console.warn('[GD_ADAPTER] No init promise found, creating new one');
+                initPromise = new Promise((resolve, reject) => {
+                    // Проверяем каждые 100ms готовность SDK
+                    var checkInterval = setInterval(() => {
+                        if (window.gdsdk && window.gdSdkReady) {
+                            clearInterval(checkInterval);
+                            resolve();
+                        }
+                    }, 100);
+
+                    // Таймаут 15 секунд
+                    setTimeout(() => {
+                        clearInterval(checkInterval);
+                        reject('GameDistribution SDK initialization timeout');
+                    }, 15000);
+                });
+            }
+
+            initPromise.then(() => {
+                console.log('[GD_ADAPTER] SDK initialized successfully');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                }
+            }).catch(error => {
+                console.error('[GD_ADAPTER] SDK initialization failed:', error);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', error);
+                }
+            });
+        },
+
+        // Environment methods
+        GetPlayerId: function() {
+            console.log('[GD_ADAPTER] Getting player ID');
+            // GameDistribution не предоставляет playerId, возвращаем пустую строку
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', '');
+            }
+        },
+
+        GetDeviceType: function() {
+            console.log('[GD_ADAPTER] Getting device type');
+            // Определяем тип устройства по userAgent
+            let deviceType = 'desktop';
+            const ua = navigator.userAgent;
+            
+            if (/iPhone|iPad|iPod/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/Android/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/Tablet|iPad/i.test(ua)) {
+                deviceType = 'tablet';
+            }
+            
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeSuccess', deviceType);
+            }
+        },
+
+        GetLanguageCode: function() {
+            console.log('[GD_ADAPTER] Getting language code');
+            // Берем язык браузера
+            const lang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
+            }
+        },
+
+        GetServerTime: function() {
+            console.log('[GD_ADAPTER] Getting server time');
+            // Возвращаем текущее время сервера (используем локальное время)
+            const timestamp = Math.floor(Date.now() / 1000);
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+            }
+        },
+
+        // Advertisement methods
+        ShowInterstitial: function() {
+            console.log('[GD_ADAPTER] Showing interstitial ad');
+            
+            if (!window.gdsdk || typeof window.gdsdk.showAd !== 'function') {
+                console.error('[GD_ADAPTER] gdsdk not available or showAd not a function');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'SDK not available');
+                }
+                return;
+            }
+
+            // Создаем колбэки
+            window.gdInterstitialCallbacks = {
+                open: function() {
+                    console.log('[GD_ADAPTER] Interstitial opened');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialOpen', '');
+                    }
+                },
+                close: function() {
+                    console.log('[GD_ADAPTER] Interstitial closed');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                    }
+                },
+                error: function(message) {
+                    console.error('[GD_ADAPTER] Interstitial error:', message);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', message || 'Ad failed to load');
+                    }
+                }
+            };
+
+            window.gdCurrentAdType = 'interstitial';
+
+            try {
+                console.log('[GD_ADAPTER] Calling gdsdk.showAd("interstitial")');
+                window.gdsdk.showAd("interstitial")
+                    .then(() => {
+                        console.log('[GD_ADAPTER] Interstitial ad show completed');
+                    })
+                    .catch(function(error) {
+                        console.error("[GD_ADAPTER] Interstitial ad error:", error);
+                        if (window.gdInterstitialCallbacks && window.gdInterstitialCallbacks.error) {
+                            window.gdInterstitialCallbacks.error(error.message || String(error));
+                        }
+                        window.gdCurrentAdType = null;
+                        window.gdInterstitialCallbacks = null;
+                    });
+            } catch (error) {
+                console.error("[GD_ADAPTER] Exception showing interstitial:", error);
+                if (window.gdInterstitialCallbacks && window.gdInterstitialCallbacks.error) {
+                    window.gdInterstitialCallbacks.error(error.message || String(error));
+                }
+                window.gdCurrentAdType = null;
+                window.gdInterstitialCallbacks = null;
+            }
+        },
+
+        ShowRewarded: function() {
+            console.log('[GD_ADAPTER] Showing rewarded ad');
+            
+            if (!window.gdsdk || typeof window.gdsdk.showAd !== 'function') {
+                console.error('[GD_ADAPTER] gdsdk not available or showAd not a function');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'SDK not available');
+                }
+                return;
+            }
+
+            // Создаем колбэки
+            window.gdRewardedCallbacks = {
+                open: function() {
+                    console.log('[GD_ADAPTER] Rewarded opened');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+                    }
+                },
+                rewarded: function() {
+                    console.log('[GD_ADAPTER] Rewarded completed');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
+                    }
+                },
+                close: function() {
+                    console.log('[GD_ADAPTER] Rewarded closed');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                    }
+                },
+                error: function(message) {
+                    console.error('[GD_ADAPTER] Rewarded error:', message);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', message || 'Ad failed to load');
+                    }
+                }
+            };
+
+            window.gdCurrentAdType = 'rewarded';
+
+            try {
+                console.log('[GD_ADAPTER] Calling gdsdk.showAd("rewarded")');
+                window.gdsdk.showAd("rewarded")
+                    .then(() => {
+                        console.log('[GD_ADAPTER] Rewarded ad show completed');
+                    // Note: Награда будет вызвана через SDK_REWARDED_WATCH_COMPLETE событие
+                    // а не через promise resolution
+                    })
+                    .catch(function(error) {
+                        console.error("[GD_ADAPTER] Rewarded ad error:", error);
+                        if (window.gdRewardedCallbacks && window.gdRewardedCallbacks.error) {
+                            window.gdRewardedCallbacks.error(error.message || String(error));
+                        }
+                        window.gdCurrentAdType = null;
+                        window.gdRewardedCallbacks = null;
+                    });
+            } catch (error) {
+                console.error("[GD_ADAPTER] Exception showing rewarded:", error);
+                if (window.gdRewardedCallbacks && window.gdRewardedCallbacks.error) {
+                    window.gdRewardedCallbacks.error(error.message || String(error));
+                }
+                window.gdCurrentAdType = null;
+                window.gdRewardedCallbacks = null;
+            }
+        },
+
+        // Методы, которые не поддерживаются GameDistribution
+        GetPlayerData: function() {
+            console.log('[GD_ADAPTER] GetPlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDataError', 'Not supported by GameDistribution');
+            }
+        },
+
+        SetPlayerData: function() {
+            console.log('[GD_ADAPTER] SetPlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'Not supported by GameDistribution');
+            }
+        },
+
+        GoToGame: function() {
+            console.log('[GD_ADAPTER] GoToGame not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleNavigateError', 'Not supported by GameDistribution');
+            }
+        },
+
+        IsMetaverseSupported: function() {
+            console.log('[GD_ADAPTER] IsMetaverseSupported called');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleIsMetaverseSupportedSuccess', 'false');
+            }
+        },
+
+        GameReady: function() {
+            console.log('[GD_ADAPTER] GameReady called');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
+            }
+        },
+
+        GameplayStart: function() {
+            console.log('[GD_ADAPTER] GameplayStart called');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
+            }
+        },
+
+        GameplayStop: function() {
+            console.log('[GD_ADAPTER] GameplayStop called');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
+            }
+        }
+    };
+
+    console.log('[GD_ADAPTER] GameDistribution adapter loaded successfully');
+})();

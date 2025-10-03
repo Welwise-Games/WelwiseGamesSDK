@@ -135,6 +135,7 @@ namespace WelwiseGames.Editor
             {
                 SupportedSDKType.WelwiseGames => "welwise-sdk-adapter",
                 SupportedSDKType.YandexGames => "yandex-sdk-adapter",
+                SupportedSDKType.GameDistribution => "gamedistribution-sdk-adapter",
                 _ => throw new ArgumentOutOfRangeException()
             };
         }

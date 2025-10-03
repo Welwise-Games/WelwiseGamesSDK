@@ -445,6 +445,13 @@ namespace WelwiseGames.Editor
             _settings.SDKType = (SupportedSDKType)EditorGUILayout.EnumPopup(
                 "SDK Type", 
                 _settings.SDKType);
+    
+            if (_settings.SDKType == SupportedSDKType.GameDistribution)
+            {
+                _settings.GameDistributionId = EditorGUILayout.TextField(
+                    "Game Distribution ID", 
+                    _settings.GameDistributionId);
+            }
             
             _settings.MuteAudioOnPause = EditorGUILayout.Toggle(
                 "Mute Audio On Pause", 

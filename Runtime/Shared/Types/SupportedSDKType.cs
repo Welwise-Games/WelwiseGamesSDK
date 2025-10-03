@@ -9,6 +9,8 @@
         /// <summary>Native Welwise Games platform</summary>
         WelwiseGames,
         /// <summary>Yandex Games Web platform</summary>
-        YandexGames
+        YandexGames,
+        /// <summary>Game Distribution Web platform</summary>
+        GameDistribution,
     }
 }
