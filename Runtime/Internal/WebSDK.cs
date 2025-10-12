@@ -26,7 +26,7 @@ namespace WelwiseGamesSDK.Internal
         public IPayments Payments { get; }
 
         private readonly WebEnvironment _webEnvironment;
-        private readonly WebPlayerData _webPlayerData;
+        private readonly PlayerData.PlayerData _webPlayerData;
         private readonly SDKSettings _settings;
         
         private bool _initializeRunning;
@@ -38,10 +38,20 @@ namespace WelwiseGamesSDK.Internal
             Analytics = new WebAnalytics(moduleSupport.CheckModule(SupportedModuleKeys.AnalyticsModuleKey));
             _webEnvironment = new WebEnvironment(moduleSupport.CheckModule(SupportedModuleKeys.EnvironmentModuleKey));
             Advertisement = new WebAdvertisement(moduleSupport.CheckModule(SupportedModuleKeys.AdvertisementModuleKey), _webEnvironment);
-            _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment, 
-                moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey),
-                moduleSupport.CheckModule(SupportedModuleKeys.GameDataModuleKey),
-                moduleSupport.CheckModule(SupportedModuleKeys.MetaverseDataModuleKey));
+
+            var webPlayerDataImplemented = moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey);
+            if (webPlayerDataImplemented)
+            {
+                _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment, 
+                    moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey),
+                    moduleSupport.CheckModule(SupportedModuleKeys.GameDataModuleKey),
+                    moduleSupport.CheckModule(SupportedModuleKeys.MetaverseDataModuleKey));
+            }
+            else
+            {
+                _webPlayerData = new UnityPlayerData(true, true, false);
+            }
+
             PlatformNavigation = new WebPlatformNavigation(_webPlayerData, 
                 moduleSupport.CheckModule(SupportedModuleKeys.PlatformNavigationModuleKey));
             Payments = new WebPayments(moduleSupport.CheckModule(SupportedModuleKeys.PaymentsModuleKey));
