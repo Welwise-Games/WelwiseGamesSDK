@@ -445,12 +445,34 @@ namespace WelwiseGames.Editor
             _settings.SDKType = (SupportedSDKType)EditorGUILayout.EnumPopup(
                 "SDK Type", 
                 _settings.SDKType);
-    
+
             if (_settings.SDKType == SupportedSDKType.GameDistribution)
             {
                 _settings.GameDistributionId = EditorGUILayout.TextField(
                     "Game Distribution ID", 
                     _settings.GameDistributionId);
+            }
+            else if (_settings.SDKType == SupportedSDKType.Y8Games)
+            {
+                EditorGUILayout.Space(5);
+                EditorGUILayout.LabelField("Y8 Games Configuration", EditorStyles.miniBoldLabel);
+        
+                _settings.Y8AppId = EditorGUILayout.TextField("Y8 App ID", _settings.Y8AppId);
+        
+                EditorGUILayout.Space(5);
+                EditorGUILayout.LabelField("Advertisement Settings", EditorStyles.miniBoldLabel);
+        
+                _settings.Y8HostId = EditorGUILayout.TextField("Host ID", _settings.Y8HostId);
+                _settings.Y8AdsenseId = EditorGUILayout.TextField("AdSense ID", _settings.Y8AdsenseId);
+                _settings.Y8ChannelId = EditorGUILayout.TextField("Channel ID", _settings.Y8ChannelId);
+                _settings.Y8AdFrequency = EditorGUILayout.TextField("Ad Frequency", _settings.Y8AdFrequency);
+                _settings.Y8TestAdsOn = EditorGUILayout.Toggle("Test Ads", _settings.Y8TestAdsOn);
+                _settings.Y8ActivateAFP = EditorGUILayout.Toggle("Activate AFP", _settings.Y8ActivateAFP);
+        
+                if (string.IsNullOrEmpty(_settings.Y8AppId) || _settings.Y8AppId == "YOUR_Y8_APP_ID")
+                {
+                    EditorGUILayout.HelpBox("Please set your Y8 App ID", MessageType.Warning);
+                }
             }
             
             _settings.MuteAudioOnPause = EditorGUILayout.Toggle(

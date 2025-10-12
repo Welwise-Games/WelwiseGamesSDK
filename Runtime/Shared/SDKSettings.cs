@@ -46,6 +46,13 @@ namespace WelwiseGamesSDK.Shared
         public bool EditorMetaverseDataModule = true;
         public bool UseThreeJsLoader = true;
         public string GameDistributionId;
+        public string Y8AppId;
+        public string Y8HostId;
+        public string Y8AdsenseId;
+        public string Y8ChannelId;
+        public string Y8AdFrequency;
+        public bool Y8TestAdsOn;
+        public bool Y8ActivateAFP;
         
         public static SDKSettings LoadOrCreateSettings()
         {
@@ -116,7 +123,14 @@ namespace WelwiseGamesSDK.Shared
                 RewardedAdReturnState = RewardedState.Closed,
                 MockProducts = new List<Product>(),
                 MockPurchases = new List<Purchase>(),
-                PurchaseSimulationDuration = 2f
+                PurchaseSimulationDuration = 2f,
+                Y8AppId = "YOUR_Y8_APP_ID",
+                Y8HostId = "ca-host-pub-6129580795478709",
+                Y8AdsenseId = "ca-pub-6129580795478709",
+                Y8ChannelId = "123456",
+                Y8AdFrequency = "180s",
+                Y8TestAdsOn = true,
+                Y8ActivateAFP = true
             };
         }
     }

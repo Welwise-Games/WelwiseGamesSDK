@@ -1,4 +1,4 @@
-﻿using System.IO;
+﻿﻿using System.IO;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.Build.Reporting;
@@ -11,7 +11,6 @@ namespace WelwiseGames.Editor
     {
         public int callbackOrder => 0;
 
-        // WebGLBuildPostprocessor.cs
         public void OnPostprocessBuild(BuildReport report)
         {
             if (report.summary.platform != BuildTarget.WebGL)
@@ -26,12 +25,19 @@ namespace WelwiseGames.Editor
             var settings = SDKSettings.LoadOrCreateSettings();
             var html = File.ReadAllText(indexHtmlPath);
 
-            // Добавляем код GameDistribution если выбран соответствующий SDK
+            // GameDistribution script injection
             if (settings.SDKType == SupportedSDKType.GameDistribution &&
                 !string.IsNullOrEmpty(settings.GameDistributionId))
             {
                 var gdScript = GenerateGameDistributionScript(settings.GameDistributionId);
                 html = InsertGameDistributionScript(html, gdScript);
+            }
+
+            // Y8 script injection
+            if (settings.SDKType == SupportedSDKType.Y8Games)
+            {
+                var y8Scripts = GenerateY8Scripts(settings);
+                html = InsertY8Scripts(html, y8Scripts);
             }
 
             // Существующие замены для aspect ratio и background
@@ -62,10 +68,9 @@ namespace WelwiseGames.Editor
             File.WriteAllText(indexHtmlPath, html);
         }
 
-       // WebGLBuildPostprocessor.cs - обновляем метод GenerateGameDistributionScript
-private string GenerateGameDistributionScript(string gameId)
-{
-    return $@"
+        private string GenerateGameDistributionScript(string gameId)
+        {
+            return $@"
     <!-- GameDistribution SDK -->
     <script>
         // Глобальные переменные для GameDistribution
@@ -204,12 +209,187 @@ private string GenerateGameDistributionScript(string gameId)
         }}, 15000);
     </script>
     ";
-}
+        }
 
         private string InsertGameDistributionScript(string html, string gdScript)
         {
-            // Вставляем после открывающего тега head
             return html.Replace("<head>", "<head>\n" + gdScript);
+        }
+
+        private string GenerateY8Scripts(SDKSettings settings)
+        {
+            var appId = string.IsNullOrEmpty(settings.Y8AppId) ? "YOUR_Y8_APP_ID" : settings.Y8AppId;
+            var hostId = string.IsNullOrEmpty(settings.Y8HostId) ? "ca-host-pub-6129580795478709" : settings.Y8HostId;
+            var adsenseId = string.IsNullOrEmpty(settings.Y8AdsenseId) ? "ca-pub-6129580795478709" : settings.Y8AdsenseId;
+            var channelId = string.IsNullOrEmpty(settings.Y8ChannelId) ? "123456" : settings.Y8ChannelId;
+            var adFrequency = string.IsNullOrEmpty(settings.Y8AdFrequency) ? "180s" : settings.Y8AdFrequency;
+            var testAdsOn = settings.Y8TestAdsOn ? "true" : "false";
+            var activateAFP = settings.Y8ActivateAFP ? "true" : "false";
+            
+            return $@"
+    <!-- Y8 Games SDK -->
+    <script src='https://cdn.y8.com/api/sdk.js' async></script>
+    
+    <!-- Y8 Configuration -->
+    <script>
+        window.Y8_APP_ID = '{appId}';
+        console.log('[Y8_HTML] Y8 configuration loaded, App ID: {appId}');
+    </script>
+
+    <!-- Y8 GameBreak Ad System -->
+    <script>
+        (function() {{
+            console.log('[Y8_HTML] Initializing Y8 GameBreak ad system...');
+            
+            var imported = document.createElement('script');
+            var HostId = '{hostId}';
+            var AdsenseId = '{adsenseId}';
+            var ChannelId = '{channelId}';
+            var adFrequency = '{adFrequency}';
+            var testAdsOn = {testAdsOn};
+            var activateAFP = {activateAFP};
+
+            window.adsbygoogle = window.adsbygoogle || [];
+            const adBreak = adConfig = function(o) {{adsbygoogle.push(o);}}
+            adConfig({{
+                preloadAdBreaks: 'on',
+                sound: 'on', // This game has sound
+                onReady: () => {{
+                    console.log('[Y8_HTML] Ad system ready');
+                }}, // Called when API has initialised and adBreak() is ready
+            }});
+
+            function nextAds()
+            {{
+                console.log('[Y8_HTML] showNextAd');
+                adBreak({{
+                    type: 'start', // ad shows at start of next level
+                    name: 'start-game',
+                    beforeAd: () => {{            
+                        console.log('[Y8_HTML] beforeAd');
+                        if (window.pauseGame) window.pauseGame();
+                    }}, 
+                    afterAd: () => {{
+                        console.log('[Y8_HTML] afterAd');
+                        if (window.resumeGame) window.resumeGame();
+                    }}, 
+                    adBreakDone: (placementInfo) => {{
+                        console.log('[Y8_HTML] adBreak complete');
+                        console.log(placementInfo.breakType);
+                        console.log(placementInfo.breakName);
+                        console.log(placementInfo.breakFormat);
+                        console.log(placementInfo.breakStatus);
+                        if (window.resumeGame) window.resumeGame();
+                    }},
+                }});
+            }}
+
+            function showReward()
+            {{
+                console.log('[Y8_HTML] showReward');
+                adBreak({{
+                    type: 'reward', 
+                    name: 'rewarded Ad',
+                    beforeAd: () => {{            
+                        console.log('[Y8_HTML] beforeAd');
+                        if (window.pauseGame) window.pauseGame();
+                    }}, 
+                    afterAd: () => {{
+                        console.log('[Y8_HTML] afterAd');
+                        if (window.resumeGame) window.resumeGame();
+                    }}, 
+                    beforeReward: (showAdFn) => {{ 
+                        console.log('[Y8_HTML] beforeReward');
+                        showAdFn(0);
+                    }},
+                    adDismissed: () => {{
+                        console.log('[Y8_HTML] adDismissed');
+                        if (window.rewardAdsCanceled) window.rewardAdsCanceled();
+                    }},
+                    adViewed: () => {{
+                        console.log('[Y8_HTML] adViewed');
+                        if (window.rewardAdsCompleted) window.rewardAdsCompleted();
+                    }},
+                    adBreakDone: (placementInfo) => {{
+                        console.log('[Y8_HTML] adBreak complete');
+                        console.log(placementInfo.breakType);
+                        console.log(placementInfo.breakName);
+                        console.log(placementInfo.breakFormat);
+                        console.log(placementInfo.breakStatus);
+                        if(placementInfo.breakStatus == 'frequencyCapped'){{
+                            if (window.NoRewardedAdsTryLater) window.NoRewardedAdsTryLater();
+                        }};
+                        if(placementInfo.breakStatus == 'other'){{
+                            if (window.NoRewardedAdsTryLater) window.NoRewardedAdsTryLater();
+                        }};
+                        if (window.resumeGame) window.resumeGame();
+                    }},
+                }});
+            }}
+
+            // Глобальные функции для работы с Unity адаптером
+            window.pauseGame = function()
+            {{
+                console.log('[Y8_HTML] pauseGame');
+            }}
+
+            window.resumeGame = function()
+            {{
+                console.log('[Y8_HTML] resumeGame');
+            }}
+
+            window.rewardAdsCanceled = function()
+            {{
+                console.log('[Y8_HTML] rewardAdsCanceled');
+            }}
+
+            window.rewardAdsCompleted = function()
+            {{
+                console.log('[Y8_HTML] RewardGained');
+            }}
+
+            window.NoRewardedAdsTryLater = function()
+            {{
+                console.log('[Y8_HTML] NoRewardedAdsTryLater');
+            }}
+
+            function createAFGScript()
+            {{
+                console.log('[Y8_HTML] createAFGScript');
+                if(activateAFP == true){{imported.setAttribute('data-ad-host', HostId)}};
+                imported.setAttribute('data-ad-client', AdsenseId);
+                if(activateAFP == false){{imported.setAttribute('data-ad-channel', ChannelId)}};
+                imported.setAttribute('data-ad-frequency-hint', adFrequency);
+                if(testAdsOn == true){{imported.setAttribute('data-adbreak-test', 'on');}}
+                imported.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+                imported.setAttribute('type', 'text/javascript');
+                imported.async = true;
+                imported.onload = function() {{
+                    console.log('[Y8_HTML] Ad script loaded successfully');
+                }};
+                imported.onerror = function(error) {{
+                    console.error('[Y8_HTML] Failed to load ad script:', error);
+                }};
+                document.head.appendChild(imported);
+            }}
+
+            // Инициализируем рекламную систему
+            createAFGScript();
+
+            // Экспортируем функции для глобального доступа
+            window.nextAds = nextAds;
+            window.showReward = showReward;
+
+            console.log('[Y8_HTML] Y8 GameBreak ad system initialized');
+        }})();
+    </script>
+    ";
+        }
+
+        private string InsertY8Scripts(string html, string y8Scripts)
+        {
+            // Вставляем перед закрывающим тегом head
+            return html.Replace("</head>", y8Scripts + "\n</head>");
         }
     }
 }

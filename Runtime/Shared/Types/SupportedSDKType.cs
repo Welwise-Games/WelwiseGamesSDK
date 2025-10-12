@@ -12,5 +12,7 @@
         YandexGames,
         /// <summary>Game Distribution Web platform</summary>
         GameDistribution,
+        /// <summary>Y8 Games Web platform</summary>
+        Y8Games,
     }
 }
