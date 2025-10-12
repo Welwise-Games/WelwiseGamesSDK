@@ -56,14 +56,20 @@ fetch('./config.json')
                     }
                     return;
                 }
-
+            
                 window.__wg_sdk.player.getData()
                     .then(data => {
+                        // Преобразуем в универсальный формат
+                        const universalData = {
+                            playerName: data.playerName || '',
+                            playerGameData: data.playerGameData || []
+                        };
+                        
                         if (window.unityInstance) {
                             window.unityInstance.SendMessage(
                                 'PluginRuntime',
                                 'HandleGetDataSuccess',
-                                JSON.stringify(data)
+                                JSON.stringify(universalData)
                             );
                         }
                     })
@@ -77,7 +83,7 @@ fetch('./config.json')
                         }
                     });
             },
-
+            
             SetPlayerData: function(jsonData) {
                 if (!window.__wg_sdk) {
                     if (window.unityInstance) {
@@ -85,8 +91,9 @@ fetch('./config.json')
                     }
                     return;
                 }
-
+            
                 try {
+                    // Данные уже в универсальном формате, передаем как есть
                     const data = JSON.parse(jsonData);
                     window.__wg_sdk.player.setData(data)
                         .then(() => {

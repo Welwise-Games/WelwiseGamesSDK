@@ -237,11 +237,20 @@
             }
         },
 
-        // Методы, которые не поддерживаются GameDistribution
         GetPlayerData: function() {
             console.log('[GD_ADAPTER] GetPlayerData not supported');
+            // Возвращаем пустые данные в универсальном формате
+            const universalData = {
+                playerName: '',
+                playerGameData: []
+            };
+            
             if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDataError', 'Not supported by GameDistribution');
+                window.unityInstance.SendMessage(
+                    'PluginRuntime', 
+                    'HandleGetDataSuccess', 
+                    JSON.stringify(universalData)
+                );
             }
         },
 

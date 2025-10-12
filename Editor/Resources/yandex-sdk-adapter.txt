@@ -56,19 +56,38 @@
             window.__yandex_sdk.player.getData()
                 .then(data => {
                     try {
-                        data.playerName = window.__yandex_sdk.player.isAuthorized() ? 
-                            window.__yandex_sdk.player.getName() || '' : 
-                            '';
+                        // Преобразуем данные Yandex в универсальный формат
+                        const universalData = {
+                            playerName: window.__yandex_sdk.player.isAuthorized() ? 
+                                window.__yandex_sdk.player.getName() || '' : '',
+                            playerGameData: []
+                        };
+                        
+                        // Конвертируем все поля в универсальный формат
+                        for (const key in data) {
+                            if (data.hasOwnProperty(key) && key !== 'playerName') {
+                                universalData.playerGameData.push({
+                                    identifier: key,
+                                    value: this._convertToUniversalFormat(data[key])
+                                });
+                            }
+                        }
+                        
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetDataSuccess',
+                                JSON.stringify(universalData)
+                            );
+                        }
                     } catch (e) {
-                        data.playerName = '';
-                    }
-                    
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage(
-                            'PluginRuntime',
-                            'HandleGetDataSuccess',
-                            JSON.stringify(data)
-                        );
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetDataError',
+                                'Data conversion error: ' + e.message
+                            );
+                        }
                     }
                 })
                 .catch(error => {
@@ -91,8 +110,17 @@
             }
 
             try {
-                const data = JSON.parse(jsonData);
-                window.__yandex_sdk.player.setData(data)
+                const universalData = JSON.parse(jsonData);
+                const yandexData = {};
+                
+                // Конвертируем из универсального формата в формат Yandex
+                if (universalData.playerGameData) {
+                    universalData.playerGameData.forEach(entry => {
+                        yandexData[entry.identifier] = this._convertFromUniversalFormat(entry.value);
+                    });
+                }
+                
+                window.__yandex_sdk.player.setData(yandexData)
                     .then(() => {
                         if (window.unityInstance) {
                             window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
@@ -114,6 +142,37 @@
             }
         },
 
+        // Вспомогательные методы для конвертации форматов
+        _convertToUniversalFormat: function(value) {
+            if (typeof value === 'boolean') return 'b' + value;
+            if (typeof value === 'number') {
+                // Проверяем целое число или float
+                return value % 1 === 0 ? 'i' + value : 'f' + value;
+            }
+            if (typeof value === 'string') {
+                // Если строка уже в нашем формате, возвращаем как есть
+                if (value.match(/^[bifs]/)) return value;
+                return 's' + value;
+            }
+            return 's' + String(value);
+        },
+
+        _convertFromUniversalFormat: function(value) {
+            if (typeof value !== 'string') return value;
+            
+            const prefix = value[0];
+            const content = value.substring(1);
+            
+            switch (prefix) {
+                case 'b': return content === 'true';
+                case 'i': return parseInt(content, 10);
+                case 'f': return parseFloat(content);
+                case 's': return content;
+                default: return value;
+            }
+        },
+
+        // Остальные методы остаются без изменений
         GetServerTime: function() {
             if (!window.__yandex_sdk || !window.__yandex_sdk.ysdk) {
                 if (window.unityInstance) {

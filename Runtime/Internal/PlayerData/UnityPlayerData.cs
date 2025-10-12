@@ -16,7 +16,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         public override void Initialize()
         {
             _playerName = PlayerPrefs.GetString(PlayerNameKey, "Ghost");
-            LoadContainerData(_gameDataContainer, GamePrefix);
+                LoadContainerData(_gameDataContainer, GamePrefix);
             LoadContainerData(_metaverseDataContainer, MetaversePrefix);
             OnLoaded();
         }
