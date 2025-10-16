@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.InteropServices;
+using UnityEngine;
 using WelwiseGamesSDK.Shared;
 using WelwiseGamesSDK.Shared.Types;
 
@@ -7,6 +8,18 @@ namespace WelwiseGamesSDK.Internal
 {
     internal sealed partial class PluginRuntime
     {
+        public void HandleGamePause(string pauseState) {
+            
+            bool shouldPause = pauseState.ToLower() == "true";
+    
+            // Приостановка/возобновление времени игры
+            Time.timeScale = shouldPause ? 0f : 1f;
+    
+            // Приостановка/возобновление аудио
+            AudioListener.pause = shouldPause;
+    
+            Debug.Log($"[PluginRuntime] Game {(shouldPause ? "paused" : "resumed")}");
+        }
         #region Module Support Check
 
         [DllImport("__Internal")]

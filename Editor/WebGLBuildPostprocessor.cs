@@ -275,11 +275,22 @@ namespace WelwiseGames.Editor
                     }}, 
                     adBreakDone: (placementInfo) => {{
                         console.log('[Y8_HTML] adBreak complete');
-                        console.log(placementInfo.breakType);
-                        console.log(placementInfo.breakName);
-                        console.log(placementInfo.breakFormat);
-                        console.log(placementInfo.breakStatus);
+                        console.log('Type:', placementInfo.breakType);
+                        console.log('Name:', placementInfo.breakName);
+                        console.log('Format:', placementInfo.breakFormat);
+                        console.log('Status:', placementInfo.breakStatus);
+                        
+                        // Всегда возобновляем игру
                         if (window.resumeGame) window.resumeGame();
+                        
+                        // Обработка различных статусов
+                        if (placementInfo.breakStatus === 'viewed') {{
+                            console.log('[Y8_HTML] Interstitial ad viewed successfully');
+                        }} else if (placementInfo.breakStatus === 'frequencyCapped') {{
+                            console.log('[Y8_HTML] Interstitial ad frequency capped');
+                        }} else if (placementInfo.breakStatus === 'other') {{
+                            console.log('[Y8_HTML] Interstitial ad failed with other reason');
+                        }}
                     }},
                 }});
             }}
@@ -296,8 +307,8 @@ namespace WelwiseGames.Editor
                     }}, 
                     afterAd: () => {{
                         console.log('[Y8_HTML] afterAd');
-                        if (window.resumeGame) window.resumeGame();
-                    }}, 
+                        // Возобновление будет вызвано в adBreakDone
+                    }},
                     beforeReward: (showAdFn) => {{ 
                         console.log('[Y8_HTML] beforeReward');
                         showAdFn(0);
@@ -312,17 +323,27 @@ namespace WelwiseGames.Editor
                     }},
                     adBreakDone: (placementInfo) => {{
                         console.log('[Y8_HTML] adBreak complete');
-                        console.log(placementInfo.breakType);
-                        console.log(placementInfo.breakName);
-                        console.log(placementInfo.breakFormat);
-                        console.log(placementInfo.breakStatus);
-                        if(placementInfo.breakStatus == 'frequencyCapped'){{
-                            if (window.NoRewardedAdsTryLater) window.NoRewardedAdsTryLater();
-                        }};
-                        if(placementInfo.breakStatus == 'other'){{
-                            if (window.NoRewardedAdsTryLater) window.NoRewardedAdsTryLater();
-                        }};
+                        console.log('Type:', placementInfo.breakType);
+                        console.log('Name:', placementInfo.breakName);
+                        console.log('Format:', placementInfo.breakFormat);
+                        console.log('Status:', placementInfo.breakStatus);
+                        
+                        // Всегда возобновляем игру
                         if (window.resumeGame) window.resumeGame();
+                        
+                        // Обработка различных статусов
+                        if (placementInfo.breakStatus === 'viewed') {{
+                            console.log('[Y8_HTML] Rewarded ad viewed successfully');
+                        }} else if (placementInfo.breakStatus === 'frequencyCapped') {{
+                            console.log('[Y8_HTML] Rewarded ad frequency capped');
+                            if (window.NoRewardedAdsTryLater) window.NoRewardedAdsTryLater();
+                        }} else if (placementInfo.breakStatus === 'other') {{
+                            console.log('[Y8_HTML] Rewarded ad failed with other reason');
+                            if (window.NoRewardedAdsTryLater) window.NoRewardedAdsTryLater();
+                        }} else if (placementInfo.breakStatus === 'dismissed') {{
+                            console.log('[Y8_HTML] Rewarded ad dismissed by user');
+                            if (window.rewardAdsCanceled) window.rewardAdsCanceled();
+                        }}
                     }},
                 }});
             }}
@@ -331,26 +352,43 @@ namespace WelwiseGames.Editor
             window.pauseGame = function()
             {{
                 console.log('[Y8_HTML] pauseGame');
+                // Вызываем паузу в Unity через адаптер
+                if (window.__sdk_adapter && window.__sdk_adapter.OnGamePause) {{
+                    window.__sdk_adapter.OnGamePause(true);
+                }}
             }}
 
             window.resumeGame = function()
             {{
                 console.log('[Y8_HTML] resumeGame');
+                // Вызываем возобновление в Unity через адаптер
+                if (window.__sdk_adapter && window.__sdk_adapter.OnGamePause) {{
+                    window.__sdk_adapter.OnGamePause(false);
+                }}
             }}
 
             window.rewardAdsCanceled = function()
             {{
                 console.log('[Y8_HTML] rewardAdsCanceled');
+                if (window.__sdk_adapter && window.__sdk_adapter.OnRewardCanceled) {{
+                    window.__sdk_adapter.OnRewardCanceled();
+                }}
             }}
 
             window.rewardAdsCompleted = function()
             {{
                 console.log('[Y8_HTML] RewardGained');
+                if (window.__sdk_adapter && window.__sdk_adapter.OnRewardCompleted) {{
+                    window.__sdk_adapter.OnRewardCompleted();
+                }}
             }}
 
             window.NoRewardedAdsTryLater = function()
             {{
                 console.log('[Y8_HTML] NoRewardedAdsTryLater');
+                if (window.__sdk_adapter && window.__sdk_adapter.OnNoRewardedAds) {{
+                    window.__sdk_adapter.OnNoRewardedAds();
+                }}
             }}
 
             function createAFGScript()

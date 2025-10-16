@@ -24,11 +24,11 @@ namespace WelwiseGamesSDK.Internal
             WelwiseSDK.Instance.Initialize();
         }
         
-        private void OnApplicationFocus(bool hasFocus) => HandleGamePause(!hasFocus);
+        private void OnApplicationFocus(bool hasFocus) => HandleGamePauseInternal(!hasFocus);
 
-        private void OnApplicationPause(bool pauseStatus) => HandleGamePause(pauseStatus);
+        private void OnApplicationPause(bool pauseStatus) => HandleGamePauseInternal(pauseStatus);
 
-        private static void HandleGamePause(bool isPaused)
+        private static void HandleGamePauseInternal(bool isPaused)
         {
             if (_settings.MuteAudioOnPause)
             {
