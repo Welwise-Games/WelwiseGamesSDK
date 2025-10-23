@@ -69,24 +69,27 @@ namespace WelwiseGamesSDK.Internal.Advertisement
 
         private void AdOpened()
         {
-            if (!_environment.IsAvailable || _environment.DeviceType != DeviceType.Desktop) return;
+            if (_environment.IsAvailable && _environment.DeviceType == DeviceType.Desktop)
+            {
+                _previousCursorVisible = Cursor.visible;
+                _previousCursorLockMode = Cursor.lockState;
+                Cursor.visible = true;
+                Cursor.lockState = CursorLockMode.None;
+            }
             
-            _previousCursorVisible = Cursor.visible;
-            _previousCursorLockMode = Cursor.lockState;
             _previousVolume = AudioListener.volume;
-            
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
             AudioListener.volume = 0;
         }
 
         private void RestoreAfterAd(bool wasShown)
         {
             if (!wasShown) return;
-            if (!_environment.IsAvailable || _environment.DeviceType != DeviceType.Desktop) return;
+            if (_environment.IsAvailable && _environment.DeviceType == DeviceType.Desktop)
+            {
+                Cursor.visible = _previousCursorVisible;
+                Cursor.lockState = _previousCursorLockMode;
+            }
 
-            Cursor.visible = _previousCursorVisible;
-            Cursor.lockState = _previousCursorLockMode;
             AudioListener.volume = _previousVolume;
         }
     }
