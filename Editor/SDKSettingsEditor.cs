@@ -18,7 +18,7 @@ namespace WelwiseGames.Editor
         private const string GamePrefix = "WS_SDK_GAME__";
         private const string MetaversePrefix = "WS_SDK_METAVERSE__";
         
-        public const string TemplateVersion = "0.0.19";
+        public const string TemplateVersion = "0.0.20";
         private const string LogoFileName = "__ws-logo";
         
         private enum TabType
