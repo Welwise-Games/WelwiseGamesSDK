@@ -83,7 +83,6 @@ namespace WelwiseGamesSDK.Internal.Advertisement
 
         private void RestoreAfterAd(bool wasShown)
         {
-            if (!wasShown) return;
             if (_environment.IsAvailable && _environment.DeviceType == DeviceType.Desktop)
             {
                 Cursor.visible = _previousCursorVisible;
