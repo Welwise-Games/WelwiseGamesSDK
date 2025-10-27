@@ -1,0 +1,549 @@
+(function() {
+    console.log('[Y8_ADAPTER] Y8 adapter loading...');
+
+    window.__sdk_adapter = {
+        GetModules: function() {
+            return [
+                "Advertisement",
+                "Environment", 
+                "PlayerData",
+                "Analytics"
+            ];
+        },
+        
+        Init: function() {
+            console.log('[Y8_ADAPTER] Starting initialization...');
+            
+            // Если SDK уже инициализирован
+            if (window.ID && window.ID.getLoginStatus) {
+                console.log('[Y8_ADAPTER] SDK already initialized');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                }
+                return;
+            }
+
+            // Получаем appId из глобальной переменной
+            var appId = window.Y8_APP_ID;
+            
+            if (!appId || appId === 'YOUR_Y8_APP_ID') {
+                console.error('[Y8_ADAPTER] Y8 App ID not configured');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', 'Y8 App ID not configured');
+                }
+                return;
+            }
+
+            // Настраиваем инициализацию перед загрузкой SDK
+            window.idAsyncInit = function() {
+                console.log('[Y8_ADAPTER] SDK script loaded, initializing...');
+                
+                ID.init({
+                    appId: appId
+                });
+
+                ID.Event.subscribe('id.init', function() {
+                    console.log('[Y8_ADAPTER] SDK initialized successfully');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                    }
+                });
+
+                ID.Event.subscribe('auth.authResponseChange', function(auth) {
+                    console.log('[Y8_ADAPTER] Auth state changed:', auth);
+                });
+            };
+
+            // Загружаем Y8 SDK если еще не загружен
+            if (!document.querySelector('script[src="https://cdn.y8.com/api/sdk.js"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://cdn.y8.com/api/sdk.js';
+                script.async = true;
+                script.onload = function() {
+                    console.log('[Y8_ADAPTER] Y8 SDK script loaded successfully');
+                };
+                script.onerror = function(error) {
+                    console.error('[Y8_ADAPTER] Failed to load Y8 SDK:', error);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', 'Failed to load Y8 SDK');
+                    }
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log('[Y8_ADAPTER] Y8 SDK already loaded, waiting for initialization...');
+            }
+
+            // Таймаут для инициализации
+            setTimeout(() => {
+                if (!window.ID || !window.ID.getLoginStatus) {
+                    console.error('[Y8_ADAPTER] SDK initialization timeout');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', 'SDK initialization timeout');
+                    }
+                }
+            }, 10000);
+        },
+
+        // Environment methods
+        GetPlayerId: function() {
+            console.log('[Y8_ADAPTER] Getting player ID');
+            
+            if (!window.ID) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            ID.getLoginStatus(function(response) {
+                if (response && response.authResponse && response.authResponse.access_token) {
+                    const playerId = response.authResponse.access_token.substring(0, 16); // Берем часть токена как ID
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', playerId);
+                    }
+                } else {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', '');
+                    }
+                }
+            }, false);
+        },
+
+        GetDeviceType: function() {
+            console.log('[Y8_ADAPTER] Getting device type');
+            let deviceType = 'desktop';
+            const ua = navigator.userAgent;
+            
+            if (/iPhone|iPad|iPod/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/Android/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/Tablet|iPad/i.test(ua)) {
+                deviceType = 'tablet';
+            }
+            
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeSuccess', deviceType);
+            }
+        },
+
+        GetLanguageCode: function() {
+            console.log('[Y8_ADAPTER] Getting language code');
+            const lang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
+            }
+        },
+
+        GetServerTime: function() {
+            console.log('[Y8_ADAPTER] Getting server time');
+            const timestamp = Math.floor(Date.now() / 1000);
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+            }
+        },
+
+        // PlayerData methods
+        GetPlayerData: function() {
+            console.log('[Y8_ADAPTER] Getting player data');
+            
+            if (!window.ID) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDataError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            ID.api('user_data/retrieve', 'POST', {key: 'unity_sdk_data'}, function(response) {
+                try {
+                    let universalData = {
+                        playerName: '',
+                        playerGameData: []
+                    };
+
+                    if (response && response.jsondata) {
+                        const data = JSON.parse(response.jsondata);
+                        universalData.playerName = data.playerName || '';
+                        universalData.playerGameData = data.playerGameData || [];
+                    }
+
+                    // Получаем имя игрока из auth данных
+                    ID.getLoginStatus(function(authResponse) {
+                        if (authResponse && authResponse.authResponse && authResponse.authResponse.details) {
+                            universalData.playerName = authResponse.authResponse.details.first_name || universalData.playerName;
+                        }
+                        
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime', 
+                                'HandleGetDataSuccess', 
+                                JSON.stringify(universalData)
+                            );
+                        }
+                    }, false);
+
+                } catch (e) {
+                    console.error('[Y8_ADAPTER] Data parse error:', e);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetDataError',
+                            'Data parse error: ' + e.message
+                        );
+                    }
+                }
+            });
+        },
+
+        SetPlayerData: function(jsonData) {
+            console.log('[Y8_ADAPTER] Setting player data');
+            
+            if (!window.ID) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            try {
+                const universalData = JSON.parse(jsonData);
+                
+                // Буферизованное сохранение как рекомендует документация Y8
+                if (window.y8SaveDelay) {
+                    clearTimeout(window.y8SaveDelay);
+                }
+
+                window.y8SaveDelay = setTimeout(() => {
+                    ID.api('user_data/submit', 'POST', {
+                        key: 'unity_sdk_data', 
+                        value: JSON.stringify(universalData)
+                    }, function(response) {
+                        if (response && response.status === 'ok') {
+                            if (window.unityInstance) {
+                                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                            }
+                        } else {
+                            console.warn('[Y8_ADAPTER] Save failed, retrying in 5 seconds');
+                            setTimeout(() => {
+                                ID.api('user_data/submit', 'POST', {
+                                    key: 'unity_sdk_data', 
+                                    value: JSON.stringify(universalData)
+                                }, function(retryResponse) {
+                                    if (retryResponse && retryResponse.status === 'ok') {
+                                        if (window.unityInstance) {
+                                            window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                                        }
+                                    } else {
+                                        if (window.unityInstance) {
+                                            window.unityInstance.SendMessage(
+                                                'PluginRuntime',
+                                                'HandleSetDataError',
+                                                'Save failed after retry'
+                                            );
+                                        }
+                                    }
+                                });
+                            }, 5000);
+                        }
+                    });
+                }, 1000); // Задержка 1 секунда для буферизации
+
+            } catch (e) {
+                console.error('[Y8_ADAPTER] JSON parse error:', e);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'Invalid JSON format');
+                }
+            }
+        },
+
+        // Analytics methods
+        SendEvent: function(eventName, data) {
+            console.log('[Y8_ADAPTER] Sending analytics event:', eventName);
+            
+            if (!window.ID) {
+                console.warn('[Y8_ADAPTER] SDK not initialized');
+                return;
+            }
+
+            // Проверяем доступность аналитики разными способами
+            if (window.ID.Analytics && typeof window.ID.Analytics.customEvent === 'function') {
+                try {
+                    if (data) {
+                        const eventData = typeof data === 'string' ? data : JSON.stringify(data);
+                        ID.Analytics.customEvent(eventName, eventData);
+                    } else {
+                        ID.Analytics.customEvent(eventName);
+                    }
+                    console.log('[Y8_ADAPTER] Analytics event sent:', eventName);
+                } catch (e) {
+                    console.error('[Y8_ADAPTER] Analytics error:', e);
+                }
+            } else if (window.ID.api && typeof window.ID.api === 'function') {
+                // Альтернативный способ через API
+                try {
+                    ID.api('analytics/event', 'POST', {
+                        event: eventName,
+                        data: data || {}
+                    }, function(response) {
+                        console.log('[Y8_ADAPTER] Analytics API response:', response);
+                    });
+                } catch (e) {
+                    console.error('[Y8_ADAPTER] Analytics API error:', e);
+                }
+            } else {
+                console.warn('[Y8_ADAPTER] Analytics not available');
+            }
+        },
+
+        GameReady: function() {
+            console.log('[Y8_ADAPTER] Game ready');
+            this.SendEvent('game_ready');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
+            }
+        },
+
+        GameplayStart: function() {
+            console.log('[Y8_ADAPTER] Gameplay start');
+            this.SendEvent('gameplay_start');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
+            }
+        },
+
+        GameplayStop: function() {
+            console.log('[Y8_ADAPTER] Gameplay stop');
+            this.SendEvent('gameplay_stop');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
+            }
+        },
+
+        // Advertisement methods
+        ShowInterstitial: function() {
+            console.log('[Y8_ADAPTER] Showing interstitial ad');
+            
+            if (!window.nextAds) {
+                console.error('[Y8_ADAPTER] Ad system not available');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'Ad system not loaded');
+                }
+                return;
+            }
+
+            try {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialOpen', '');
+                }
+
+                // Сохраняем тип рекламы для обработки возобновления
+                window.lastAdType = 'interstitial';
+
+                nextAds();
+
+            } catch (e) {
+                console.error('[Y8_ADAPTER] Interstitial error:', e);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleInterstitialError',
+                        e.message || String(e)
+                    );
+                }
+            }
+        },
+
+        ShowRewarded: function() {
+            console.log('[Y8_ADAPTER] Showing rewarded ad');
+            
+            if (!window.showReward) {
+                console.error('[Y8_ADAPTER] Rewarded ad system not available');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'Rewarded ad system not loaded');
+                }
+                return;
+            }
+
+            try {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+                }
+
+                // Сохраняем тип рекламы для обработки возобновления
+                window.lastAdType = 'rewarded';
+
+                showReward();
+
+            } catch (e) {
+                console.error('[Y8_ADAPTER] Rewarded ad error:', e);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleRewardedError',
+                        e.message || String(e)
+                    );
+                }
+            }
+        },
+
+        // Y8-specific methods для расширенной функциональности
+        Login: function() {
+            if (!window.ID) {
+                console.error('[Y8_ADAPTER] SDK not initialized');
+                return;
+            }
+
+            ID.login(function(response) {
+                console.log('[Y8_ADAPTER] Login response:', response);
+                // Можно отправить событие в Unity если нужно
+                if (window.unityInstance && response && response.authResponse) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleY8LoginSuccess', JSON.stringify(response));
+                }
+            });
+        },
+
+        Register: function() {
+            if (!window.ID) {
+                console.error('[Y8_ADAPTER] SDK not initialized');
+                return;
+            }
+
+            ID.register(function(response) {
+                console.log('[Y8_ADAPTER] Register response:', response);
+                if (window.unityInstance && response && response.authResponse) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleY8RegisterSuccess', JSON.stringify(response));
+                }
+            });
+        },
+
+        GetLoginStatus: function() {
+            if (!window.ID) {
+                console.error('[Y8_ADAPTER] SDK not initialized');
+                return;
+            }
+
+            ID.getLoginStatus(function(response) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleY8LoginStatus', JSON.stringify(response));
+                }
+            }, false);
+        },
+
+        // Новые методы для обработки паузы игры
+        OnGamePause: function(shouldPause) {
+            console.log('[Y8_ADAPTER] Game ' + (shouldPause ? 'paused' : 'resumed'));
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGamePause', shouldPause ? 'true' : 'false');
+            }
+        },
+
+        OnRewardCompleted: function() {
+            console.log('[Y8_ADAPTER] Rewarded ad completed - reward granted');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+            }
+        },
+
+        OnRewardCanceled: function() {
+            console.log('[Y8_ADAPTER] Rewarded ad canceled');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+            }
+        },
+
+        OnNoRewardedAds: function() {
+            console.log('[Y8_ADAPTER] No rewarded ads available');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'No rewarded ads available');
+            }
+        },
+
+        // Unsupported methods
+        GoToGame: function() {
+            console.log('[Y8_ADAPTER] GoToGame not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleNavigateError', 'Not supported by Y8');
+            }
+        },
+
+        IsMetaverseSupported: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleIsMetaverseSupportedSuccess', 'false');
+            }
+        },
+
+        GetMetaversePlayerData: function() {
+            console.log('[Y8_ADAPTER] GetMetaversePlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetMetaverseDataError', 'Not supported by Y8');
+            }
+        },
+
+        SetMetaversePlayerData: function() {
+            console.log('[Y8_ADAPTER] SetMetaversePlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetMetaverseDataError', 'Not supported by Y8');
+            }
+        },
+
+        GetCombinedPlayerData: function() {
+            console.log('[Y8_ADAPTER] GetCombinedPlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetCombinedDataError', 'Not supported by Y8');
+            }
+        },
+
+        SetCombinedPlayerData: function() {
+            console.log('[Y8_ADAPTER] SetCombinedPlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetCombinedDataError', 'Not supported by Y8');
+            }
+        }
+    };
+
+    // Глобальные колбэки для Y8 rewarded ads
+    window.rewardAdsCompleted = function() {
+        console.log('[Y8_ADAPTER] Rewarded ad completed - reward granted');
+        if (window.__sdk_adapter && window.__sdk_adapter.OnRewardCompleted) {
+            window.__sdk_adapter.OnRewardCompleted();
+        }
+    };
+
+    window.rewardAdsCanceled = function() {
+        console.log('[Y8_ADAPTER] Rewarded ad canceled');
+        if (window.__sdk_adapter && window.__sdk_adapter.OnRewardCanceled) {
+            window.__sdk_adapter.OnRewardCanceled();
+        }
+    };
+
+    window.NoRewardedAdsTryLater = function() {
+        console.log('[Y8_ADAPTER] No rewarded ads available');
+        if (window.__sdk_adapter && window.__sdk_adapter.OnNoRewardedAds) {
+            window.__sdk_adapter.OnNoRewardedAds();
+        }
+    };
+
+    // Колбэки для interstitial ads
+    window.pauseGame = function() {
+        console.log('[Y8_ADAPTER] Game paused for ad');
+        if (window.__sdk_adapter && window.__sdk_adapter.OnGamePause) {
+            window.__sdk_adapter.OnGamePause(true);
+        }
+    };
+
+    window.resumeGame = function() {
+        console.log('[Y8_ADAPTER] Game resumed after ad');
+        if (window.__sdk_adapter && window.__sdk_adapter.OnGamePause) {
+            window.__sdk_adapter.OnGamePause(false);
+        }
+        
+        // Для interstitial закрытие обрабатывается автоматически через resume
+        if (window.lastAdType === 'interstitial' && window.unityInstance) {
+            window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+            window.lastAdType = null;
+        }
+    };
+
+    console.log('[Y8_ADAPTER] Y8 adapter loaded successfully');
+})();

@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -46,50 +46,26 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 try
                 {
                     _gameDataContainer.Clear();
-                    switch (_supportedSDK)
+                    var playerData = JsonConvert.DeserializeObject<UniversalPlayerData>(json);
+                    _playerName = playerData.PlayerName;
+                    
+                    foreach (var entry in playerData.PlayerGameData)
                     {
-                        case SupportedSDKType.WelwiseGames:
-                            var playerData = JsonConvert.DeserializeObject<PlayerData>(json);
-                            _playerName = playerData.PlayerName;
-                            foreach (var entry in playerData.PlayerGameData)
-                            {
-                                _gameDataContainer.DeserializeToContainer(entry.Identifier, entry.Value);
-                            }
-
-                            break;
-                        case SupportedSDKType.YandexGames:
-                            var dict = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
-                            foreach (var kvp in dict)
-                            {
-                                if (kvp.Key.Equals("playerName", StringComparison.OrdinalIgnoreCase))
-                                {
-                                    _playerName = kvp.Value?.ToString();
-                                    continue;
-                                }
-
-                                if (kvp.Value is string valueStr)
-                                {
-                                    _gameDataContainer.DeserializeToContainer(kvp.Key, valueStr);
-                                }
-                                else
-                                {
-                                    Debug.LogWarning($"[{nameof(WebPlayerData)}] Value for key {kvp.Key} is not a string: {kvp.Value}");
-                                }
-                            }
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException();
+                        _gameDataContainer.DeserializeToContainer(entry.Identifier, entry.Value);
                     }
                 }
                 catch (Exception e)
                 {
                     Debug.LogError(e);
                 }
+                
+                // Fallback для имени игрока
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
                     _previousPlayerName = _playerName;
                 }
+                
                 OnLoaded();
             }, error =>
             {
@@ -104,13 +80,15 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             {
                 try
                 {
-                    var playerData = JsonConvert.DeserializeObject<MetaverseGameData>(json);
-                    _playerName = playerData.PlayerName;
-                    foreach (var entry in playerData.PlayerGameData)
+                    var combinedData = JsonConvert.DeserializeObject<UniversalCombinedData>(json);
+                    _playerName = combinedData.PlayerName;
+                    
+                    foreach (var entry in combinedData.PlayerGameData)
                     {
                         _gameDataContainer.DeserializeToContainer(entry.Identifier, entry.Value);
                     }
-                    foreach (var entry in playerData.PlayerMetaverseData)
+                    
+                    foreach (var entry in combinedData.PlayerMetaverseData)
                     {
                         _metaverseDataContainer.DeserializeToContainer(entry.Identifier, entry.Value);
                     }
@@ -119,11 +97,13 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     Debug.LogError(e);
                 }
+                
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
                     _previousPlayerName = _playerName;
                 }
+                
                 OnLoaded();
             }, error =>
             {
@@ -132,217 +112,94 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             });
         }
 
-        private string SaveCombinedData()
-        {
-             _gameDataContainer.Changed = false;
-             _metaverseDataContainer.Changed = false;
-             _isSaving = true;
-             var combinedData = new MetaverseGameData
-             {
-                 PlayerName = _playerName,
-                 PlayerGameData = new List<DataEntry>(),
-                 PlayerMetaverseData = new List<DataEntry>(),
-             };
-             foreach (var kvp in _gameDataContainer.Booleans)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _gameDataContainer.Ints)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _gameDataContainer.Floats)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _gameDataContainer.Strings)
-             {
-                 combinedData.PlayerGameData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             // ------
-             foreach (var kvp in _metaverseDataContainer.Booleans)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _metaverseDataContainer.Ints)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _metaverseDataContainer.Floats)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             
-             foreach (var kvp in _metaverseDataContainer.Strings)
-             {
-                 combinedData.PlayerMetaverseData.Add(new DataEntry()
-                 {
-                     Identifier = kvp.Key, 
-                     Value = DataConvertUtil.Serialize(kvp.Value)
-                 });
-             }
-             return JsonConvert.SerializeObject(combinedData);
-        }
-
-        private string SavePlayerDataYandex()
+        private string SerializePlayerData()
         {
             _gameDataContainer.Changed = false;
             _isSaving = true;
             
-            Dictionary<string, string> playerData = new();
-            
-            foreach (var kvp in _gameDataContainer.Booleans)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
-            
-            foreach (var kvp in _gameDataContainer.Strings)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
-            
-            foreach (var kvp in _gameDataContainer.Ints)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
-            
-            foreach (var kvp in _gameDataContainer.Floats)
-            {
-                playerData[kvp.Key] = DataConvertUtil.Serialize(kvp.Value);
-            }
-            return JsonConvert.SerializeObject(playerData);
-        }
-
-        private string SavePlayerDataWelwise()
-        { 
-            _gameDataContainer.Changed = false;
-            _isSaving = true;
-            var playerData = new PlayerData()
+            var playerData = new UniversalPlayerData
             {
                 PlayerName = _playerName,
-                PlayerGameData = new List<DataEntry>(),
+                PlayerGameData = new List<UniversalDataEntry>()
             };
-                    
-            foreach (var kvp in _gameDataContainer.Booleans)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _gameDataContainer.Ints)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _gameDataContainer.Floats)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _gameDataContainer.Strings)
-            {
-                playerData.PlayerGameData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
+            
+            AddContainerDataToEntries(_gameDataContainer, playerData.PlayerGameData);
             
             return JsonConvert.SerializeObject(playerData);
         }
 
-        private string SaveMetaverseData()
+        private string SerializeMetaverseData()
         {
             _metaverseDataContainer.Changed = false;
             _isSaving = true;
 
-            var metaverseData = new MetaversePlayerData()
+            var metaverseData = new UniversalMetaverseData
             {
                 PlayerName = _playerName,
-                PlayerMetaverseData = new List<DataEntry>(),
+                PlayerMetaverseData = new List<UniversalDataEntry>()
             };
-                    
-            foreach (var kvp in _metaverseDataContainer.Booleans)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _metaverseDataContainer.Ints)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _metaverseDataContainer.Floats)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
-                    
-            foreach (var kvp in _metaverseDataContainer.Strings)
-            {
-                metaverseData.PlayerMetaverseData.Add(new DataEntry()
-                {
-                    Identifier = kvp.Key, 
-                    Value = DataConvertUtil.Serialize(kvp.Value)
-                });
-            }
+            
+            AddContainerDataToEntries(_metaverseDataContainer, metaverseData.PlayerMetaverseData);
+            
             return JsonConvert.SerializeObject(metaverseData);
+        }
+
+        private string SerializeCombinedData()
+        {
+            _gameDataContainer.Changed = false;
+            _metaverseDataContainer.Changed = false;
+            _isSaving = true;
+            
+            var combinedData = new UniversalCombinedData
+            {
+                PlayerName = _playerName,
+                PlayerGameData = new List<UniversalDataEntry>(),
+                PlayerMetaverseData = new List<UniversalDataEntry>()
+            };
+            
+            AddContainerDataToEntries(_gameDataContainer, combinedData.PlayerGameData);
+            AddContainerDataToEntries(_metaverseDataContainer, combinedData.PlayerMetaverseData);
+            
+            return JsonConvert.SerializeObject(combinedData);
+        }
+        
+        private void AddContainerDataToEntries(DataContainer container, List<UniversalDataEntry> entries)
+        {
+            foreach (var kvp in container.Booleans)
+            {
+                entries.Add(new UniversalDataEntry
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+            
+            foreach (var kvp in container.Ints)
+            {
+                entries.Add(new UniversalDataEntry
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+            
+            foreach (var kvp in container.Floats)
+            {
+                entries.Add(new UniversalDataEntry
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
+            
+            foreach (var kvp in container.Strings)
+            {
+                entries.Add(new UniversalDataEntry
+                {
+                    Identifier = kvp.Key, 
+                    Value = DataConvertUtil.Serialize(kvp.Value)
+                });
+            }
         }
 
         public override void Save()
@@ -354,7 +211,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             {
                 if (_gameDataContainer.Changed && _metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-                    PluginRuntime.SetCombinedPlayerData(SaveCombinedData(), () =>
+                    PluginRuntime.SetCombinedPlayerData(SerializeCombinedData(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
@@ -369,7 +226,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 }
                 else if (_gameDataContainer.Changed && !_metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-                    PluginRuntime.SetPlayerData(SavePlayerDataWelwise(), () =>
+                    PluginRuntime.SetPlayerData(SerializePlayerData(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
@@ -383,7 +240,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 }
                 else if (!_gameDataContainer.Changed && _metaverseDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-                    PluginRuntime.SetMetaversePlayerData(SaveMetaverseData(), () =>
+                    PluginRuntime.SetMetaversePlayerData(SerializeMetaverseData(), () =>
                     {
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
@@ -400,13 +257,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             {
                 if (_gameDataContainer.Changed || _previousPlayerName != _playerName)
                 {
-                    var data = _supportedSDK switch
-                    {
-                        SupportedSDKType.WelwiseGames => SavePlayerDataWelwise(),
-                        SupportedSDKType.YandexGames => SavePlayerDataYandex(),
-                        _ => throw new ArgumentOutOfRangeException()
-                    };
-                    PluginRuntime.SetPlayerData(data, () =>
+                    PluginRuntime.SetPlayerData(SerializePlayerData(), () =>
                         {
                             _isSaving = false;
                             if (_gameDataContainer.Changed) Save();
@@ -442,8 +293,8 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             };
         }
         
-        
-        public class DataEntry
+        // Универсальные классы для данных
+        public class UniversalDataEntry
         {
             [JsonProperty("identifier", NullValueHandling = NullValueHandling.Ignore)]
             public string Identifier { get; set; }
@@ -455,37 +306,34 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             public List<string> Values { get; set; }
         }
 
-        public class PlayerData
+        public class UniversalPlayerData
         {
             [JsonProperty("playerName", NullValueHandling = NullValueHandling.Ignore)]
             public string PlayerName { get; set; }
 
             [JsonProperty("playerGameData", NullValueHandling = NullValueHandling.Ignore)]
-            public List<DataEntry> PlayerGameData { get; set; }
+            public List<UniversalDataEntry> PlayerGameData { get; set; }
         }
 
-        public class MetaversePlayerData
+        public class UniversalMetaverseData
         {
             [JsonProperty("playerName", NullValueHandling = NullValueHandling.Ignore)]
             public string PlayerName { get; set; }
 
             [JsonProperty("playerMetaverseData", NullValueHandling = NullValueHandling.Ignore)]
-            public List<DataEntry> PlayerMetaverseData { get; set; }
+            public List<UniversalDataEntry> PlayerMetaverseData { get; set; }
         }
 
-        public class MetaverseGameData
+        public class UniversalCombinedData
         {
             [JsonProperty("playerName", NullValueHandling = NullValueHandling.Ignore)]
             public string PlayerName { get; set; }
 
             [JsonProperty("playerMetaverseData", NullValueHandling = NullValueHandling.Ignore)]
-            public List<DataEntry> PlayerMetaverseData { get; set; }
+            public List<UniversalDataEntry> PlayerMetaverseData { get; set; }
 
             [JsonProperty("playerGameData", NullValueHandling = NullValueHandling.Ignore)]
-            public List<DataEntry> PlayerGameData { get; set; }
+            public List<UniversalDataEntry> PlayerGameData { get; set; }
         }
     }
-    
-    
-    
 }
