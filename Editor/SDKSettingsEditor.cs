@@ -18,7 +18,7 @@ namespace WelwiseGames.Editor
         private const string GamePrefix = "WS_SDK_GAME__";
         private const string MetaversePrefix = "WS_SDK_METAVERSE__";
         
-        public const string TemplateVersion = "1.0.0";
+        public const string TemplateVersion = "1.0.1";
         private const string LogoFileName = "__ws-logo";
         
         private enum TabType
@@ -474,6 +474,7 @@ namespace WelwiseGames.Editor
                     EditorGUILayout.HelpBox("Please set your Y8 App ID", MessageType.Warning);
                 }
             }
+            
             
             _settings.MuteAudioOnPause = EditorGUILayout.Toggle(
                 "Mute Audio On Pause", 

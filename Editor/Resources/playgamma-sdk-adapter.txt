@@ -1,0 +1,522 @@
+(function() {
+    console.log('[PLAYGAMMA_ADAPTER] PlayGamma adapter loading...');
+
+    window.__sdk_adapter = {
+        GetModules: function() {
+            return [
+                "Advertisement",
+                "Environment",
+                "PlayerData",
+                "Analytics"
+            ];
+        },
+        
+        Init: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Starting initialization...');
+            
+            // Если SDK уже инициализирован
+            if (window.bridge && window.bridge.isInitialized) {
+                console.log('[PLAYGAMMA_ADAPTER] SDK already initialized');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                }
+                return;
+            }
+
+            // Загружаем PlayGamma SDK если еще не загружен
+            if (!document.querySelector('script[src*="playgama-bridge"]')) {
+                const script = document.createElement('script');
+                script.src = 'https://bridge.playgama.com/v1/stable/playgama-bridge.js';
+                script.async = true;
+                script.onload = function() {
+                    console.log('[PLAYGAMMA_ADAPTER] PlayGamma SDK script loaded successfully');
+                    initializeBridge();
+                };
+                script.onerror = function(error) {
+                    console.error('[PLAYGAMMA_ADAPTER] Failed to load PlayGamma SDK:', error);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', 'Failed to load PlayGamma SDK');
+                    }
+                };
+                document.head.appendChild(script);
+            } else {
+                console.log('[PLAYGAMMA_ADAPTER] PlayGamma SDK already loaded, initializing...');
+                initializeBridge();
+            }
+
+            function initializeBridge() {
+                if (!window.bridge || typeof window.bridge.initialize !== 'function') {
+                    console.error('[PLAYGAMMA_ADAPTER] PlayGamma bridge not available');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', 'PlayGamma bridge not available');
+                    }
+                    return;
+                }
+
+                window.bridge.initialize()
+                    .then(() => {
+                        console.log('[PLAYGAMMA_ADAPTER] SDK initialized successfully');
+                        
+                        // Подписываемся на события рекламы
+                        if (window.bridge.advertisement) {
+                            window.bridge.advertisement.on(
+                                window.bridge.EVENT_NAME.INTERSTITIAL_STATE_CHANGED, 
+                                handleInterstitialStateChange
+                            );
+                            window.bridge.advertisement.on(
+                                window.bridge.EVENT_NAME.REWARDED_STATE_CHANGED, 
+                                handleRewardedStateChange
+                            );
+                        }
+
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[PLAYGAMMA_ADAPTER] SDK initialization failed:', error);
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime', 
+                                'HandleInitError', 
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            }
+
+            function handleInterstitialStateChange(state) {
+                console.log('[PLAYGAMMA_ADAPTER] Interstitial state changed:', state);
+                switch (state) {
+                    case 'opened':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialOpen', '');
+                        }
+                        break;
+                    case 'closed':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                        }
+                        break;
+                    case 'failed':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'Interstitial ad failed');
+                        }
+                        break;
+                }
+            }
+
+            function handleRewardedStateChange(state) {
+                console.log('[PLAYGAMMA_ADAPTER] Rewarded state changed:', state);
+                switch (state) {
+                    case 'opened':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+                        }
+                        break;
+                    case 'rewarded':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
+                        }
+                        break;
+                    case 'closed':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                        }
+                        break;
+                    case 'failed':
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'Rewarded ad failed');
+                        }
+                        break;
+                }
+            }
+
+            // Таймаут для инициализации
+            setTimeout(() => {
+                if (!window.bridge || !window.bridge.isInitialized) {
+                    console.error('[PLAYGAMMA_ADAPTER] SDK initialization timeout');
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInitError', 'SDK initialization timeout');
+                    }
+                }
+            }, 15000);
+        },
+
+        // Environment methods
+        GetPlayerId: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Getting player ID');
+            
+            if (!window.bridge) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            try {
+                // PlayGamma не предоставляет прямой playerId, используем уникальный идентификатор если доступен
+                let playerId = '';
+                if (window.bridge.user && window.bridge.user.id) {
+                    playerId = window.bridge.user.id;
+                }
+                
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', playerId);
+                }
+            } catch (error) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetPlayerIdError',
+                        error.message || String(error)
+                    );
+                }
+            }
+        },
+
+        GetDeviceType: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Getting device type');
+            let deviceType = 'desktop';
+            const ua = navigator.userAgent;
+            
+            if (/iPhone|iPad|iPod/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/Android/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/Tablet|iPad/i.test(ua)) {
+                deviceType = 'tablet';
+            }
+            
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDeviceTypeSuccess', deviceType);
+            }
+        },
+
+        GetLanguageCode: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Getting language code');
+            
+            if (!window.bridge) {
+                // Возвращаем язык браузера как fallback
+                const lang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
+                }
+                return;
+            }
+
+            try {
+                const lang = window.bridge.platform.language || 
+                            (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
+                }
+            } catch (error) {
+                const lang = (navigator.language || navigator.userLanguage || 'en').split('-')[0];
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetLanguageCodeSuccess', lang);
+                }
+            }
+        },
+
+        GetServerTime: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Getting server time');
+            
+            if (!window.bridge) {
+                // Возвращаем локальное время как fallback
+                const timestamp = Math.floor(Date.now() / 1000);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+                }
+                return;
+            }
+
+            window.bridge.platform.getServerTime()
+                .then(time => {
+                    const timestamp = Math.floor(time / 1000); // Конвертируем в секунды
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+                    }
+                })
+                .catch(error => {
+                    console.error('[PLAYGAMMA_ADAPTER] Failed to get server time:', error);
+                    // Fallback на локальное время
+                    const timestamp = Math.floor(Date.now() / 1000);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGetTimeSuccess', String(timestamp));
+                    }
+                });
+        },
+
+        // PlayerData methods
+        GetPlayerData: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Getting player data');
+            
+            if (!window.bridge || !window.bridge.storage) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleGetDataError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            // Используем ключ для хранения данных игры
+            const storageKey = 'unity_game_data';
+            
+            window.bridge.storage.get(storageKey)
+                .then(data => {
+                    try {
+                        let universalData = {
+                            playerName: '',
+                            playerGameData: []
+                        };
+
+                        if (data) {
+                            // Парсим сохраненные данные
+                            const savedData = typeof data === 'string' ? JSON.parse(data) : data;
+                            universalData.playerName = savedData.playerName || '';
+                            universalData.playerGameData = savedData.playerGameData || [];
+                        }
+
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime', 
+                                'HandleGetDataSuccess', 
+                                JSON.stringify(universalData)
+                            );
+                        }
+                    } catch (e) {
+                        console.error('[PLAYGAMMA_ADAPTER] Data parse error:', e);
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleGetDataError',
+                                'Data parse error: ' + e.message
+                            );
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('[PLAYGAMMA_ADAPTER] Get player data error:', error);
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetDataError',
+                            error.message || String(error)
+                        );
+                    }
+                });
+        },
+
+        SetPlayerData: function(jsonData) {
+            console.log('[PLAYGAMMA_ADAPTER] Setting player data');
+            
+            if (!window.bridge || !window.bridge.storage) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'SDK not initialized');
+                }
+                return;
+            }
+
+            try {
+                const universalData = JSON.parse(jsonData);
+                const storageKey = 'unity_game_data';
+                
+                // Сохраняем данные в формате PlayGamma
+                window.bridge.storage.set(storageKey, JSON.stringify(universalData))
+                    .then(() => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('[PLAYGAMMA_ADAPTER] Set player data error:', error);
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleSetDataError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+
+            } catch (e) {
+                console.error('[PLAYGAMMA_ADAPTER] JSON parse error:', e);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataError', 'Invalid JSON format');
+                }
+            }
+        },
+
+        // Analytics methods
+        GameReady: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Game ready');
+            
+            if (window.bridge && window.bridge.platform) {
+                window.bridge.platform.sendMessage('game_ready');
+            }
+            
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
+            }
+        },
+
+        GameplayStart: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Gameplay start');
+            
+            if (window.bridge && window.bridge.platform) {
+                window.bridge.platform.sendMessage('gameplay_started');
+            }
+            
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
+            }
+        },
+
+        GameplayStop: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Gameplay stop');
+            
+            if (window.bridge && window.bridge.platform) {
+                window.bridge.platform.sendMessage('gameplay_stopped');
+            }
+            
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
+            }
+        },
+
+        SendEvent: function(eventName, data) {
+            console.log('[PLAYGAMMA_ADAPTER] Sending analytics event:', eventName);
+            
+            if (!window.bridge) {
+                console.warn('[PLAYGAMMA_ADAPTER] SDK not initialized');
+                return;
+            }
+
+            // PlayGamma поддерживает отправку кастомных событий через sendMessage
+            try {
+                if (window.bridge.platform) {
+                    // Для достижений используем специальное сообщение
+                    if (eventName === 'achievement_unlocked') {
+                        window.bridge.platform.sendMessage('player_got_achievement');
+                    } else {
+                        // Для других событий можно использовать кастомную логику
+                        console.log('[PLAYGAMMA_ADAPTER] Analytics event:', eventName, data);
+                    }
+                }
+            } catch (e) {
+                console.error('[PLAYGAMMA_ADAPTER] Analytics error:', e);
+            }
+        },
+
+        // Advertisement methods
+        ShowInterstitial: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Showing interstitial ad');
+            
+            if (!window.bridge || !window.bridge.advertisement) {
+                console.error('[PLAYGAMMA_ADAPTER] Ad system not available');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'Ad system not loaded');
+                }
+                return;
+            }
+
+            if (!window.bridge.advertisement.isInterstitialSupported) {
+                console.error('[PLAYGAMMA_ADAPTER] Interstitial ads not supported');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialError', 'Interstitial ads not supported');
+                }
+                return;
+            }
+
+            try {
+                window.bridge.advertisement.showInterstitial('game_interstitial');
+            } catch (e) {
+                console.error('[PLAYGAMMA_ADAPTER] Interstitial error:', e);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleInterstitialError',
+                        e.message || String(e)
+                    );
+                }
+            }
+        },
+
+        ShowRewarded: function() {
+            console.log('[PLAYGAMMA_ADAPTER] Showing rewarded ad');
+            
+            if (!window.bridge || !window.bridge.advertisement) {
+                console.error('[PLAYGAMMA_ADAPTER] Rewarded ad system not available');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'Rewarded ad system not loaded');
+                }
+                return;
+            }
+
+            if (!window.bridge.advertisement.isRewardedSupported) {
+                console.error('[PLAYGAMMA_ADAPTER] Rewarded ads not supported');
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedError', 'Rewarded ads not supported');
+                }
+                return;
+            }
+
+            try {
+                window.bridge.advertisement.showRewarded('game_rewarded');
+            } catch (e) {
+                console.error('[PLAYGAMMA_ADAPTER] Rewarded ad error:', e);
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleRewardedError',
+                        e.message || String(e)
+                    );
+                }
+            }
+        },
+
+        // Unsupported methods
+        GoToGame: function(gameId) {
+            console.log('[PLAYGAMMA_ADAPTER] GoToGame not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleNavigateError', 'Not supported by PlayGamma');
+            }
+        },
+
+        IsMetaverseSupported: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleIsMetaverseSupportedSuccess', 'false');
+            }
+        },
+
+        GetMetaversePlayerData: function() {
+            console.log('[PLAYGAMMA_ADAPTER] GetMetaversePlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetMetaverseDataError', 'Not supported by PlayGamma');
+            }
+        },
+
+        SetMetaversePlayerData: function() {
+            console.log('[PLAYGAMMA_ADAPTER] SetMetaversePlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetMetaverseDataError', 'Not supported by PlayGamma');
+            }
+        },
+
+        GetCombinedPlayerData: function() {
+            console.log('[PLAYGAMMA_ADAPTER] GetCombinedPlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetCombinedDataError', 'Not supported by PlayGamma');
+            }
+        },
+
+        SetCombinedPlayerData: function() {
+            console.log('[PLAYGAMMA_ADAPTER] SetCombinedPlayerData not supported');
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleSetCombinedDataError', 'Not supported by PlayGamma');
+            }
+        }
+    };
+
+    console.log('[PLAYGAMMA_ADAPTER] PlayGamma adapter loaded successfully');
+})();

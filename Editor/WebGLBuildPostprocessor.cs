@@ -11,7 +11,7 @@ namespace WelwiseGames.Editor
     {
         public int callbackOrder => 0;
 
-        public void OnPostprocessBuild(BuildReport report)
+         public void OnPostprocessBuild(BuildReport report)
         {
             if (report.summary.platform != BuildTarget.WebGL)
                 return;
@@ -38,6 +38,13 @@ namespace WelwiseGames.Editor
             {
                 var y8Scripts = GenerateY8Scripts(settings);
                 html = InsertY8Scripts(html, y8Scripts);
+            }
+
+            // PlayGamma script injection - добавляем загрузку PlayGamma SDK
+            if (settings.SDKType == SupportedSDKType.PlayGamma)
+            {
+                var playGammaScripts = GeneratePlayGammaScripts();
+                html = InsertPlayGammaScripts(html, playGammaScripts);
             }
 
             // Существующие замены для aspect ratio и background
@@ -428,6 +435,35 @@ namespace WelwiseGames.Editor
         {
             // Вставляем перед закрывающим тегом head
             return html.Replace("</head>", y8Scripts + "\n</head>");
+        }
+        
+        private string GeneratePlayGammaScripts()
+        {
+            return $@"
+    <!-- PlayGamma Bridge SDK -->
+    <script src='https://bridge.playgama.com/v1/stable/playgama-bridge.js'></script>
+    
+    <!-- PlayGamma Configuration Info -->
+    <script>
+        console.log('[PLAYGAMMA_HTML] PlayGamma SDK loaded from CDN');
+        console.log('[PLAYGAMMA_HTML] Remember to add playgama-bridge-config.json to your StreamingAssets folder');
+        
+        // Глобальные переменные для отслеживания состояния PlayGamma SDK
+        window.playGammaSdkReady = false;
+        window.playGammaSdkInitPromise = null;
+        
+        // Инициализация будет выполнена через адаптер
+        window.addEventListener('DOMContentLoaded', function() {{
+            console.log('[PLAYGAMMA_HTML] DOM ready, PlayGamma SDK can be initialized by adapter');
+        }});
+    </script>
+    ";
+        }
+
+        private string InsertPlayGammaScripts(string html, string playGammaScripts)
+        {
+            // Вставляем PlayGamma SDK в head для предварительной загрузки
+            return html.Replace("<head>", "<head>\n" + playGammaScripts);
         }
     }
 }

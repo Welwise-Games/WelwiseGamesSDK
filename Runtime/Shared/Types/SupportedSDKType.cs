@@ -14,5 +14,7 @@
         GameDistribution,
         /// <summary>Y8 Games Web platform</summary>
         Y8Games,
+        /// <summary>PlayGamma Web platform</summary>
+        PlayGamma,
     }
 }
