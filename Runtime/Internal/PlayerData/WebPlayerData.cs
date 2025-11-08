@@ -11,17 +11,15 @@ namespace WelwiseGamesSDK.Internal.PlayerData
     internal sealed class WebPlayerData : PlayerData
     {
         private readonly IEnvironment _environment;
-        private readonly SupportedSDKType _supportedSDK;
         
         private bool _isMetaverseSupported;
         private bool _isSaving;
         
-        public WebPlayerData(SDKSettings settings, IEnvironment environment, 
+        public WebPlayerData(IEnvironment environment, 
             bool isAvailableSelf, bool isGameDataAvailable, bool isMetaverseDataAvailable) 
             : base(isAvailableSelf, isGameDataAvailable, isMetaverseDataAvailable)
         {
             _environment = environment;
-            _supportedSDK = settings.SDKType;
         }
 
         public override void Initialize()

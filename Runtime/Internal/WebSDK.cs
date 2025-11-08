@@ -42,7 +42,7 @@ namespace WelwiseGamesSDK.Internal
             var webPlayerDataImplemented = moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey);
             if (webPlayerDataImplemented)
             {
-                _webPlayerData = new WebPlayerData(sdkSettings, _webEnvironment, 
+                _webPlayerData = new WebPlayerData(_webEnvironment, 
                     moduleSupport.CheckModule(SupportedModuleKeys.PlayerDataModuleKey),
                     moduleSupport.CheckModule(SupportedModuleKeys.GameDataModuleKey),
                     moduleSupport.CheckModule(SupportedModuleKeys.MetaverseDataModuleKey));
