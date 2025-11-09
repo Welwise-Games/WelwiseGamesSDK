@@ -441,8 +441,6 @@ namespace WelwiseGames.Editor
         private void DrawGeneralSettings()
         {
             EditorGUILayout.Space(10);
-            EditorGUILayout.LabelField("Runtime Settings", EditorStyles.boldLabel);
-
             // Динамический выбор SDK
             var sdkNames = SDKProvider.GetSDKNames();
     
@@ -475,7 +473,7 @@ namespace WelwiseGames.Editor
             if (sdkDefinition != null && sdkDefinition.ConfigFields.Count > 0)
             {
                 EditorGUILayout.Space(10);
-                EditorGUILayout.LabelField($"{sdkDefinition.Name} Configuration", EditorStyles.miniBoldLabel);
+                EditorGUILayout.LabelField($"{sdkDefinition.Name} Configuration", EditorStyles.boldLabel);
 
                 foreach (var field in sdkDefinition.ConfigFields)
                 {
@@ -483,6 +481,8 @@ namespace WelwiseGames.Editor
                 }
             }
             
+            EditorGUILayout.Space(15);
+            EditorGUILayout.LabelField("Runtime Settings", EditorStyles.boldLabel);
             _settings.MuteAudioOnPause = EditorGUILayout.Toggle(
                 "Mute Audio On Pause", 
                 _settings.MuteAudioOnPause);
@@ -544,28 +544,31 @@ namespace WelwiseGames.Editor
 
             object newValue = null;
 
+            // Создаем GUIContent с отображаемым именем и тултипом
+            var labelContent = new GUIContent(field.DisplayName, field.Tooltip);
+
             switch (field.Type.ToLower())
             {
                 case "string":
-                    newValue = EditorGUILayout.TextField(field.DisplayName, currentValue?.ToString() ?? "");
+                    newValue = EditorGUILayout.TextField(labelContent, currentValue?.ToString() ?? "");
                     break;
                 case "bool":
                     bool boolVal;
                     bool.TryParse(currentValue?.ToString(), out boolVal);
-                    newValue = EditorGUILayout.Toggle(field.DisplayName, boolVal);
+                    newValue = EditorGUILayout.Toggle(labelContent, boolVal);
                     break;
                 case "int":
                     int intVal;
                     int.TryParse(currentValue?.ToString(), out intVal);
-                    newValue = EditorGUILayout.IntField(field.DisplayName, intVal);
+                    newValue = EditorGUILayout.IntField(labelContent, intVal);
                     break;
                 case "float":
                     float floatVal;
                     float.TryParse(currentValue?.ToString(), out floatVal);
-                    newValue = EditorGUILayout.FloatField(field.DisplayName, floatVal);
+                    newValue = EditorGUILayout.FloatField(labelContent, floatVal);
                     break;
                 default:
-                    EditorGUILayout.LabelField(field.DisplayName, $"Unsupported type: {field.Type}");
+                    EditorGUILayout.LabelField(labelContent, new GUIContent($"Unsupported type: {field.Type}"));
                     break;
             }
 
@@ -574,11 +577,6 @@ namespace WelwiseGames.Editor
                 config[field.Name] = newValue;
                 _settings.SDKConfig = config; // Это обновит JSON
                 MarkSettingsDirty();
-            }
-
-            if (!string.IsNullOrEmpty(field.Tooltip))
-            {
-                EditorGUILayout.HelpBox(field.Tooltip, MessageType.Info);
             }
         }
         

@@ -68,7 +68,6 @@ namespace WelwiseGames.Editor.SDK
                 }
 
                 _isCacheInitialized = true;
-                Debug.Log($"SDKProvider cache initialized with {_sdkDefinitionsCache.Count} SDKs");
             }
             catch (Exception ex)
             {
