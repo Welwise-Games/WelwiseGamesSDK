@@ -1,0 +1,10 @@
+{
+  "name": "PlayGamma",
+  "adapterFile": "PlayGamma_adapter.txt",
+  "postBuildScripts": [
+    {
+      "injectPoint": "head",
+      "file": "PlayGamma_injection-head.txt"
+    }
+  ]
+}

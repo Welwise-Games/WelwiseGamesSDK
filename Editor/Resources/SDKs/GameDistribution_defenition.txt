@@ -1,0 +1,19 @@
+{
+  "name": "GameDistribution",
+  "adapterFile": "GameDistribution_adapter.txt",
+  "configFields": [
+    {
+      "name": "GameDistributionId",
+      "type": "string",
+      "displayName": "Game Distribution ID",
+      "defaultValue": "",
+      "tooltip": "Your GameDistribution game ID"
+    }
+  ],
+  "postBuildScripts": [
+    {
+      "injectPoint": "head",
+      "file": "GameDistribution_injection-head.txt"
+    }
+  ]
+}

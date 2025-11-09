@@ -2,7 +2,7 @@
 using System.IO;
 using UnityEditor;
 using UnityEngine;
-using WelwiseGamesSDK.Shared.Types;
+using WelwiseGames.Editor.SDK;
 
 namespace WelwiseGames.Editor
 {
@@ -10,15 +10,14 @@ namespace WelwiseGames.Editor
     {
         private const string TemplateFolder = "WebGLTemplates/Welwise SDK";
         private const string AdapterFileName = "sdk-adapter.js";
-        private const string ThreeJsPackageName = "three-js";
 
-        public static void UpdateTemplate(SupportedSDKType sdkType, bool includeThreeJs)
+        public static void UpdateTemplate(string sdkName, bool includeThreeJs)
         {
             try
             {
                 CleanTemplateFolder();
                 ImportTemplatePackage();
-                CopySDKAdapter(sdkType);
+                CopySDKAdapter(sdkName);
                 
                 if (includeThreeJs)
                 {
@@ -67,6 +66,7 @@ namespace WelwiseGames.Editor
 
         private static void ImportThreeJsPackage()
         {
+            const string ThreeJsPackageName = "three-js";
             var packageGuid = AssetDatabase.FindAssets(ThreeJsPackageName);
             if (packageGuid.Length == 0)
             {
@@ -114,32 +114,17 @@ namespace WelwiseGames.Editor
             }
         }
 
-        public static void CopySDKAdapter(SupportedSDKType sdkType)
+        public static void CopySDKAdapter(string sdkName)
         {
-            var resourceName = GetAdapterResourceName(sdkType);
-            var adapterAsset = Resources.Load<TextAsset>(resourceName);
-            
-            if (adapterAsset == null)
+            var adapterCode = SDKProvider.GetAdapterCode(sdkName);
+            if (string.IsNullOrEmpty(adapterCode))
             {
-                Debug.LogError($"Failed to load SDK adapter: {resourceName}");
+                Debug.LogError($"Adapter code not found for SDK: {sdkName}");
                 return;
             }
 
             CreateTemplateDirectory();
-            SaveAdapterFile(adapterAsset.text);
-        }
-
-        private static string GetAdapterResourceName(SupportedSDKType sdkType)
-        {
-            return sdkType switch
-            {
-                SupportedSDKType.WelwiseGames => "welwise-sdk-adapter",
-                SupportedSDKType.YandexGames => "yandex-sdk-adapter",
-                SupportedSDKType.GameDistribution => "gamedistribution-sdk-adapter",
-                SupportedSDKType.Y8Games => "y8-sdk-adapter",
-                SupportedSDKType.PlayGamma => "playgamma-sdk-adapter",
-                _ => throw new ArgumentOutOfRangeException()
-            };
+            SaveAdapterFile(adapterCode);
         }
 
         private static void CreateTemplateDirectory()
@@ -153,7 +138,6 @@ namespace WelwiseGames.Editor
 
         private static void SaveAdapterFile(string content)
         {
-            AssetDatabase.DeleteAsset($"Assets/{TemplateFolder}/{AdapterFileName}");
             var filePath = $"Assets/{TemplateFolder}/{AdapterFileName}";
             File.WriteAllText(filePath, content);
         }

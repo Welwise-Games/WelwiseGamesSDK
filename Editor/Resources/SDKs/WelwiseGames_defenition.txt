@@ -1,0 +1,4 @@
+{
+  "name": "WelwiseGames",
+  "adapterFile": "WelwiseGames_adapter.txt"
+}

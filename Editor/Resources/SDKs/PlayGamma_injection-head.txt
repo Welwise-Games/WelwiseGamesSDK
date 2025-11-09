@@ -1,0 +1,15 @@
+<!-- PlayGamma Bridge SDK -->
+<script src='https://bridge.playgama.com/v1/stable/playgama-bridge.js'></script>
+
+<!-- PlayGamma Configuration Info -->
+<script>
+    console.log('[PLAYGAMMA_HTML] PlayGamma SDK loaded from CDN');
+    console.log('[PLAYGAMMA_HTML] Remember to add playgama-bridge-config.json to your StreamingAssets folder');
+
+    window.playGammaSdkReady = false;
+    window.playGammaSdkInitPromise = null;
+
+    window.addEventListener('DOMContentLoaded', function() {
+        console.log('[PLAYGAMMA_HTML] DOM ready, PlayGamma SDK can be initialized by adapter');
+    });
+</script>

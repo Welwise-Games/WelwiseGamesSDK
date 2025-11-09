@@ -9,6 +9,7 @@ using WelwiseGamesSDK.Shared;
 using WelwiseGamesSDK.Shared.Types;
 using DeviceType = WelwiseGamesSDK.Shared.Types.DeviceType;
 using System.Collections.Generic;
+using WelwiseGames.Editor.SDK;
 
 namespace WelwiseGames.Editor
 {
@@ -34,7 +35,7 @@ namespace WelwiseGames.Editor
         
         private TabType _currentTab = TabType.General;
         private SDKSettings _settings;
-        private SupportedSDKType _lastSDKType;
+        private string _lastSelectedSDK;
         private Texture2D _backgroundTexture;
         private Texture2D _logoTexture;
         private bool _needsTextureReload;
@@ -249,7 +250,7 @@ namespace WelwiseGames.Editor
         private void LoadSettings()
         {
             _settings = SDKSettings.LoadOrCreateSettings();
-            _lastSDKType = _settings.SDKType;
+            _lastSelectedSDK = _settings.SelectedSDK;
             LoadBackgroundTexture();
         }
         
@@ -313,7 +314,7 @@ namespace WelwiseGames.Editor
 
         private void UpdateTemplateForCurrentSDK()
         {
-            WebGLTemplateUpdater.UpdateTemplate(_settings.SDKType, _settings.UseThreeJsLoader);
+            WebGLTemplateUpdater.UpdateTemplate(_settings.SelectedSDK, _settings.UseThreeJsLoader);
         }
         
         private void OnGUI()
@@ -364,10 +365,10 @@ namespace WelwiseGames.Editor
                 MarkSettingsDirty();
             }
 
-            if (_settings.SDKType != _lastSDKType)
+            if (_settings.SelectedSDK != _lastSelectedSDK)
             {
-                HandleSDKTypeChange(_lastSDKType, _settings.SDKType);
-                _lastSDKType = _settings.SDKType;
+                HandleSDKTypeChange(_lastSelectedSDK, _settings.SelectedSDK);
+                _lastSelectedSDK = _settings.SelectedSDK;
                 SaveSettingsImmediate();
             }
             
@@ -442,39 +443,45 @@ namespace WelwiseGames.Editor
             EditorGUILayout.Space(10);
             EditorGUILayout.LabelField("Runtime Settings", EditorStyles.boldLabel);
 
-            _settings.SDKType = (SupportedSDKType)EditorGUILayout.EnumPopup(
-                "SDK Type", 
-                _settings.SDKType);
-
-            if (_settings.SDKType == SupportedSDKType.GameDistribution)
+            // Динамический выбор SDK
+            var sdkNames = SDKProvider.GetSDKNames();
+    
+            // Handle case where no SDKs are available
+            if (sdkNames.Length == 0)
             {
-                _settings.GameDistributionId = EditorGUILayout.TextField(
-                    "Game Distribution ID", 
-                    _settings.GameDistributionId);
+                EditorGUILayout.HelpBox("No SDKs found. Please ensure SDK definitions are properly installed.", MessageType.Warning);
+                return;
             }
-            else if (_settings.SDKType == SupportedSDKType.Y8Games)
+
+            var currentIndex = Array.IndexOf(sdkNames, _settings.SelectedSDK);
+            if (currentIndex < 0) 
             {
-                EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Y8 Games Configuration", EditorStyles.miniBoldLabel);
-        
-                _settings.Y8AppId = EditorGUILayout.TextField("Y8 App ID", _settings.Y8AppId);
-        
-                EditorGUILayout.Space(5);
-                EditorGUILayout.LabelField("Advertisement Settings", EditorStyles.miniBoldLabel);
-        
-                _settings.Y8HostId = EditorGUILayout.TextField("Host ID", _settings.Y8HostId);
-                _settings.Y8AdsenseId = EditorGUILayout.TextField("AdSense ID", _settings.Y8AdsenseId);
-                _settings.Y8ChannelId = EditorGUILayout.TextField("Channel ID", _settings.Y8ChannelId);
-                _settings.Y8AdFrequency = EditorGUILayout.TextField("Ad Frequency", _settings.Y8AdFrequency);
-                _settings.Y8TestAdsOn = EditorGUILayout.Toggle("Test Ads", _settings.Y8TestAdsOn);
-                _settings.Y8ActivateAFP = EditorGUILayout.Toggle("Activate AFP", _settings.Y8ActivateAFP);
-        
-                if (string.IsNullOrEmpty(_settings.Y8AppId) || _settings.Y8AppId == "YOUR_Y8_APP_ID")
+                currentIndex = 0;
+                _settings.SelectedSDK = sdkNames[0]; // Auto-select first available SDK
+            }
+
+            var newIndex = EditorGUILayout.Popup("SDK Type", currentIndex, sdkNames);
+            if (newIndex != currentIndex)
+            {
+                _settings.SelectedSDK = sdkNames[newIndex];
+                MarkSettingsDirty();
+            }
+
+            // Add null check before getting SDK definition
+            if (string.IsNullOrEmpty(_settings.SelectedSDK))
+                return;
+
+            var sdkDefinition = SDKProvider.GetSDKDefinition(_settings.SelectedSDK);
+            if (sdkDefinition != null && sdkDefinition.ConfigFields.Count > 0)
+            {
+                EditorGUILayout.Space(10);
+                EditorGUILayout.LabelField($"{sdkDefinition.Name} Configuration", EditorStyles.miniBoldLabel);
+
+                foreach (var field in sdkDefinition.ConfigFields)
                 {
-                    EditorGUILayout.HelpBox("Please set your Y8 App ID", MessageType.Warning);
+                    DrawConfigField(field);
                 }
             }
-            
             
             _settings.MuteAudioOnPause = EditorGUILayout.Toggle(
                 "Mute Audio On Pause", 
@@ -528,6 +535,51 @@ namespace WelwiseGames.Editor
                     _settings.EditorMetaverseDataModule);
             }
             EditorGUILayout.EndVertical();
+        }
+
+        private void DrawConfigField(SDKConfigField field)
+        {
+            var config = _settings.SDKConfig;
+            var currentValue = config.ContainsKey(field.Name) ? config[field.Name] : field.DefaultValue;
+
+            object newValue = null;
+
+            switch (field.Type.ToLower())
+            {
+                case "string":
+                    newValue = EditorGUILayout.TextField(field.DisplayName, currentValue?.ToString() ?? "");
+                    break;
+                case "bool":
+                    bool boolVal;
+                    bool.TryParse(currentValue?.ToString(), out boolVal);
+                    newValue = EditorGUILayout.Toggle(field.DisplayName, boolVal);
+                    break;
+                case "int":
+                    int intVal;
+                    int.TryParse(currentValue?.ToString(), out intVal);
+                    newValue = EditorGUILayout.IntField(field.DisplayName, intVal);
+                    break;
+                case "float":
+                    float floatVal;
+                    float.TryParse(currentValue?.ToString(), out floatVal);
+                    newValue = EditorGUILayout.FloatField(field.DisplayName, floatVal);
+                    break;
+                default:
+                    EditorGUILayout.LabelField(field.DisplayName, $"Unsupported type: {field.Type}");
+                    break;
+            }
+
+            if (newValue != null && !newValue.Equals(currentValue))
+            {
+                config[field.Name] = newValue;
+                _settings.SDKConfig = config; // Это обновит JSON
+                MarkSettingsDirty();
+            }
+
+            if (!string.IsNullOrEmpty(field.Tooltip))
+            {
+                EditorGUILayout.HelpBox(field.Tooltip, MessageType.Info);
+            }
         }
         
         private void DrawBuildSettings()
@@ -669,7 +721,7 @@ namespace WelwiseGames.Editor
             return Path.ChangeExtension(path, null);
         }
         
-        private void HandleSDKTypeChange(SupportedSDKType oldType, SupportedSDKType newType)
+        private void HandleSDKTypeChange(string oldType, string newType)
         {
             try
             {

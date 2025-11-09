@@ -1,0 +1,61 @@
+{
+  "name": "Y8",
+  "adapterFile": "Y8_adapter.txt",
+  "configFields": [
+    {
+      "name": "Y8AppId",
+      "type": "string",
+      "displayName": "Y8 App ID",
+      "defaultValue": "YOUR_Y8_APP_ID",
+      "tooltip": "Your Y8 application ID"
+    },
+    {
+      "name": "Y8HostId",
+      "type": "string",
+      "displayName": "Y8 Host ID",
+      "defaultValue": "ca-host-pub-6129580795478709",
+      "tooltip": "Y8 host identifier for ads"
+    },
+    {
+      "name": "Y8AdsenseId",
+      "type": "string",
+      "displayName": "Y8 Adsense ID",
+      "defaultValue": "ca-pub-6129580795478709",
+      "tooltip": "Google Adsense ID for Y8 platform"
+    },
+    {
+      "name": "Y8ChannelId",
+      "type": "string",
+      "displayName": "Y8 Channel ID",
+      "defaultValue": "123456",
+      "tooltip": "Y8 channel identifier"
+    },
+    {
+      "name": "Y8AdFrequency",
+      "type": "string",
+      "displayName": "Y8 Ad Frequency",
+      "defaultValue": "180s",
+      "tooltip": "Frequency of ad displays (e.g., 180s for 3 minutes)"
+    },
+    {
+      "name": "Y8TestAdsOn",
+      "type": "bool",
+      "displayName": "Y8 Test Ads",
+      "defaultValue": "true",
+      "tooltip": "Enable test ads for development"
+    },
+    {
+      "name": "Y8ActivateAFP",
+      "type": "bool",
+      "displayName": "Y8 Activate AFP",
+      "defaultValue": "true",
+      "tooltip": "Activate AFP (Ad Frame Protocol)"
+    }
+  ],
+  "postBuildScripts": [
+    {
+      "injectPoint": "head",
+      "file": "Y8_injection-head.txt"
+    }
+  ]
+}

@@ -19,8 +19,9 @@ namespace WelwiseGamesSDK.Shared
             Aspect9_16
         }
         
+        // Базовые настройки
         public string DebugPlayerId;
-        public SupportedSDKType SDKType;
+        public string SelectedSDK; // Заменяем SupportedSDKType на строку
         public DeviceType DebugDeviceType;
         public string DebugLanguageCode;
         public bool MuteAudioOnPause;
@@ -29,7 +30,7 @@ namespace WelwiseGamesSDK.Shared
         public bool LoadSaveOnInitialize;
         public string InstalledTemplateVersion;
         public AspectRatioMode AspectRatio;
-        public string BackgroundImagePath; // Путь относительно папки Resources
+        public string BackgroundImagePath;
         public float AdSimulationDuration;
         public InterstitialState InterstitialAdReturnState;
         public RewardedState RewardedAdReturnState;
@@ -45,14 +46,37 @@ namespace WelwiseGamesSDK.Shared
         public bool EditorGameDataModule = true;
         public bool EditorMetaverseDataModule = true;
         public bool UseThreeJsLoader = true;
-        public string GameDistributionId;
-        public string Y8AppId;
-        public string Y8HostId;
-        public string Y8AdsenseId;
-        public string Y8ChannelId;
-        public string Y8AdFrequency;
-        public bool Y8TestAdsOn;
-        public bool Y8ActivateAFP;
+        
+        // Динамические настройки SDK (сериализуем как JSON)
+        public string SDKConfigJson = "{}";
+        
+        [NonSerialized]
+        private Dictionary<string, object> _sdkConfig;
+        
+        public Dictionary<string, object> SDKConfig
+        {
+            get
+            {
+                if (_sdkConfig == null)
+                {
+                    try
+                    {
+                        _sdkConfig = JsonConvert.DeserializeObject<Dictionary<string, object>>(SDKConfigJson) 
+                                    ?? new Dictionary<string, object>();
+                    }
+                    catch
+                    {
+                        _sdkConfig = new Dictionary<string, object>();
+                    }
+                }
+                return _sdkConfig;
+            }
+            set
+            {
+                _sdkConfig = value;
+                SDKConfigJson = JsonConvert.SerializeObject(_sdkConfig);
+            }
+        }
         
         public static SDKSettings LoadOrCreateSettings()
         {
@@ -108,7 +132,7 @@ namespace WelwiseGamesSDK.Shared
             return new SDKSettings
             {
                 DebugPlayerId = Guid.NewGuid().ToString(),
-                SDKType = SupportedSDKType.WelwiseGames,
+                SelectedSDK = "WelwiseGames", // Значение по умолчанию
                 DebugDeviceType = DeviceType.Desktop,
                 DebugLanguageCode = "en",
                 MuteAudioOnPause = true,
@@ -124,13 +148,7 @@ namespace WelwiseGamesSDK.Shared
                 MockProducts = new List<Product>(),
                 MockPurchases = new List<Purchase>(),
                 PurchaseSimulationDuration = 2f,
-                Y8AppId = "YOUR_Y8_APP_ID",
-                Y8HostId = "ca-host-pub-6129580795478709",
-                Y8AdsenseId = "ca-pub-6129580795478709",
-                Y8ChannelId = "123456",
-                Y8AdFrequency = "180s",
-                Y8TestAdsOn = true,
-                Y8ActivateAFP = true
+                SDKConfigJson = "{}"
             };
         }
     }
