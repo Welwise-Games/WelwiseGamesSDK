@@ -64,10 +64,12 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 Debug.LogWarning($"Validation set data error: key={key}, value={value} not set");
                 return;
             }
-            
+        
+            bool isNewKey = !dictionary.ContainsKey(key);
             var previous = dictionary.GetValueOrDefault(key);
             dictionary[key] = value;
-            Changed = !EqualityComparer<T>.Default.Equals(previous, value);
+        
+            Changed |= isNewKey || !EqualityComparer<T>.Default.Equals(previous, value);
         }
     }
 }

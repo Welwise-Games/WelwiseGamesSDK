@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 using UnityEngine;
 
 namespace WelwiseGamesSDK.Internal.PlayerData
@@ -9,14 +10,13 @@ namespace WelwiseGamesSDK.Internal.PlayerData
         private const string GamePrefix = "WS_SDK_GAME__";
         private const string MetaversePrefix = "WS_SDK_METAVERSE__";
 
-        public UnityPlayerData(bool isAvailableSelf, bool isGameDataAvailable, bool isMetaverseDataAvailable) : 
+        public UnityPlayerData(bool isAvailableSelf, bool isGameDataAvailable, bool isMetaverseDataAvailable) :
             base(isAvailableSelf, isGameDataAvailable, isMetaverseDataAvailable) {}
-  
 
         public override void Initialize()
         {
             _playerName = PlayerPrefs.GetString(PlayerNameKey, "Ghost");
-                LoadContainerData(_gameDataContainer, GamePrefix);
+            LoadContainerData(_gameDataContainer, GamePrefix);
             LoadContainerData(_metaverseDataContainer, MetaversePrefix);
             OnLoaded();
         }
@@ -27,17 +27,30 @@ namespace WelwiseGamesSDK.Internal.PlayerData
             SaveContainerData(_metaverseDataContainer, MetaversePrefix);
             PlayerPrefs.SetString(PlayerNameKey, _playerName);
             PlayerPrefs.Save();
+            OnSaved();
         }
-        
+
         private static void LoadContainerData(DataContainer container, string prefix)
         {
             container.Clear();
 
-            var keysStr = PlayerPrefs.GetString(prefix + "__keys", "");
-            if (string.IsNullOrEmpty(keysStr)) 
+            var keysJson = PlayerPrefs.GetString(prefix + "__keys", "");
+            if (string.IsNullOrEmpty(keysJson))
                 return;
 
-            var keys = keysStr.Split(',');
+            List<string> keys;
+            try
+            {
+                keys = JsonConvert.DeserializeObject<List<string>>(keysJson);
+            }
+            catch
+            {
+
+                keys = new List<string>(keysJson.Split(','));
+            }
+
+            if (keys == null) return;
+
             foreach (var key in keys)
             {
                 var prefixedKey = prefix + key;
@@ -46,13 +59,13 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 container.DeserializeToContainer(key, value);
             }
         }
-        
+
         private void SaveContainerData(DataContainer container, string prefix)
         {
             if (!container.Changed) return;
-            
+
             var keys = new HashSet<string>();
-    
+
             foreach (var kvp in container.Strings)
             {
                 PlayerPrefs.SetString(prefix + kvp.Key, DataConvertUtil.Serialize(kvp.Value));
@@ -73,8 +86,8 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 PlayerPrefs.SetString(prefix + kvp.Key, DataConvertUtil.Serialize(kvp.Value));
                 keys.Add(kvp.Key);
             }
-    
-            PlayerPrefs.SetString(prefix + "__keys", string.Join(",", keys));
+
+            PlayerPrefs.SetString(prefix + "__keys", JsonConvert.SerializeObject(new List<string>(keys)));
             container.Changed = false;
         }
     }

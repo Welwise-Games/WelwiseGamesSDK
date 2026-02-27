@@ -57,13 +57,12 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                     Debug.LogError(e);
                 }
                 
-                // Fallback для имени игрока
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
-                    _previousPlayerName = _playerName;
                 }
                 
+                _previousPlayerName = _playerName;
                 OnLoaded();
             }, error =>
             {
@@ -99,9 +98,9 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 if (string.IsNullOrEmpty(_playerName) || _playerName.ToLower() == "гость")
                 {
                     _playerName = CreateFallbackName();
-                    _previousPlayerName = _playerName;
                 }
                 
+                _previousPlayerName = _playerName;
                 OnLoaded();
             }, error =>
             {
@@ -211,10 +210,10 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     PluginRuntime.SetCombinedPlayerData(SerializeCombinedData(), () =>
                     {
+                        _previousPlayerName = _playerName;
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
                         else OnSaved();
-                        _previousPlayerName = _playerName;
                     },
                     error =>
                     {
@@ -226,6 +225,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     PluginRuntime.SetPlayerData(SerializePlayerData(), () =>
                     {
+                         _previousPlayerName = _playerName;
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
                         else OnSaved();
@@ -240,6 +240,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     PluginRuntime.SetMetaversePlayerData(SerializeMetaverseData(), () =>
                     {
+                         _previousPlayerName = _playerName;
                         _isSaving = false;
                         if (_gameDataContainer.Changed || _metaverseDataContainer.Changed) Save();
                         else OnSaved();
@@ -257,6 +258,7 @@ namespace WelwiseGamesSDK.Internal.PlayerData
                 {
                     PluginRuntime.SetPlayerData(SerializePlayerData(), () =>
                         {
+                            _previousPlayerName = _playerName;
                             _isSaving = false;
                             if (_gameDataContainer.Changed) Save();
                             else OnSaved();
