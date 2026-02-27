@@ -1,9 +1,24 @@
+onst FALLBACK_SDK_URL = 'https://welwise-games.online/sdk';
+
 fetch('./config.json')
-    .then(res => res.json())
-    .then(config => {
+    .then(res => res.text())
+    .then(text => {
+        try {
+            const config = JSON.parse(text);
+            return config.SDK_URL || FALLBACK_SDK_URL;
+        } catch (e) {
+            console.warn('config.json parse error, using fallback SDK URL:', e.message);
+            return FALLBACK_SDK_URL;
+        }
+    })
+    .catch(err => {
+        console.warn('config.json load error, using fallback SDK URL:', err.message);
+        return FALLBACK_SDK_URL;
+    })
+    .then(sdkUrl => {
         return new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = config.SDK_URL;
+            script.src = sdkUrl;
             script.onload = resolve;
             script.onerror = reject;
             document.head.appendChild(script);
@@ -12,7 +27,8 @@ fetch('./config.json')
     .then(() => {
         if (!window.WelwiseGames || typeof window.WelwiseGames.init !== 'function') {
             throw new Error('Welwise SDK not properly loaded');
-        
+        }
+
         window.__sdk_adapter = {
             GetModules: function() {
                 return [
@@ -21,10 +37,11 @@ fetch('./config.json')
                     "PlatformNavigation",
                     "PlayerData",
                     "GameData",
-                    "MetaverseData"
+                    "MetaverseData",
+                    "Payments"
                 ];
             },
-            
+
             Init: function() {
                 const initPromise = WelwiseGames.init()
                 .then(sdk => {
@@ -48,7 +65,7 @@ fetch('./config.json')
                         sendUnityMessage('HandleInitError', errorMessage);
                     });
             },
-            
+
             GetPlayerData: function() {
                 if (!window.__wg_sdk) {
                     if (window.unityInstance) {
@@ -56,15 +73,14 @@ fetch('./config.json')
                     }
                     return;
                 }
-            
+
                 window.__wg_sdk.player.getData()
                     .then(data => {
-                        // Преобразуем в универсальный формат
                         const universalData = {
                             playerName: data.playerName || '',
                             playerGameData: data.playerGameData || []
                         };
-                        
+
                         if (window.unityInstance) {
                             window.unityInstance.SendMessage(
                                 'PluginRuntime',
@@ -83,7 +99,7 @@ fetch('./config.json')
                         }
                     });
             },
-            
+
             SetPlayerData: function(jsonData) {
                 if (!window.__wg_sdk) {
                     if (window.unityInstance) {
@@ -91,9 +107,8 @@ fetch('./config.json')
                     }
                     return;
                 }
-            
+
                 try {
-                    // Данные уже в универсальном формате, передаем как есть
                     const data = JSON.parse(jsonData);
                     window.__wg_sdk.player.setData(data)
                         .then(() => {
@@ -463,6 +478,180 @@ fetch('./config.json')
                         );
                     }
                 }
+            },
+
+            // ======== Payments — адаптация Welwise к эталону ========
+
+            // PaymentsInit: purchases доступен сразу после sdk.init()
+            PaymentsInit: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsInitError', 'SDK not initialized');
+                    }
+                    return;
+                }
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsInitSuccess', '');
+                }
+            },
+
+            // PaymentsGetCatalog: у Welwise нет каталога — товары на бэкенде.
+            // Возвращаем пустой массив, чтобы эталон не падал.
+            PaymentsGetCatalog: function() {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsGetCatalogSuccess', '[]');
+                }
+            },
+
+            // PaymentsGetPurchases → getPendingPurchases()
+            // Маппим поля pending в эталонный формат Purchase:
+            //   productID  ← itemId
+            //   purchaseToken ← purchaseId  (используется потом в Consume/confirm)
+            //   developerPayload ← quantity + debitedCoins (JSON)
+            //   signature ← transactionDateTime
+            PaymentsGetPurchases: function() {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsGetPurchasesError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.purchases.getPendingPurchases()
+                    .then(pending => {
+                        const mapped = (pending || []).map(p => ({
+                            productID: p.itemId,
+                            purchaseToken: p.purchaseId,
+                            developerPayload: JSON.stringify({
+                                quantity: p.quantity,
+                                debitedCoins: p.debitedCoins,
+                                transactionDateTime: p.transactionDateTime
+                            }),
+                            signature: p.transactionDateTime || ''
+                        }));
+
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandlePaymentsGetPurchasesSuccess',
+                                JSON.stringify(mapped)
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandlePaymentsGetPurchasesError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
+            },
+
+            // PaymentsPurchase(productId, developerPayload) → sdk.purchases.purchase(itemId, ...)
+            // developerPayload может содержать quantity как JSON: {"quantity":5}
+            // Результат маппится в эталонный Purchase
+            PaymentsPurchase: function(productId, developerPayload) {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsPurchaseError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                var quantity = 1;
+                if (developerPayload) {
+                    try {
+                        var payload = JSON.parse(developerPayload);
+                        if (payload.quantity && typeof payload.quantity === 'number') {
+                            quantity = payload.quantity;
+                        }
+                    } catch(e) {
+                        // developerPayload не JSON — используем quantity=1
+                    }
+                }
+
+                try {
+                    window.__wg_sdk.purchases.purchase(productId, {
+                        quantity: quantity,
+                        callbacks: {
+                            onSuccess: (data) => {
+                                var result = {
+                                    productID: data.itemId,
+                                    purchaseToken: data.purchaseId,
+                                    developerPayload: JSON.stringify({
+                                        quantity: data.quantity,
+                                        debitedCoins: data.debitedCoins
+                                    }),
+                                    signature: ''
+                                };
+
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage(
+                                        'PluginRuntime',
+                                        'HandlePaymentsPurchaseSuccess',
+                                        JSON.stringify(result)
+                                    );
+                                }
+                            },
+                            onError: (reason, error, purchaseId) => {
+                                var msg = (reason || 'INTERNAL_ERROR') + ': ' +
+                                    (error ? (error.message || String(error)) : 'Unknown error');
+                                if (purchaseId) {
+                                    msg += ' [purchaseId=' + purchaseId + ']';
+                                }
+
+                                if (window.unityInstance) {
+                                    window.unityInstance.SendMessage(
+                                        'PluginRuntime',
+                                        'HandlePaymentsPurchaseError',
+                                        msg
+                                    );
+                                }
+                            }
+                        }
+                    });
+                } catch (e) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandlePaymentsPurchaseError',
+                            e.message || String(e)
+                        );
+                    }
+                }
+            },
+
+            // PaymentsConsume(purchaseToken) → sdk.purchases.confirmPurchase(purchaseId)
+            // purchaseToken в эталоне = purchaseId в Welwise
+            PaymentsConsume: function(purchaseToken) {
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsConsumeError', 'SDK not initialized');
+                    }
+                    return;
+                }
+
+                window.__wg_sdk.purchases.confirmPurchase(purchaseToken)
+                    .then(() => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandlePaymentsConsumeSuccess',
+                                purchaseToken
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandlePaymentsConsumeError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
             }
         };
     })
