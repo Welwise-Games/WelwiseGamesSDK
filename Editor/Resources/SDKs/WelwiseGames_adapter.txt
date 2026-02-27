@@ -1,4 +1,4 @@
-onst FALLBACK_SDK_URL = 'https://welwise-games.online/sdk';
+const FALLBACK_SDK_URL = 'https://welwise-games.online/sdk';
 
 fetch('./config.json')
     .then(res => res.text())
