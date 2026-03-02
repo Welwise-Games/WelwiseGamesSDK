@@ -495,12 +495,52 @@ fetch('./config.json')
                 }
             },
 
-            // PaymentsGetCatalog: у Welwise нет каталога — товары на бэкенде.
-            // Возвращаем пустой массив, чтобы эталон не падал.
+            // PaymentsGetCatalog: sdk.purchases.getAvailableItems() → эталонный Product[]
+            // Маппинг полей GameItem → Product:
+            //   id              ← itemId
+            //   title           ← name
+            //   description     ← description
+            //   imageURI        ← imageUrl
+            //   price           ← "<priceCoins> WCoins"
+            //   priceCurrencyCode ← "WCoins"
+            //   priceValue      ← String(priceCoins)
             PaymentsGetCatalog: function() {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsGetCatalogSuccess', '[]');
+                if (!window.__wg_sdk) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandlePaymentsGetCatalogError', 'SDK not initialized');
+                    }
+                    return;
                 }
+
+                window.__wg_sdk.purchases.getAvailableItems()
+                    .then(items => {
+                        const mapped = (items || []).map(item => ({
+                            id: item.itemId,
+                            title: item.name || '',
+                            description: item.description || '',
+                            imageURI: item.imageUrl || '',
+                            price: item.priceCoins + ' WCoins',
+                            priceCurrencyCode: 'WCoins',
+                            priceValue: String(item.priceCoins)
+                        }));
+
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandlePaymentsGetCatalogSuccess',
+                                JSON.stringify(mapped)
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandlePaymentsGetCatalogError',
+                                error.message || String(error)
+                            );
+                        }
+                    });
             },
 
             // PaymentsGetPurchases → getPendingPurchases()
