@@ -1,0 +1,375 @@
+(function() {
+    window.__sdk_adapter = {
+        GetModules: function() {
+            return [
+                "Advertisement",
+                "PlayerData",
+                "Environment",
+                "Analytics"
+            ];
+        },
+
+        Init: function() {
+            if (typeof ytgame === 'undefined') {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleInitError',
+                        'YouTube Playables SDK not loaded'
+                    );
+                }
+                return;
+            }
+
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
+            }
+        },
+
+        GetPlayerData: function() {
+            if (typeof ytgame === 'undefined' || !ytgame.game) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetDataError',
+                        'YouTube Playables SDK not available'
+                    );
+                }
+                return;
+            }
+
+            var inYT = typeof ytgame.IN_PLAYABLES_ENV !== 'undefined' && ytgame.IN_PLAYABLES_ENV;
+
+            if (!inYT) {
+                var saved = '';
+                try { saved = localStorage.getItem('YT_SAVE') || ''; } catch(e) {}
+                var universalData = {
+                    playerName: '',
+                    playerGameData: saved ? [{ identifier: 'cloudSave', value: 's' + saved }] : []
+                };
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetDataSuccess',
+                        JSON.stringify(universalData)
+                    );
+                }
+                return;
+            }
+
+            ytgame.game.loadData()
+                .then(function(data) {
+                    var universalData = {
+                        playerName: '',
+                        playerGameData: data ? [{ identifier: 'cloudSave', value: 's' + data }] : []
+                    };
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetDataSuccess',
+                            JSON.stringify(universalData)
+                        );
+                    }
+                })
+                .catch(function(error) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetDataError',
+                            error && error.message ? error.message : 'Failed to load cloud data'
+                        );
+                    }
+                });
+        },
+
+        SetPlayerData: function(jsonData) {
+            if (typeof ytgame === 'undefined' || !ytgame.game) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleSetDataError',
+                        'YouTube Playables SDK not available'
+                    );
+                }
+                return;
+            }
+
+            try {
+                var universalData = JSON.parse(jsonData);
+                var savePayload = '';
+
+                if (universalData.playerGameData && universalData.playerGameData.length > 0) {
+                    var entry = universalData.playerGameData[0];
+                    if (typeof entry.value === 'string' && entry.value.length > 1) {
+                        savePayload = entry.value.substring(1);
+                    } else {
+                        savePayload = String(entry.value);
+                    }
+                }
+
+                var inYT = typeof ytgame.IN_PLAYABLES_ENV !== 'undefined' && ytgame.IN_PLAYABLES_ENV;
+
+                if (!inYT) {
+                    try { localStorage.setItem('YT_SAVE', savePayload); } catch(e) {}
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                    }
+                    return;
+                }
+
+                var maxBytes = 3 * 1024 * 1024;
+                if (new Blob([savePayload]).size >= maxBytes) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleSetDataError',
+                            'Cloud save data exceeds 3 MiB limit'
+                        );
+                    }
+                    return;
+                }
+
+                ytgame.game.saveData(savePayload)
+                    .then(function() {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
+                        }
+                    })
+                    .catch(function(error) {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage(
+                                'PluginRuntime',
+                                'HandleSetDataError',
+                                error && error.message ? error.message : 'Failed to save cloud data'
+                            );
+                        }
+                    });
+            } catch (e) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleSetDataError',
+                        'Invalid JSON format'
+                    );
+                }
+            }
+        },
+
+        GetServerTime: function() {
+            var timestamp = Date.now();
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandleGetTimeSuccess',
+                    String(timestamp)
+                );
+            }
+        },
+
+        GoToGame: function(gameId) {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandleNavigateError',
+                    'Navigation not supported on YouTube Playables'
+                );
+            }
+        },
+
+        GetPlayerId: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', '');
+            }
+        },
+
+        GetDeviceType: function() {
+            var deviceType = 'desktop';
+            var ua = navigator.userAgent || '';
+            if (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(ua)) {
+                deviceType = 'mobile';
+            } else if (/iPad|Android(?!.*Mobile)/i.test(ua)) {
+                deviceType = 'tablet';
+            } else if (/SmartTV|GoogleTV|AppTV|TV|SonyDTV/i.test(ua)) {
+                deviceType = 'tv';
+            }
+
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandleGetDeviceTypeSuccess',
+                    deviceType
+                );
+            }
+        },
+
+        GetLanguageCode: function() {
+            if (typeof ytgame === 'undefined' || !ytgame.system) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage(
+                        'PluginRuntime',
+                        'HandleGetLanguageCodeSuccess',
+                        navigator.language || 'en'
+                    );
+                }
+                return;
+            }
+
+            ytgame.system.getLanguage()
+                .then(function(lang) {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetLanguageCodeSuccess',
+                            lang || 'en'
+                        );
+                    }
+                })
+                .catch(function() {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage(
+                            'PluginRuntime',
+                            'HandleGetLanguageCodeSuccess',
+                            navigator.language || 'en'
+                        );
+                    }
+                });
+        },
+
+        IsMetaverseSupported: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandleIsMetaverseSupportedSuccess',
+                    'false'
+                );
+            }
+        },
+
+        GameReady: function() {
+            if (typeof ytgame !== 'undefined' && ytgame.game) {
+                ytgame.game.gameReady();
+            }
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
+            }
+        },
+
+        GameplayStart: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
+            }
+        },
+
+        GameplayStop: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
+            }
+        },
+
+        ShowInterstitial: function() {
+            var inYT = typeof ytgame !== 'undefined' && typeof ytgame.IN_PLAYABLES_ENV !== 'undefined' && ytgame.IN_PLAYABLES_ENV;
+
+            if (!inYT || typeof ytgame === 'undefined' || !ytgame.ads) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                }
+                return;
+            }
+
+            ytgame.ads.requestInterstitialAd()
+                .then(function() {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                    }
+                })
+                .catch(function() {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
+                    }
+                });
+        },
+
+        ShowRewarded: function() {
+            var inYT = typeof ytgame !== 'undefined' && typeof ytgame.IN_PLAYABLES_ENV !== 'undefined' && ytgame.IN_PLAYABLES_ENV;
+
+            if (!inYT || typeof ytgame === 'undefined' || !ytgame.ads) {
+                if (window.unityInstance) {
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                }
+                return;
+            }
+
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
+            }
+
+            ytgame.ads.requestRewardedAd('default-reward')
+                .then(function(isRewardEarned) {
+                    if (isRewardEarned) {
+                        if (window.unityInstance) {
+                            window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
+                        }
+                    }
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                    }
+                })
+                .catch(function() {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
+                    }
+                });
+        },
+
+        PaymentsInit: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandlePaymentsInitError',
+                    'Payments not supported on YouTube Playables'
+                );
+            }
+        },
+
+        PaymentsGetCatalog: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandlePaymentsGetCatalogError',
+                    'Payments not supported on YouTube Playables'
+                );
+            }
+        },
+
+        PaymentsGetPurchases: function() {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandlePaymentsGetPurchasesError',
+                    'Payments not supported on YouTube Playables'
+                );
+            }
+        },
+
+        PaymentsPurchase: function(productId, developerPayload) {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandlePaymentsPurchaseError',
+                    'Payments not supported on YouTube Playables'
+                );
+            }
+        },
+
+        PaymentsConsume: function(purchaseToken) {
+            if (window.unityInstance) {
+                window.unityInstance.SendMessage(
+                    'PluginRuntime',
+                    'HandlePaymentsConsumeError',
+                    'Payments not supported on YouTube Playables'
+                );
+            }
+        }
+    };
+})();

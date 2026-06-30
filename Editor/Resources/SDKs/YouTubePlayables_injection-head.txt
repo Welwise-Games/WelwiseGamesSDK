@@ -1,0 +1,33 @@
+<!-- YouTube Playables SDK -->
+<script src="https://www.youtube.com/game_api/v1"></script>
+<script>
+    (function() {
+        if (typeof ytgame !== 'undefined' && ytgame.game) {
+            ytgame.game.firstFrameReady();
+        }
+
+        var origCreateElement = document.createElement.bind(document);
+        document.createElement = function(tag) {
+            var el = origCreateElement(tag);
+            if (tag.toLowerCase() === 'script') {
+                el.nonce = document.querySelector('script[nonce]')?.nonce ?? '';
+            }
+            return el;
+        };
+
+        function resizeCanvas() {
+            var screenW = window.innerWidth;
+            var screenH = window.innerHeight;
+            if (screenH === 0) return;
+
+            var canvas = document.getElementById('unity-canvas');
+            if (canvas) {
+                canvas.style.width = screenW + 'px';
+                canvas.style.height = screenH + 'px';
+            }
+        }
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+    })();
+</script>

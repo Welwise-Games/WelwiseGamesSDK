@@ -1,0 +1,10 @@
+{
+  "name": "YouTubePlayables",
+  "adapterFile": "YouTubePlayables_adapter.txt",
+  "postBuildScripts": [
+    {
+      "injectPoint": "head",
+      "file": "YouTubePlayables_injection-head.txt"
+    }
+  ]
+}
