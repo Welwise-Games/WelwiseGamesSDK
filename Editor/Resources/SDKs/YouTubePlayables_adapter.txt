@@ -21,6 +21,19 @@
                 return;
             }
 
+            if (typeof ytgame.system !== 'undefined') {
+                ytgame.system.onPause(function() {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGamePause', 'true');
+                    }
+                });
+                ytgame.system.onResume(function() {
+                    if (window.unityInstance) {
+                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGamePause', 'false');
+                    }
+                });
+            }
+
             if (window.unityInstance) {
                 window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
             }
