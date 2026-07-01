@@ -25,6 +25,12 @@
             }
 
             if (typeof ytgame.system !== 'undefined') {
+                window.__yt_audio_enabled = ytgame.system.isAudioEnabled();
+
+                ytgame.system.onAudioEnabledChange(function(isEnabled) {
+                    window.__yt_audio_enabled = isEnabled;
+                });
+
                 ytgame.system.onPause(function() {
                     sendUnityMessage('HandleGamePause', 'true');
                 });
