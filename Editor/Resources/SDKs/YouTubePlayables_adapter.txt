@@ -1,4 +1,13 @@
 (function() {
+    function sendUnityMessage(handler, message) {
+        var interval = setInterval(function() {
+            if (window.unityInstance) {
+                clearInterval(interval);
+                window.unityInstance.SendMessage('PluginRuntime', handler, message || '');
+            }
+        }, 50);
+    }
+
     window.__sdk_adapter = {
         GetModules: function() {
             return [
@@ -11,43 +20,25 @@
 
         Init: function() {
             if (typeof ytgame === 'undefined') {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage(
-                        'PluginRuntime',
-                        'HandleInitError',
-                        'YouTube Playables SDK not loaded'
-                    );
-                }
+                sendUnityMessage('HandleInitError', 'YouTube Playables SDK not loaded');
                 return;
             }
 
             if (typeof ytgame.system !== 'undefined') {
                 ytgame.system.onPause(function() {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGamePause', 'true');
-                    }
+                    sendUnityMessage('HandleGamePause', 'true');
                 });
                 ytgame.system.onResume(function() {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleGamePause', 'false');
-                    }
+                    sendUnityMessage('HandleGamePause', 'false');
                 });
             }
 
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleInitSuccess', '');
-            }
+            sendUnityMessage('HandleInitSuccess', '');
         },
 
         GetPlayerData: function() {
             if (typeof ytgame === 'undefined' || !ytgame.game) {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage(
-                        'PluginRuntime',
-                        'HandleGetDataError',
-                        'YouTube Playables SDK not available'
-                    );
-                }
+                sendUnityMessage('HandleGetDataError', 'YouTube Playables SDK not available');
                 return;
             }
 
@@ -60,13 +51,7 @@
                     playerName: '',
                     playerGameData: saved ? [{ identifier: 'cloudSave', value: 's' + saved }] : []
                 };
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage(
-                        'PluginRuntime',
-                        'HandleGetDataSuccess',
-                        JSON.stringify(universalData)
-                    );
-                }
+                sendUnityMessage('HandleGetDataSuccess', JSON.stringify(universalData));
                 return;
             }
 
@@ -76,34 +61,17 @@
                         playerName: '',
                         playerGameData: data ? [{ identifier: 'cloudSave', value: 's' + data }] : []
                     };
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage(
-                            'PluginRuntime',
-                            'HandleGetDataSuccess',
-                            JSON.stringify(universalData)
-                        );
-                    }
+                    sendUnityMessage('HandleGetDataSuccess', JSON.stringify(universalData));
                 })
                 .catch(function(error) {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage(
-                            'PluginRuntime',
-                            'HandleGetDataError',
-                            error && error.message ? error.message : 'Failed to load cloud data'
-                        );
-                    }
+                    sendUnityMessage('HandleGetDataError',
+                        error && error.message ? error.message : 'Failed to load cloud data');
                 });
         },
 
         SetPlayerData: function(jsonData) {
             if (typeof ytgame === 'undefined' || !ytgame.game) {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage(
-                        'PluginRuntime',
-                        'HandleSetDataError',
-                        'YouTube Playables SDK not available'
-                    );
-                }
+                sendUnityMessage('HandleSetDataError', 'YouTube Playables SDK not available');
                 return;
             }
 
@@ -124,75 +92,39 @@
 
                 if (!inYT) {
                     try { localStorage.setItem('YT_SAVE', savePayload); } catch(e) {}
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
-                    }
+                    sendUnityMessage('HandleSetDataSuccess', '');
                     return;
                 }
 
                 var maxBytes = 3 * 1024 * 1024;
                 if (new Blob([savePayload]).size >= maxBytes) {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage(
-                            'PluginRuntime',
-                            'HandleSetDataError',
-                            'Cloud save data exceeds 3 MiB limit'
-                        );
-                    }
+                    sendUnityMessage('HandleSetDataError', 'Cloud save data exceeds 3 MiB limit');
                     return;
                 }
 
                 ytgame.game.saveData(savePayload)
                     .then(function() {
-                        if (window.unityInstance) {
-                            window.unityInstance.SendMessage('PluginRuntime', 'HandleSetDataSuccess', '');
-                        }
+                        sendUnityMessage('HandleSetDataSuccess', '');
                     })
                     .catch(function(error) {
-                        if (window.unityInstance) {
-                            window.unityInstance.SendMessage(
-                                'PluginRuntime',
-                                'HandleSetDataError',
-                                error && error.message ? error.message : 'Failed to save cloud data'
-                            );
-                        }
+                        sendUnityMessage('HandleSetDataError',
+                            error && error.message ? error.message : 'Failed to save cloud data');
                     });
             } catch (e) {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage(
-                        'PluginRuntime',
-                        'HandleSetDataError',
-                        'Invalid JSON format'
-                    );
-                }
+                sendUnityMessage('HandleSetDataError', 'Invalid JSON format');
             }
         },
 
         GetServerTime: function() {
-            var timestamp = Date.now();
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandleGetTimeSuccess',
-                    String(timestamp)
-                );
-            }
+            sendUnityMessage('HandleGetTimeSuccess', String(Date.now()));
         },
 
         GoToGame: function(gameId) {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandleNavigateError',
-                    'Navigation not supported on YouTube Playables'
-                );
-            }
+            sendUnityMessage('HandleNavigateError', 'Navigation not supported on YouTube Playables');
         },
 
         GetPlayerId: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleGetPlayerIdSuccess', '');
-            }
+            sendUnityMessage('HandleGetPlayerIdSuccess', '');
         },
 
         GetDeviceType: function() {
@@ -205,100 +137,57 @@
             } else if (/SmartTV|GoogleTV|AppTV|TV|SonyDTV/i.test(ua)) {
                 deviceType = 'tv';
             }
-
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandleGetDeviceTypeSuccess',
-                    deviceType
-                );
-            }
+            sendUnityMessage('HandleGetDeviceTypeSuccess', deviceType);
         },
 
         GetLanguageCode: function() {
             if (typeof ytgame === 'undefined' || !ytgame.system) {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage(
-                        'PluginRuntime',
-                        'HandleGetLanguageCodeSuccess',
-                        navigator.language || 'en'
-                    );
-                }
+                sendUnityMessage('HandleGetLanguageCodeSuccess', navigator.language || 'en');
                 return;
             }
 
             ytgame.system.getLanguage()
                 .then(function(lang) {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage(
-                            'PluginRuntime',
-                            'HandleGetLanguageCodeSuccess',
-                            lang || 'en'
-                        );
-                    }
+                    sendUnityMessage('HandleGetLanguageCodeSuccess', lang || 'en');
                 })
                 .catch(function() {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage(
-                            'PluginRuntime',
-                            'HandleGetLanguageCodeSuccess',
-                            navigator.language || 'en'
-                        );
-                    }
+                    sendUnityMessage('HandleGetLanguageCodeSuccess', navigator.language || 'en');
                 });
         },
 
         IsMetaverseSupported: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandleIsMetaverseSupportedSuccess',
-                    'false'
-                );
-            }
+            sendUnityMessage('HandleIsMetaverseSupportedSuccess', 'false');
         },
 
         GameReady: function() {
             if (typeof ytgame !== 'undefined' && ytgame.game) {
                 ytgame.game.gameReady();
             }
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameReadySuccess', '');
-            }
+            sendUnityMessage('HandleGameReadySuccess', '');
         },
 
         GameplayStart: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStartSuccess', '');
-            }
+            sendUnityMessage('HandleGameplayStartSuccess', '');
         },
 
         GameplayStop: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleGameplayStopSuccess', '');
-            }
+            sendUnityMessage('HandleGameplayStopSuccess', '');
         },
 
         ShowInterstitial: function() {
             var inYT = typeof ytgame !== 'undefined' && typeof ytgame.IN_PLAYABLES_ENV !== 'undefined' && ytgame.IN_PLAYABLES_ENV;
 
             if (!inYT || typeof ytgame === 'undefined' || !ytgame.ads) {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
-                }
+                sendUnityMessage('HandleInterstitialClose', '');
                 return;
             }
 
             ytgame.ads.requestInterstitialAd()
                 .then(function() {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
-                    }
+                    sendUnityMessage('HandleInterstitialClose', '');
                 })
                 .catch(function() {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleInterstitialClose', '');
-                    }
+                    sendUnityMessage('HandleInterstitialClose', '');
                 });
         },
 
@@ -306,83 +195,43 @@
             var inYT = typeof ytgame !== 'undefined' && typeof ytgame.IN_PLAYABLES_ENV !== 'undefined' && ytgame.IN_PLAYABLES_ENV;
 
             if (!inYT || typeof ytgame === 'undefined' || !ytgame.ads) {
-                if (window.unityInstance) {
-                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
-                    window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
-                }
+                sendUnityMessage('HandleRewardedOpen', '');
+                sendUnityMessage('HandleRewardedClose', '');
                 return;
             }
 
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedOpen', '');
-            }
+            sendUnityMessage('HandleRewardedOpen', '');
 
             ytgame.ads.requestRewardedAd('default-reward')
                 .then(function(isRewardEarned) {
                     if (isRewardEarned) {
-                        if (window.unityInstance) {
-                            window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedRewarded', '');
-                        }
+                        sendUnityMessage('HandleRewardedRewarded', '');
                     }
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
-                    }
+                    sendUnityMessage('HandleRewardedClose', '');
                 })
                 .catch(function() {
-                    if (window.unityInstance) {
-                        window.unityInstance.SendMessage('PluginRuntime', 'HandleRewardedClose', '');
-                    }
+                    sendUnityMessage('HandleRewardedClose', '');
                 });
         },
 
         PaymentsInit: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandlePaymentsInitError',
-                    'Payments not supported on YouTube Playables'
-                );
-            }
+            sendUnityMessage('HandlePaymentsInitError', 'Payments not supported on YouTube Playables');
         },
 
         PaymentsGetCatalog: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandlePaymentsGetCatalogError',
-                    'Payments not supported on YouTube Playables'
-                );
-            }
+            sendUnityMessage('HandlePaymentsGetCatalogError', 'Payments not supported on YouTube Playables');
         },
 
         PaymentsGetPurchases: function() {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandlePaymentsGetPurchasesError',
-                    'Payments not supported on YouTube Playables'
-                );
-            }
+            sendUnityMessage('HandlePaymentsGetPurchasesError', 'Payments not supported on YouTube Playables');
         },
 
         PaymentsPurchase: function(productId, developerPayload) {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandlePaymentsPurchaseError',
-                    'Payments not supported on YouTube Playables'
-                );
-            }
+            sendUnityMessage('HandlePaymentsPurchaseError', 'Payments not supported on YouTube Playables');
         },
 
         PaymentsConsume: function(purchaseToken) {
-            if (window.unityInstance) {
-                window.unityInstance.SendMessage(
-                    'PluginRuntime',
-                    'HandlePaymentsConsumeError',
-                    'Payments not supported on YouTube Playables'
-                );
-            }
+            sendUnityMessage('HandlePaymentsConsumeError', 'Payments not supported on YouTube Playables');
         }
     };
 })();
